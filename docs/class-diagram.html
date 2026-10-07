@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Q-AI Hub — UI &amp; data class diagram</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; }
+
+header {
+  background: #1a1f2e;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #3C3489;
+}
+header h1 { font-size: 18px; color: #CECBF6; letter-spacing: .04em; font-weight: 500; }
+header span { font-size: 11px; color: #7a8fa0; }
+
+#toolbar {
+  background: #12151e;
+  padding: 8px 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid #1e2536;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 5px 12px; border-radius: 6px; border: 1px solid #2a3548;
+  background: #1a2035; color: #9ab; font-size: 11px; cursor: pointer;
+  transition: all .2s; font-family: inherit;
+}
+.btn:hover { background: #222d46; border-color: #6665d0; color: #CECBF6; }
+.filter-btn {
+  padding: 3px 10px; border-radius: 20px; border: 1px solid #2a3548;
+  background: transparent; color: #7a8fa0; font-size: 11px; cursor: pointer;
+  transition: all .2s; font-family: inherit;
+}
+.filter-btn.active { background: #3C348922; border-color: #6665d0; color: #CECBF6; }
+#search {
+  padding: 5px 10px; border-radius: 6px; border: 1px solid #2a3548;
+  background: #1a2035; color: #e2e8f0; font-size: 11px; width: 170px;
+  outline: none; font-family: inherit;
+}
+#search:focus { border-color: #6665d0; }
+#stats { font-size: 10px; color: #4a5568; margin-left: auto; }
+#zoom-label { font-size: 10px; color: #4a5568; }
+
+#canvas-wrap {
+  overflow: hidden; width: 100%;
+  height: calc(100vh - 108px);
+  cursor: grab; user-select: none; position: relative;
+}
+#canvas-wrap.grabbing { cursor: grabbing; }
+#canvas { transform-origin: 0 0; position: relative; }
+
+/* UML box */
+.uml {
+  position: absolute; border-radius: 8px; overflow: hidden;
+  border: 1px solid #2a3548; width: 200px;
+  transition: box-shadow .2s, border-color .2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.uml:hover { border-color: #6665d0; box-shadow: 0 4px 20px rgba(102,101,208,.2); }
+.uml.highlight { box-shadow: 0 0 0 2px #CECBF6; border-color: #CECBF6; }
+.uml.dimmed { opacity: .15; }
+
+.uml-header {
+  padding: 6px 10px 5px; display: flex; flex-direction: column; align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.uml-stereotype { font-size: 9px; color: rgba(255,255,255,.5); letter-spacing: .08em; margin-bottom: 1px; }
+.uml-classname { font-size: 12px; font-weight: 600; white-space: nowrap; }
+
+.uml-body { background: #141921; }
+.uml-section { border-top: 1px solid rgba(255,255,255,.05); }
+.uml-section-label {
+  font-size: 8px; font-weight: 600; letter-spacing: .12em; padding: 3px 8px 1px;
+  color: rgba(255,255,255,.3); text-transform: uppercase;
+}
+.uml-row { display: flex; align-items: baseline; gap: 3px; padding: 1px 8px; font-size: 10px; line-height: 1.6; }
+.uml-vis { color: #4a5568; font-size: 9px; flex-shrink: 0; min-width: 8px; }
+.uml-name { color: #e2e8f0; }
+.uml-type { color: #64a0c8; font-size: 9px; }
+.uml-method { font-style: italic; color: #94a3b8; }
+
+/* color themes */
+.t-purple .uml-header { background: #3C3489; } .t-purple .uml-classname { color: #CECBF6; }
+.t-teal   .uml-header { background: #085041; } .t-teal   .uml-classname { color: #9FE1CB; }
+.t-coral  .uml-header { background: #712B13; } .t-coral  .uml-classname { color: #F5C4B3; }
+.t-blue   .uml-header { background: #0C447C; } .t-blue   .uml-classname { color: #B5D4F4; }
+.t-amber  .uml-header { background: #633806; } .t-amber  .uml-classname { color: #FAC775; }
+.t-green  .uml-header { background: #27500A; } .t-green  .uml-classname { color: #C0DD97; }
+.t-pink   .uml-header { background: #72243E; } .t-pink   .uml-classname { color: #F4C0D1; }
+.t-red    .uml-header { background: #791F1F; } .t-red    .uml-classname { color: #F7C1C1; }
+.t-gray   .uml-header { background: #2a3548; } .t-gray   .uml-classname { color: #D3D1C7; }
+
+#svg-overlay { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+
+/* legend */
+#legend {
+  position: fixed; bottom: 16px; right: 16px;
+  background: #12151eee; border: 1px solid #2a3548; border-radius: 8px;
+  padding: 10px 14px; font-size: 10px; color: #7a8fa0; z-index: 100;
+  line-height: 1.8;
+}
+#legend h4 { color: #e2e8f0; margin-bottom: 6px; font-size: 11px; font-weight: 500; }
+.leg { display: flex; align-items: center; gap: 6px; }
+.leg-dot { width: 10px; height: 3px; border-radius: 1px; flex-shrink: 0; }
+#legend .hint { margin-top: 6px; font-size: 9px; color: #4a5568; border-top: 1px solid #1e2536; padding-top: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Q-AI Hub — TypeScript domain model (frontend)</h1>
+  <span id="hdr-stats"></span>
+</header>
+
+<div id="toolbar">
+  <button class="btn" onclick="resetView()">↺ Reset view</button>
+  <button class="btn" onclick="zoomIn()">＋ Zoom in</button>
+  <button class="btn" onclick="zoomOut()">－ Zoom out</button>
+  <span style="color:#2a3548;margin:0 4px">|</span>
+  <span style="font-size:11px;color:#4a5568">Filter:</span>
+  <button class="filter-btn active" onclick="filter('all',this)">All</button>
+  <button class="filter-btn" onclick="filter('entity',this)">Entities</button>
+  <button class="filter-btn" onclick="filter('service',this)">Services</button>
+  <button class="filter-btn" onclick="filter('dto',this)">DTOs</button>
+  <button class="filter-btn" onclick="filter('enum',this)">Enums</button>
+  <span style="color:#2a3548;margin:0 4px">|</span>
+  <input id="search" placeholder="🔍 Search class or field…" oninput="searchClass(this.value)"/>
+  <span id="stats"></span>
+  <span id="zoom-label" style="margin-left:6px">55%</span>
+</div>
+
+<div id="canvas-wrap">
+  <div id="canvas">
+    <svg id="svg-overlay"></svg>
+  </div>
+</div>
+
+<div id="legend">
+  <h4>Legend</h4>
+  <div class="leg"><div class="leg-dot" style="background:#CECBF6"></div> Purple — Admin users (dashboard data)</div>
+  <div class="leg"><div class="leg-dot" style="background:#9FE1CB"></div> Teal — Programs, public events, startups</div>
+  <div class="leg"><div class="leg-dot" style="background:#FAC775"></div> Amber — Admin events &amp; questions</div>
+  <div class="leg"><div class="leg-dot" style="background:#C0DD97"></div> Green — Applications &amp; applicants</div>
+  <div class="leg"><div class="leg-dot" style="background:#B5D4F4"></div> Blue — Expert invites (EventExpert)</div>
+  <div class="leg"><div class="leg-dot" style="background:#F4C0D1"></div> Pink — Pitch evaluation &amp; criteria</div>
+  <div class="leg"><div class="leg-dot" style="background:#D3D1C7"></div> Gray — Form state &amp; ExpertRole</div>
+  <div class="leg"><div class="leg-dot" style="background:#F5C4B3"></div> Coral — Admin shell / section router</div>
+  <div class="hint">Drag canvas to pan · Scroll to zoom · Covers all routes, forms, localStorage, admin sections</div>
+</div>
+
+<script>
+/* ═══════════════════════ DATA (Q-AI Hub — every page & shared UI) ═══════════════════════ */
+const CLASSES = [
+
+/* ── ROW 0: CORE DATA (admin + landing) — y=40 */
+{ id:'Program', label:'Program', stereotype:'«mockData.ts»', theme:'t-teal', kind:'entity', x:40, y:40,
+  fields:[
+    {vis:'+',name:'id',type:'number'},
+    {vis:'+',name:'axis',type:'string'},
+    {vis:'+',name:'title',type:'string'},
+    {vis:'+',name:'description',type:'string'},
+    {vis:'+',name:'professor',type:'{ name; photo }'},
+    {vis:'+',name:'color',type:'string'},
+    {vis:'+',name:'cardTagline',type:'string'},
+    {vis:'+',name:'cardPillar',type:'string'},
+  ], methods:[]},
+
+{ id:'Event', label:'Event', stereotype:'«mockData.ts»', theme:'t-teal', kind:'entity', x:280, y:40,
+  fields:[
+    {vis:'+',name:'id',type:'number'},
+    {vis:'+',name:'title',type:'string'},
+    {vis:'+',name:'type',type:'Hackathon | Workshop | Talk'},
+    {vis:'+',name:'status',type:'Open | Closed | Coming Soon'},
+    {vis:'+',name:'date',type:'string'},
+    {vis:'+',name:'location',type:'string'},
+    {vis:'+',name:'description',type:'string'},
+  ], methods:[]},
+
+{ id:'AdminEvent', label:'AdminEvent', stereotype:'«adminData.ts»', theme:'t-amber', kind:'entity', x:520, y:40,
+  fields:[
+    {vis:'+',name:'id',type:'string'},
+    {vis:'+',name:'title',type:'string'},
+    {vis:'+',name:'date',type:'string'},
+    {vis:'+',name:'location',type:'string'},
+    {vis:'+',name:'category',type:'string'},
+    {vis:'+',name:'status',type:'Open | Closed | Upcoming'},
+    {vis:'+',name:'applicants',type:'number'},
+    {vis:'+',name:'maxCapacity',type:'number'},
+    {vis:'+',name:'image',type:'string'},
+    {vis:'+',name:'description',type:'string'},
+    {vis:'+',name:'questions',type:'EventQuestion[]'},
+    {vis:'+',name:'evaluationCriteria',type:'EvaluationCriterion[]?'},
+  ], methods:[]},
+
+{ id:'AdminUser', label:'AdminUser', stereotype:'«adminData.ts»', theme:'t-purple', kind:'entity', x:760, y:40,
+  fields:[
+    {vis:'+',name:'id',type:'string'},
+    {vis:'+',name:'name',type:'string'},
+    {vis:'+',name:'email',type:'string'},
+    {vis:'+',name:'role',type:'string'},
+    {vis:'+',name:'startup',type:'string'},
+    {vis:'+',name:'startupId',type:'string'},
+    {vis:'+',name:'avatar',type:'string'},
+    {vis:'+',name:'status',type:'Active | Pending | Suspended'},
+    {vis:'+',name:'bio',type:'string'},
+    {vis:'+',name:'skills',type:'string[]'},
+    {vis:'+',name:'applied',type:'number'},
+    {vis:'+',name:'accepted',type:'number'},
+    {vis:'+',name:'joinDate',type:'string'},
+    {vis:'+',name:'phone',type:'string'},
+    {vis:'+',name:'linkedin',type:'string'},
+    {vis:'+',name:'github',type:'string'},
+    {vis:'+',name:'applications',type:'UserApplication[]'},
+  ], methods:[]},
+
+/* ── ROW 1: NESTED + STARTUP — y=400 */
+{ id:'EventQuestion', label:'EventQuestion', stereotype:'«adminData.ts»', theme:'t-amber', kind:'entity', x:40, y:400,
+  fields:[
+    {vis:'+',name:'id',type:'string'},
+    {vis:'+',name:'text',type:'string'},
+    {vis:'+',name:'type',type:'Long Text | Short Text | …'},
+    {vis:'+',name:'required',type:'boolean'},
+  ], methods:[]},
+
+{ id:'EvaluationCriterion', label:'EvaluationCriterion', stereotype:'«adminData.ts»', theme:'t-pink', kind:'entity', x:280, y:400,
+  fields:[
+    {vis:'+',name:'id',type:'string?'},
+    {vis:'+',name:'key',type:'string?'},
+    {vis:'+',name:'label',type:'string'},
+    {vis:'+',name:'description',type:'string'},
+    {vis:'+',name:'color',type:'string?'},
+  ], methods:[]},
+
+{ id:'Startup', label:'Startup', stereotype:'«adminData.ts»', theme:'t-teal', kind:'entity', x:520, y:400,
+  fields:[
+    {vis:'+',name:'id',type:'string'},
+    {vis:'+',name:'name',type:'string'},
+    {vis:'+',name:'founderId',type:'string'},
+    {vis:'+',name:'founderName',type:'string'},
+    {vis:'+',name:'logo',type:'string'},
+    {vis:'+',name:'industry',type:'string'},
+    {vis:'+',name:'stage',type:'Idea | Pre-Seed | Seed | Series A'},
+    {vis:'+',name:'status',type:'Active | On Hold | …'},
+    {vis:'+',name:'pitchDate',type:'string?'},
+    {vis:'+',name:'description',type:'string'},
+    {vis:'+',name:'foundedDate',type:'string'},
+    {vis:'+',name:'teamSize',type:'number'},
+    {vis:'+',name:'funding',type:'string'},
+    {vis:'+',name:'progress',type:'number'},
+    {vis:'+',name:'milestones',type:'Milestone[]'},
+    {vis:'+',name:'metrics',type:'{ label; value }[]'},
+    {vis:'+',name:'members',type:'{ name; role; avatar }[]'},
+  ], methods:[]},
+
+{ id:'Milestone', label:'Milestone', stereotype:'«adminData.ts»', theme:'t-teal', kind:'entity', x:760, y:400,
+  fields:[
+    {vis:'+',name:'id',type:'string'},
+    {vis:'+',name:'title',type:'string'},
+    {vis:'+',name:'status',type:'completed | in-progress | upcoming'},
+    {vis:'+',name:'date',type:'string'},
+    {vis:'+',name:'description',type:'string'},
+  ], methods:[]},
+
+/* ── ROW 2: APPLICATIONS — y=780 */
+{ id:'UserApplication', label:'UserApplication', stereotype:'«adminData.ts»', theme:'t-green', kind:'entity', x:40, y:780,
+  fields:[
+    {vis:'+',name:'eventTitle',type:'string'},
+    {vis:'+',name:'eventId',type:'string'},
+    {vis:'+',name:'date',type:'string'},
+    {vis:'+',name:'status',type:'Accepted | Rejected | Pending | Under Review'},
+    {vis:'+',name:'score',type:'number?'},
+  ], methods:[]},
+
+{ id:'Applicant', label:'Applicant', stereotype:'«adminData.ts»', theme:'t-green', kind:'entity', x:280, y:780,
+  fields:[
+    {vis:'+',name:'id',type:'string'},
+    {vis:'+',name:'userId',type:'string'},
+    {vis:'+',name:'name',type:'string'},
+    {vis:'+',name:'email',type:'string'},
+    {vis:'+',name:'startup',type:'string'},
+    {vis:'+',name:'avatar',type:'string'},
+    {vis:'+',name:'status',type:'Pending | Accepted | Rejected | Under Review'},
+    {vis:'+',name:'submittedAt',type:'string'},
+    {vis:'+',name:'answers',type:'{ question; answer; type }[]'},
+  ], methods:[]},
+
+{ id:'EventExpert', label:'EventExpert', stereotype:'«InviteExpertsPanel»', theme:'t-blue', kind:'entity', x:520, y:780,
+  fields:[
+    {vis:'+',name:'email',type:'string'},
+    {vis:'+',name:'role',type:'ExpertRole'},
+    {vis:'+',name:'invitedAt',type:'string'},
+  ], methods:[]},
+
+{ id:'ExpertRole', label:'ExpertRole', stereotype:'«type alias»', theme:'t-gray', kind:'enum', x:760, y:780,
+  fields:[
+    {vis:'',name:'Field Expert'},
+    {vis:'',name:'Finance Expert'},
+    {vis:'',name:'Technical Expert'},
+    {vis:'',name:'Legal Expert'},
+    {vis:'',name:'Marketing Expert'},
+  ], methods:[]},
+
+/* ── ROW 3: AUTH & LANDING FORMS — y=1120 */
+{ id:'RegisterForm', label:'RegisterPage state', stereotype:'«form»', theme:'t-gray', kind:'dto', x:40, y:1120,
+  fields:[
+    {vis:'+',name:'fullName',type:'string'},
+    {vis:'+',name:'studentId',type:'string'},
+    {vis:'+',name:'email',type:'string'},
+    {vis:'+',name:'password',type:'string'},
+    {vis:'+',name:'confirmPassword',type:'string'},
+  ], methods:[]},
+
+{ id:'LoginForm', label:'LoginPage state', stereotype:'«form»', theme:'t-gray', kind:'dto', x:280, y:1120,
+  fields:[
+    {vis:'+',name:'email',type:'string'},
+    {vis:'+',name:'password',type:'string'},
+    {vis:'+',name:'rememberMe',type:'boolean'},
+    {vis:'+',name:'errors',type:'{ email?; password? }'},
+    {vis:'+',name:'location.state',type:'returnUrl?, eventName?'},
+  ], methods:[]},
+
+{ id:'InviteForm', label:'InviteUser / InviteTeammate', stereotype:'«form»', theme:'t-gray', kind:'dto', x:520, y:1120,
+  fields:[
+    {vis:'+',name:'email',type:'string'},
+    {vis:'+',name:'message',type:'string'},
+  ], methods:[]},
+
+{ id:'LandingPageState', label:'LandingPage state', stereotype:'«page»', theme:'t-teal', kind:'dto', x:760, y:1120,
+  fields:[
+    {vis:'+',name:'authModalOpen',type:'boolean'},
+    {vis:'+',name:'selectedProgram',type:'{ id; title; axis } | null'},
+    {vis:'+',name:'stats',type:'{ startups; members; partners; axes }'},
+  ], methods:[]},
+
+/* ── ROW 4: APPLICATION & EVENT EDITOR FORMS — y=1500 */
+{ id:'EventApplyForm', label:'EventApplicationPage', stereotype:'«form»', theme:'t-gray', kind:'dto', x:40, y:1500,
+  fields:[
+    {vis:'+',name:'currentStep',type:'1 | 2 | 3'},
+    {vis:'+',name:'isSubmitted / applicationCode',type:'boolean / string'},
+    {vis:'+',name:'formData',type:'projectName, sector, tagline, pitches…'},
+    {vis:'+',name:'userRole',type:'string'},
+    {vis:'+',name:'teammates',type:'{ email; role }[]'},
+    {vis:'+',name:'techStack',type:'string[]'},
+    {vis:'+',name:'aiPitch',type:'{ problem; solution; targetMarket }'},
+    {vis:'+',name:'files',type:'logo, pitchDeck, pitchVideo (File | null)'},
+    {vis:'+',name:'acceptTerms',type:'boolean'},
+  ], methods:[]},
+
+{ id:'ProgramApplyForm', label:'ProgramApplicationPage', stereotype:'«form»', theme:'t-gray', kind:'dto', x:280, y:1500,
+  fields:[
+    {vis:'+',name:'currentStep',type:'number'},
+    {vis:'+',name:'startupName',type:'string'},
+    {vis:'+',name:'sector',type:'string'},
+    {vis:'+',name:'description / aiDescription',type:'string'},
+    {vis:'+',name:'githubUrl',type:'string'},
+    {vis:'+',name:'teamSize',type:'string'},
+    {vis:'+',name:'userRole',type:'string'},
+    {vis:'+',name:'teammates',type:'{ email; role }[]'},
+    {vis:'+',name:'techStack',type:'string'},
+    {vis:'+',name:'logo / pitchDeck',type:'File | null'},
+    {vis:'+',name:'agreeToTerms',type:'boolean'},
+    {vis:'+',name:'showComparison',type:'boolean'},
+  ], methods:[]},
+
+{ id:'CreateEventForm', label:'CreateEventPage state', stereotype:'«form»', theme:'t-gray', kind:'dto', x:520, y:1500,
+  fields:[
+    {vis:'+',name:'name',type:'string'},
+    {vis:'+',name:'category',type:'string'},
+    {vis:'+',name:'description',type:'string'},
+    {vis:'+',name:'startDate / endDate',type:'string'},
+    {vis:'+',name:'location',type:'string'},
+    {vis:'+',name:'maxParticipants',type:'string'},
+    {vis:'+',name:'deadline',type:'string'},
+    {vis:'+',name:'tags',type:'string'},
+    {vis:'+',name:'imageUrl',type:'string'},
+    {vis:'+',name:'status',type:'string'},
+    {vis:'+',name:'pendingExperts',type:'EventExpert[]'},
+  ], methods:[]},
+
+{ id:'EditEventForm', label:'EditEventPage state', stereotype:'«form»', theme:'t-gray', kind:'dto', x:760, y:1500,
+  fields:[
+    {vis:'+',name:'same fields as Create',type:'—'},
+    {vis:'+',name:'showDeleteConfirm',type:'boolean'},
+    {vis:'+',name:'prefill',type:'MOCK_EVENTS[id]'},
+  ], methods:[]},
+
+/* ── ROW 5: DASHBOARD & SETTINGS — y=1880 */
+{ id:'UserDashboardState', label:'UserDashboard', stereotype:'«page»', theme:'t-purple', kind:'dto', x:40, y:1880,
+  fields:[
+    {vis:'+',name:'activeTab',type:'query ?tab='},
+    {vis:'+',name:'tabs',type:'overview | applications | roles | events | notifications | settings'},
+    {vis:'+',name:'applications',type:'StoredEventApplication[]'},
+    {vis:'+',name:'primaryInterest',type:'string'},
+    {vis:'+',name:'availability',type:'string[]'},
+    {vis:'+',name:'notificationPrefs',type:'{ appStatus; newEvents; juryFeedback }'},
+    {vis:'+',name:'userRoles',type:'UserExpertRole[]'},
+    {vis:'+',name:'profileName',type:'string'},
+  ], methods:[]},
+
+{ id:'EventsPageState', label:'EventsPage', stereotype:'«page»', theme:'t-teal', kind:'dto', x:280, y:1880,
+  fields:[
+    {vis:'+',name:'activeFilter',type:'FilterType'},
+    {vis:'+',name:'authModalOpen',type:'boolean'},
+    {vis:'+',name:'selectedEvent',type:'{ id; title; date } | null'},
+    {vis:'+',name:'isLoggedIn',type:'boolean'},
+    {vis:'+',name:'profileName',type:'string'},
+    {vis:'+',name:'view=public',type:'searchParams'},
+  ], methods:[]},
+
+{ id:'PasswordChangeState', label:'PasswordChangeForm', stereotype:'«User + Admin»', theme:'t-gray', kind:'dto', x:520, y:1880,
+  fields:[
+    {vis:'+',name:'currentPassword',type:'string'},
+    {vis:'+',name:'newPassword',type:'string'},
+    {vis:'+',name:'confirmPassword',type:'string'},
+    {vis:'+',name:'showCurrent / showNew',type:'boolean'},
+  ], methods:[]},
+
+{ id:'PlatformSettings', label:'PlatformSettings', stereotype:'«AdminDashboard Settings»', theme:'t-red', kind:'entity', x:760, y:1880,
+  fields:[
+    {vis:'+',name:'allowPublicRegistrations',type:'boolean'},
+    {vis:'+',name:'requireEmailVerification',type:'boolean'},
+    {vis:'+',name:'allowLateSubmissions',type:'boolean'},
+    {vis:'+',name:'showAnonymisedToJury',type:'boolean'},
+  ], methods:[]},
+
+/* ── ROW 6: STORAGE & ADMIN SHELL — y=2260 */
+{ id:'StoredEventApplication', label:'StoredEventApplication', stereotype:'«localStorage»', theme:'t-green', kind:'entity', x:40, y:2260,
+  fields:[
+    {vis:'+',name:'applicationId',type:'string'},
+    {vis:'+',name:'eventId',type:'number'},
+    {vis:'+',name:'eventName',type:'string'},
+    {vis:'+',name:'status',type:'string'},
+    {vis:'+',name:'submittedDate',type:'string'},
+    {vis:'+',name:'+ form fields',type:'JSON (files stripped)'},
+  ], methods:[]},
+
+{ id:'UserExpertRole', label:'UserExpertRole', stereotype:'«dashboard roles tab»', theme:'t-blue', kind:'entity', x:280, y:2260,
+  fields:[
+    {vis:'+',name:'eventId',type:'string'},
+    {vis:'+',name:'role',type:'string'},
+    {vis:'+',name:'invitedAt',type:'string'},
+  ], methods:[]},
+
+{ id:'AdminDashboardState', label:'AdminDashboard', stereotype:'«page»', theme:'t-coral', kind:'dto', x:520, y:2260,
+  fields:[
+    {vis:'+',name:'activeSection',type:'AdminNavSection'},
+    {vis:'+',name:'URL',type:'?section='},
+  ], methods:[]},
+
+{ id:'AuthInterceptModalProps', label:'AuthInterceptModal', stereotype:'«props»', theme:'t-gray', kind:'dto', x:760, y:2260,
+  fields:[
+    {vis:'+',name:'isOpen',type:'boolean'},
+    {vis:'+',name:'onClose',type:'() => void'},
+    {vis:'+',name:'eventName',type:'string?'},
+    {vis:'+',name:'eventDate',type:'string?'},
+    {vis:'+',name:'returnUrl',type:'string?'},
+  ], methods:[]},
+
+/* ── ROW 7: STARTUP DETAIL & ROUTE LITERALS — y=2640 */
+{ id:'Teammate', label:'Teammate', stereotype:'«StartupDetailPage»', theme:'t-teal', kind:'entity', x:40, y:2640,
+  fields:[
+    {vis:'+',name:'name',type:'string'},
+    {vis:'+',name:'role',type:'string'},
+    {vis:'+',name:'avatar',type:'string'},
+  ], methods:[]},
+
+{ id:'Rating', label:'Rating', stereotype:'«StartupDetailPage»', theme:'t-pink', kind:'entity', x:280, y:2640,
+  fields:[
+    {vis:'+',name:'label',type:'string'},
+    {vis:'+',name:'score',type:'number'},
+    {vis:'+',name:'max',type:'number'},
+    {vis:'+',name:'color',type:'string'},
+  ], methods:[]},
+
+{ id:'NavigationLiterals', label:'Route / tab literals', stereotype:'«string unions»', theme:'t-gray', kind:'enum', x:520, y:2640,
+  fields:[
+    {vis:'',name:'EventsFilter: All | Hackathon | Workshop | Talk'},
+    {vis:'',name:'UserTab: overview | applications | roles…'},
+    {vis:'',name:'AdminSection: dashboard | events | users…'},
+  ], methods:[]},
+
+{ id:'LocalStorageKeys', label:'LocalStorage keys', stereotype:'«contract»', theme:'t-gray', kind:'enum', x:760, y:2640,
+  fields:[
+    {vis:'',name:'isLoggedIn, userRole, userName, userEmail'},
+    {vis:'',name:'application-{eventId} (mock Event id)'},
+    {vis:'',name:'event-experts-{eventId}'},
+  ], methods:[]},
+
+/* ── ROW 8: STARTUP DETAIL + ADMIN MODULES & PITCH — y=3020 */
+{ id:'StartupDetailPage', label:'StartupDetailPage', stereotype:'«page»', theme:'t-teal', kind:'service', x:40, y:3020,
+  fields:[
+    {vis:'+',name:'application',type:'localStorage application-*'},
+    {vis:'+',name:'ratings',type:'Rating[] (demo)'},
+    {vis:'+',name:'teammates',type:'Teammate[] (demo)'},
+  ], methods:[]},
+
+{ id:'AdminPanelModules', label:'Admin panel sections', stereotype:'«components»', theme:'t-coral', kind:'service', x:280, y:3020,
+  fields:[
+    {vis:'+',name:'dashboard',type:'DashboardHome'},
+    {vis:'+',name:'events',type:'EventsManager'},
+    {vis:'+',name:'users',type:'UsersSection'},
+    {vis:'+',name:'startups',type:'StartupsSection'},
+    {vis:'+',name:'pitch',type:'PitchEvaluation'},
+    {vis:'+',name:'settings',type:'SettingsSection'},
+  ], methods:[]},
+
+{ id:'PitchEvalNote', label:'PitchEvaluation.tsx', stereotype:'«component»', theme:'t-pink', kind:'service', x:520, y:3020,
+  fields:[
+    {vis:'+',name:'scores',type:'Record<criterionKey, number>'},
+    {vis:'+',name:'uses',type:'evaluationCriteria[]'},
+    {vis:'+',name:'reads',type:'AdminEvent, Startup, applicantsByEvent'},
+  ], methods:[]},
+];
+
+const CONNECTORS = [
+  {from:'AdminEvent', to:'EventQuestion', label:'questions', style:'assoc'},
+  {from:'AdminEvent', to:'EvaluationCriterion', label:'evaluationCriteria?', style:'assoc'},
+  {from:'AdminUser', to:'UserApplication', label:'applications', style:'assoc'},
+  {from:'AdminUser', to:'Startup', label:'startupId → id', style:'assoc'},
+  {from:'Startup', to:'Milestone', label:'milestones', style:'assoc'},
+  {from:'Applicant', to:'AdminUser', label:'userId', style:'assoc'},
+  {from:'EventExpert', to:'ExpertRole', label:'role', style:'assoc'},
+  {from:'CreateEventForm', to:'EventExpert', label:'pendingExperts', style:'assoc'},
+  {from:'PitchEvalNote', to:'AdminEvent', label:'event', style:'uses'},
+  {from:'PitchEvalNote', to:'Startup', label:'startup', style:'uses'},
+  {from:'PitchEvalNote', to:'EvaluationCriterion', label:'criteria', style:'uses'},
+  {from:'EventApplyForm', to:'StoredEventApplication', label:'persists', style:'assoc'},
+  {from:'StoredEventApplication', to:'Event', label:'eventId', style:'assoc'},
+  {from:'UserDashboardState', to:'StoredEventApplication', label:'loads', style:'assoc'},
+  {from:'UserExpertRole', to:'EventExpert', label:'from event-experts-*', style:'assoc'},
+  {from:'LandingPageState', to:'Program', label:'programs[]', style:'assoc'},
+  {from:'ProgramApplyForm', to:'Program', label:'programs/:id/apply', style:'assoc'},
+  {from:'EventsPageState', to:'Event', label:'lists', style:'assoc'},
+  {from:'UserDashboardState', to:'UserExpertRole', label:'roles tab', style:'assoc'},
+  {from:'EventApplyForm', to:'AuthInterceptModalProps', label:'login flow', style:'uses'},
+  {from:'AdminDashboardState', to:'AdminPanelModules', label:'renders', style:'uses'},
+  {from:'AdminDashboardState', to:'PlatformSettings', label:'settings tab', style:'uses'},
+  {from:'StartupDetailPage', to:'StoredEventApplication', label:'application-*', style:'assoc'},
+  {from:'StartupDetailPage', to:'Teammate', label:'demo team', style:'assoc'},
+  {from:'StartupDetailPage', to:'Rating', label:'demo scores', style:'assoc'},
+];
+
+/* ═══════════════════════ BUILD DOM ═══════════════════════ */
+const canvas = document.getElementById('canvas');
+const svg    = document.getElementById('svg-overlay');
+let scale = 0.55, panX = 0, panY = 0, isDragging = false, startX, startY;
+
+function buildClass(cls) {
+  const el = document.createElement('div');
+  el.className = `uml ${cls.theme}`;
+  el.id = `cls-${cls.id}`;
+  el.dataset.kind = cls.kind;
+  el.style.cssText = `left:${cls.x}px;top:${cls.y}px;`;
+
+  const hdr = document.createElement('div');
+  hdr.className = 'uml-header';
+  if (cls.stereotype) {
+    const st = document.createElement('div');
+    st.className = 'uml-stereotype';
+    st.textContent = cls.stereotype;
+    hdr.appendChild(st);
+  }
+  const cn = document.createElement('div');
+  cn.className = 'uml-classname';
+  cn.textContent = cls.label;
+  hdr.appendChild(cn);
+  el.appendChild(hdr);
+
+  const body = document.createElement('div');
+  body.className = 'uml-body';
+
+  if (cls.fields.length) {
+    const sec = document.createElement('div');
+    sec.className = 'uml-section';
+    cls.fields.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'uml-row';
+      row.innerHTML = `<span class="uml-vis">${f.vis||''}</span><span class="uml-name">${f.name}</span>${f.type?`<span class="uml-type"> : ${f.type}</span>`:''}`;
+      sec.appendChild(row);
+    });
+    body.appendChild(sec);
+  }
+
+  if (cls.methods && cls.methods.length) {
+    const sec = document.createElement('div');
+    sec.className = 'uml-section';
+    const lbl = document.createElement('div');
+    lbl.className = 'uml-section-label';
+    lbl.textContent = 'methods';
+    sec.appendChild(lbl);
+    cls.methods.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'uml-row';
+      row.innerHTML = `<span class="uml-vis">+</span><span class="uml-method">${m.name}()</span>`;
+      sec.appendChild(row);
+    });
+    body.appendChild(sec);
+  }
+
+  el.appendChild(body);
+  canvas.appendChild(el);
+}
+
+CLASSES.forEach(buildClass);
+const statsText = `${CLASSES.length} classes · ${CONNECTORS.length} relations`;
+document.getElementById('stats').textContent = statsText;
+document.getElementById('hdr-stats').textContent = statsText;
+
+/* ═══════════════════════ CONNECTORS ═══════════════════════ */
+const NS = 'http://www.w3.org/2000/svg';
+function makeSvgEl(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+  return el;
+}
+
+function getBox(id) {
+  const el = document.getElementById('cls-' + id);
+  if (!el) return null;
+  const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+  const w = el.offsetWidth || 200, h = el.offsetHeight || 80;
+  return { x, y, w, h, cx: x+w/2, cy: y+h/2,
+    top:{x:x+w/2,y}, bottom:{x:x+w/2,y:y+h},
+    left:{x,y:y+h/2}, right:{x:x+w,y:y+h/2} };
+}
+
+function drawConnectors() {
+  svg.innerHTML = '';
+  const W = 1200, H = 3600;
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const defs = makeSvgEl('defs', {});
+  const mkM = (id, d, fill, stroke) => {
+    const m = makeSvgEl('marker', {id, viewBox:'0 0 10 10', refX:'9', refY:'5', markerWidth:'6', markerHeight:'6', orient:'auto'});
+    m.appendChild(makeSvgEl('path', {d, fill, stroke, 'stroke-width':'1.2'}));
+    defs.appendChild(m);
+  };
+  mkM('arr-open', 'M2 1L9 5L2 9', 'none', '#6665d0');
+  mkM('arr-uses', 'M2 1L9 5L2 9', 'none', '#4a5568');
+  mkM('arr-ext',  'M1 1L9 5L1 9Z', '#CECBF6', '#CECBF6');
+  svg.appendChild(defs);
+
+  CONNECTORS.forEach(c => {
+    const a = getBox(c.from), b = getBox(c.to);
+    if (!a || !b) return;
+    const dx = b.cx - a.cx, dy = b.cy - a.cy;
+    let p1, p2;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      p1 = dx > 0 ? a.right : a.left;
+      p2 = dx > 0 ? b.left  : b.right;
+    } else {
+      p1 = dy > 0 ? a.bottom : a.top;
+      p2 = dy > 0 ? b.top    : b.bottom;
+    }
+
+    const isDash = c.style === 'uses';
+    const color  = c.style === 'extends' ? '#CECBF6' : c.style === 'uses' ? '#4a5568' : '#6665d088';
+    const marker = c.style === 'extends' ? 'url(#arr-ext)' : c.style === 'uses' ? 'url(#arr-uses)' : 'url(#arr-open)';
+    const mx = (p1.x + p2.x) / 2;
+    const d  = `M ${p1.x} ${p1.y} L ${mx} ${p1.y} L ${mx} ${p2.y} L ${p2.x} ${p2.y}`;
+
+    svg.appendChild(makeSvgEl('path', {
+      d, fill:'none', stroke: color, 'stroke-width': c.style==='extends'?'1.5':'1',
+      'stroke-dasharray': isDash ? '4 3' : 'none',
+      'marker-end': marker
+    }));
+
+    if (c.label && c.label !== 'extends' && c.label !== 'uses') {
+      const t = makeSvgEl('text', {
+        x: (p1.x+p2.x)/2, y: (p1.y+p2.y)/2 - 3,
+        'text-anchor':'middle', fill:'#4a5568',
+        'font-size':'9', 'font-family':"'Segoe UI',system-ui,sans-serif"
+      });
+      t.textContent = c.label;
+      svg.appendChild(t);
+    }
+  });
+}
+
+setTimeout(drawConnectors, 250);
+
+/* ═══════════════════════ ZOOM / PAN ═══════════════════════ */
+const wrap = document.getElementById('canvas-wrap');
+
+function applyTransform() {
+  canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  document.getElementById('zoom-label').textContent = Math.round(scale*100) + '%';
+}
+
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  scale = Math.min(2, Math.max(0.15, scale + (e.deltaY > 0 ? -0.06 : 0.06)));
+  applyTransform();
+}, {passive: false});
+
+wrap.addEventListener('mousedown', e => {
+  if (e.target.closest('.uml')) return;
+  isDragging = true;
+  startX = e.clientX - panX;
+  startY = e.clientY - panY;
+  wrap.classList.add('grabbing');
+});
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  panX = e.clientX - startX;
+  panY = e.clientY - startY;
+  applyTransform();
+});
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  wrap.classList.remove('grabbing');
+});
+
+// touch
+wrap.addEventListener('touchstart', e => {
+  if (e.touches.length===1) { isDragging=true; startX=e.touches[0].clientX-panX; startY=e.touches[0].clientY-panY; }
+}, {passive:true});
+wrap.addEventListener('touchmove', e => {
+  if (isDragging && e.touches.length===1) { panX=e.touches[0].clientX-startX; panY=e.touches[0].clientY-startY; applyTransform(); }
+}, {passive:true});
+wrap.addEventListener('touchend', () => { isDragging=false; });
+
+function resetView() { scale=0.55; panX=0; panY=0; applyTransform(); }
+function zoomIn()    { scale=Math.min(2, scale+0.1); applyTransform(); }
+function zoomOut()   { scale=Math.max(0.15, scale-0.1); applyTransform(); }
+applyTransform();
+
+/* ═══════════════════════ FILTER / SEARCH ═══════════════════════ */
+function filter(kind, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  CLASSES.forEach(c => {
+    const el = document.getElementById('cls-' + c.id);
+    if (!el) return;
+    el.classList.toggle('dimmed', kind !== 'all' && c.kind !== kind);
+  });
+}
+
+function searchClass(q) {
+  const lq = q.toLowerCase();
+  CLASSES.forEach(c => {
+    const el = document.getElementById('cls-' + c.id);
+    if (!el) return;
+    if (!lq) { el.classList.remove('dimmed', 'highlight'); return; }
+    const match = c.label.toLowerCase().includes(lq) ||
+                  c.fields.some(f => f.name.toLowerCase().includes(lq));
+    el.classList.toggle('highlight', match);
+    el.classList.toggle('dimmed', !match);
+  });
+}
+</script>
+</body>
+</html>

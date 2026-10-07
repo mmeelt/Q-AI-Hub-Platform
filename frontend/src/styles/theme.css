@@ -1,0 +1,335 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Q-AI Hub Light Mode - Arctic Marine */
+  --mint-green: #00F5A0;
+  /* Keeping accent values intact for specific uses */
+  --cyan: #00D9F5;
+  --electric-blue: #0061FF;
+
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+  --card: rgba(255, 255, 255, 0.88); /* Frosted white: readable over any background */
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #1e3a8a;
+  /* Neon Navy */
+  --primary-foreground: #ffffff;
+  --secondary: #e2e8f0;
+  --secondary-foreground: #0f172a;
+  --muted: #e8edf4; /* slightly darker than the page so muted surfaces stay visible */
+  --muted-foreground: #475569;
+  --accent: #1e3a8a;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  /* Danger */
+  --destructive-foreground: #ffffff;
+  --border: rgba(30, 58, 138, 0.15);
+  /* Navy hint border */
+  --input: rgba(30, 58, 138, 0.05);
+  --ring: #1e3a8a;
+  --radius: 0.75rem;
+
+  /* Font families */
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-size: 16px;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+
+  /* Frosted glass & blur layers - Light Mode */
+  --glass-bg: rgba(248, 250, 252, 0.6);
+  --glass-bg-strong: rgba(241, 245, 249, 0.9);
+  --glass-border: rgba(30, 58, 138, 0.1);
+  --glass-border-strong: rgba(30, 58, 138, 0.2);
+  --glass-blur: 20px;
+  --glass-blur-strong: 40px;
+  --shadow-soft: 0 8px 32px rgba(0, 229, 255, 0.08), 0 4px 16px rgba(123, 47, 255, 0.04);
+  --shadow-soft-lg: 0 24px 64px rgba(0, 229, 255, 0.12), 0 12px 32px rgba(123, 47, 255, 0.06);
+  --shadow-glass: 0 8px 32px rgba(0, 229, 255, 0.08), 0 0 0 1px rgba(0, 229, 255, 0.05) inset;
+  --shadow-float: 0 25px 50px -12px rgba(0, 229, 255, 0.15), 0 0 0 1px rgba(0, 229, 255, 0.06);
+
+  /* Liquid glass - Light Mode */
+  --liquid-glass-bg: rgba(241, 245, 249, 0.4);
+  --liquid-glass-bg-hover: rgba(241, 245, 249, 0.6);
+  --liquid-glass-border: rgba(0, 229, 255, 0.2);
+  --liquid-glass-border-hover: rgba(0, 229, 255, 0.4);
+  --liquid-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --liquid-glass-shadow: 0 8px 32px rgba(0, 229, 255, 0.12), 0 4px 16px rgba(123, 47, 255, 0.05);
+  --liquid-glass-shadow-hover: 0 12px 40px rgba(0, 229, 255, 0.18), 0 8px 24px rgba(123, 47, 255, 0.1), 0 0 0 1px rgba(0, 229, 255, 0.15);
+}
+
+.dark {
+  /* Q-AI Hub Color Palette */
+  --mint-green: #00F5A0;
+  --cyan: #00D9F5;
+  --electric-blue: #0061FF;
+  --dark-navy: #0A0E1A;
+  --dark-slate: #0F1628;
+  --input-bg: #1A2035;
+  --accent-purple: #7B2FFF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8892A4;
+  --success: #00F5A0;
+  --warning: #FFB800;
+  --danger: #FF4757;
+
+  /* Tailwind integration */
+  --background: var(--dark-navy);
+  --foreground: var(--text-primary);
+  --card: var(--dark-slate);
+  --card-foreground: var(--text-primary);
+  --popover: var(--dark-slate);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--electric-blue);
+  --primary-foreground: var(--text-primary);
+  --secondary: var(--input-bg);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--input-bg);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--accent-purple);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--text-primary);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: var(--input-bg);
+  --ring: var(--electric-blue);
+
+  /* Frosted glass & blur layers */
+  --glass-bg: rgba(15, 22, 40, 0.4);
+  --glass-bg-strong: rgba(15, 22, 40, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.14);
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.24);
+  --shadow-soft-lg: 0 24px 64px rgba(0, 0, 0, 0.32);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  --shadow-float: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  /* Liquid glass – frosted, soft edges, no neon */
+  --liquid-glass-bg: rgba(255, 255, 255, 0.06);
+  --liquid-glass-bg-hover: rgba(255, 255, 255, 0.1);
+  --liquid-glass-border: rgba(255, 255, 255, 0.12);
+  --liquid-glass-border-hover: rgba(255, 255, 255, 0.2);
+  --liquid-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --liquid-glass-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+  --liquid-glass-shadow-hover: 0 40px 96px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* Q-AI Hub brand palette: use as text-brand-cyan, bg-brand-purple/15, from-brand-mint ... */
+@theme {
+  --color-brand-cyan: #00E5FF;
+  --color-brand-sky: #00D9F5;
+  --color-brand-mint: #00F5A0;
+  --color-brand-teal: #00FFC2;
+  --color-brand-purple: #7B2FFF;
+  --color-brand-blue: #0061FF;
+  --color-brand-amber: #FFB800;
+  --color-brand-red: #FF4757;
+  --color-brand-navy: #0A0E1A;
+  --color-brand-slate: #0F1628;
+  --color-brand-ink: #111729;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    letter-spacing: 0.02em;
+  }
+
+  h1 {
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  h4 {
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  label {
+    font-weight: var(--font-weight-medium);
+  }
+
+  button {
+    font-weight: var(--font-weight-medium);
+  }
+
+  input,
+  textarea,
+  select {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-normal);
+  }
+}
+
+/* Frosted glass utility classes – backdrop-filter + blur layers */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(var(--glass-blur-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: var(--shadow-soft-lg), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  }
+
+  .shadow-float {
+    box-shadow: var(--shadow-float);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Liquid glass button / interactive surface */
+  .liquid-glass {
+    background: var(--liquid-glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--liquid-glass-border);
+    box-shadow: var(--liquid-glass-highlight), var(--liquid-glass-shadow);
+  }
+
+  .liquid-glass:hover {
+    background: var(--liquid-glass-bg-hover);
+    border-color: var(--liquid-glass-border-hover);
+    box-shadow: var(--liquid-glass-highlight), var(--liquid-glass-shadow-hover);
+  }
+
+  /* Neon Button Gradient */
+  .neon-btn-gradient {
+    background: linear-gradient(135deg, #00E5FF 0%, #0061FF 100%);
+    border: none;
+    box-shadow: 0 10px 25px -5px rgba(0, 229, 255, 0.4), 0 8px 10px -6px rgba(0, 97, 255, 0.3);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: white !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .neon-btn-gradient::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: 0.5s;
+  }
+
+  .neon-btn-gradient:hover::after {
+    left: 100%;
+  }
+
+  .neon-btn-gradient:hover {
+    box-shadow: 0 15px 35px -5px rgba(0, 229, 255, 0.6), 0 10px 15px -6px rgba(0, 97, 255, 0.4);
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+  }
+
+  .neon-btn-gradient:active {
+    transform: translateY(0);
+  }
+
+  /* Thin marine border around neon text for contrast in Light Mode */
+  .neon-text-border {
+    -webkit-text-stroke: 0.5px #1e3a8a; /* Marine blue stroke */
+    paint-order: stroke fill;
+  }
+
+  /* Glass Border Buttons */
+  .btn-glass-outline {
+    background: rgba(15, 22, 40, 0.03);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    color: var(--foreground);
+    transition: all 0.3s ease;
+  }
+
+  .btn-glass-outline:hover {
+    border-color: rgba(0, 229, 255, 0.6);
+    background: rgba(0, 229, 255, 0.08);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+  }
+}
+/* Light mode readability: the neon accents (#00E5FF, #00F5A0...) are designed for the dark theme
+   and fail contrast on white. In light mode, text using them switches to a darker shade of the
+   same hue (WCAG AA). Dark mode is unchanged. */
+:root:not(.dark) .text-brand-cyan,
+:root:not(.dark) .text-brand-sky { color: #0e7490; }
+:root:not(.dark) .text-brand-mint,
+:root:not(.dark) .text-brand-teal { color: #047857; }
+:root:not(.dark) .text-brand-amber { color: #b45309; }
+:root:not(.dark) .text-brand-purple { color: #6d28d9; }
+:root:not(.dark) .text-brand-red { color: #be123c; }
