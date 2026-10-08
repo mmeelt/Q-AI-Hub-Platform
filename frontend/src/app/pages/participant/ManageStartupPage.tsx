@@ -55,7 +55,7 @@ export function ManageStartupPage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev: any) => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
@@ -90,7 +90,7 @@ export function ManageStartupPage() {
         setIsRefining(true);
         try {
             const data = await api.refineDescription(formData.rawDescription);
-            setFormData(prev => ({ 
+            setFormData((prev: any) => ({ 
                 ...prev, 
                 aiGeneratedDescription: data.refinedDescription,
                 isUsingAiDescription: true 
@@ -234,7 +234,7 @@ export function ManageStartupPage() {
                                                     <p className="text-foreground/80 leading-relaxed">{formData.aiGeneratedDescription}</p>
                                                     <div className="mt-4 flex items-center gap-3">
                                                         <button 
-                                                            onClick={() => setFormData(prev => ({ 
+                                                            onClick={() => setFormData((prev: any) => ({ 
                                                                 ...prev, 
                                                                 rawDescription: prev.aiGeneratedDescription,
                                                                 aiGeneratedDescription: null
@@ -244,7 +244,7 @@ export function ManageStartupPage() {
                                                             Replace with AI Version
                                                         </button>
                                                         <button 
-                                                            onClick={() => setFormData(prev => ({ 
+                                                            onClick={() => setFormData((prev: any) => ({ 
                                                                 ...prev, 
                                                                 aiGeneratedDescription: null
                                                             }))}

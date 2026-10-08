@@ -95,7 +95,7 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
                                     Our project, <span className="text-white font-semibold">{applicant.startup}</span>, leverages advanced technological frameworks to solve critical bottlenecks in the current market.
                                 </p>
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/5 italic">
-                                    "{applicant.answers.find(a => a.question === 'Pitch')?.answer || 'No project description provided yet.'}"
+                                    "{applicant.answers.find((a: any) => a.question === 'Pitch')?.answer || 'No project description provided yet.'}"
                                 </div>
                             </div>
                         </section>
@@ -107,7 +107,7 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
                                 Application Details
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {applicant.answers.filter(a => a.question !== 'Pitch').map((a: any, i: number) => (
+                                {applicant.answers.filter((a: any) => a.question !== 'Pitch').map((a: any, i: number) => (
                                     <div key={i} className="space-y-1">
                                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">{a.question}</p>
                                         <p className="text-sm text-white">
@@ -281,7 +281,7 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
                                 {followupStatus === 'answers_received' && (
                                     <div className="space-y-8">
                                         <div className="space-y-6">
-                                            {applicant.followupQuestions?.map((q, i) => (
+                                            {applicant.followupQuestions?.map((q: any, i: number) => (
                                                 <div key={i} className="space-y-3 p-4 rounded-2xl bg-white/[0.03] border border-white/5">
                                                     <p className="text-sm font-bold text-white flex gap-2">
                                                         <span className="text-cyan-400 tracking-tighter">Q:</span>
@@ -347,7 +347,7 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
                                     <span className="text-muted-foreground">Project Sector</span>
-                                    <span className="text-white font-medium">{applicant.answers.find(a => a.question === 'Sector')?.answer || 'N/A'}</span>
+                                    <span className="text-white font-medium">{applicant.answers.find((a: any) => a.question === 'Sector')?.answer || 'N/A'}</span>
                                 </div>
                                 <div className="pt-4 border-t border-white/5 space-y-3">
                                     <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Schedule Pitch</span>

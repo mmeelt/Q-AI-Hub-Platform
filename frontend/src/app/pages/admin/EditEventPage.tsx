@@ -51,8 +51,6 @@ export function EditEventPage() {
                     tags: (e.tags || []).join(', '),
                     imageUrl: e.coverImageUrl || '',
                     status: e.status === 'ACTIVE' ? 'active' : e.status === 'CLOSED' ? 'closed' : 'draft',
-                    eventType: e.eventType || 'SIMPLE',
-                    hasPitch: e.hasPitch || false,
                 });
                 if (e.formFieldsJson) {
                     try {

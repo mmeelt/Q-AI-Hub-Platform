@@ -327,7 +327,7 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
                         <span className="text-xs text-muted-foreground">Last 7 days</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                        {recentActivity.map((activity, i) => (
+                        {recentActivity.map((activity: any, i: number) => (
                             <motion.div
                                 key={i}
                                 initial={{ opacity: 0, x: -10 }}

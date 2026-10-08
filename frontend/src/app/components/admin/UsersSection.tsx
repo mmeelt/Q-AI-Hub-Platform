@@ -67,7 +67,7 @@ function UserProfilePanel({ user, onClose }: { user: any; onClose: () => void })
                 <div className="border-b border-border p-6">
                     <h5 className="mb-3 text-xs font-bold tracking-[0.15em] text-muted-foreground uppercase">Skills & Expertise</h5>
                     <div className="flex flex-wrap gap-2">
-                        {user.skills.map((skill, i) => (
+                        {user.skills.map((skill: string, i: number) => (
                             <motion.span key={skill} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 + i * 0.05 }}
                                 className="rounded-full bg-brand-cyan/10 px-3 py-1 text-xs font-medium text-cyan-600 dark:text-brand-cyan border border-brand-cyan/10">{skill}</motion.span>
                         ))}
@@ -76,7 +76,7 @@ function UserProfilePanel({ user, onClose }: { user: any; onClose: () => void })
                 <div className="border-b border-border p-6">
                     <h5 className="mb-3 text-xs font-bold tracking-[0.15em] text-muted-foreground uppercase">Activity Stats</h5>
                     <div className="grid grid-cols-4 gap-2">
-                        {[{ l: 'Applied', v: user.applied, c: '#00E5FF' }, { l: 'Accepted', v: user.accepted, c: '#00FFC2' }, { l: 'Rate', v: user.applied > 0 ? `${Math.round((user.accepted / user.applied) * 100)}%` : '0%', c: '#7B2FFF' }, { l: 'Active', v: user.applications.filter(a => a.status === 'Pending' || a.status === 'Under Review').length, c: '#00D9F5' }].map(stat => (
+                        {[{ l: 'Applied', v: user.applied, c: '#00E5FF' }, { l: 'Accepted', v: user.accepted, c: '#00FFC2' }, { l: 'Rate', v: user.applied > 0 ? `${Math.round((user.accepted / user.applied) * 100)}%` : '0%', c: '#7B2FFF' }, { l: 'Active', v: user.applications.filter((a: any) => a.status === 'Pending' || a.status === 'Under Review').length, c: '#00D9F5' }].map(stat => (
                             <div key={stat.l} className="rounded-xl bg-muted p-3 text-center border border-border">
                                 <p className="text-lg font-bold" style={{ color: stat.c }}>{stat.v}</p>
                                 <p className="text-[10px] font-medium text-muted-foreground">{stat.l}</p>
@@ -87,7 +87,7 @@ function UserProfilePanel({ user, onClose }: { user: any; onClose: () => void })
                 <div className="p-6">
                     <h5 className="mb-3 text-xs font-bold tracking-[0.15em] text-muted-foreground uppercase">Application History</h5>
                     <div className="flex flex-col gap-2">
-                        {user.applications.map((app, i) => (
+                        {user.applications.map((app: any, i: number) => (
                             <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.06 }}
                                 className="flex items-center gap-3 rounded-xl border border-border bg-muted/50 p-3 hover:bg-muted transition-colors">
                                 <div className="flex-1"><p className="text-sm font-medium text-foreground">{app.eventTitle}</p><p className="text-xs text-muted-foreground">{app.date}</p></div>
@@ -286,7 +286,7 @@ export function UsersSection() {
                             ))}
                         </div>
                         <div className="mx-5 mb-4 flex flex-wrap gap-1.5">
-                            {user.skills.slice(0, 3).map(skill => <span key={skill} className="rounded-full bg-brand-cyan/[0.08] border border-brand-cyan/10 px-2.5 py-0.5 text-[10px] font-medium text-cyan-600 dark:text-brand-cyan">{skill}</span>)}
+                            {user.skills.slice(0, 3).map((skill: string) => <span key={skill} className="rounded-full bg-brand-cyan/[0.08] border border-brand-cyan/10 px-2.5 py-0.5 text-[10px] font-medium text-cyan-600 dark:text-brand-cyan">{skill}</span>)}
                             {user.skills.length > 3 && <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[10px] text-muted-foreground">+{user.skills.length - 3}</span>}
                         </div>
                         <div className="border-t border-border px-5 py-3">

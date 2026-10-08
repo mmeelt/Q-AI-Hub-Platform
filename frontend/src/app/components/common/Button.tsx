@@ -4,17 +4,20 @@ import { motion } from 'motion/react';
 interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'> {
   variant?: 'primary' | 'ghost' | 'outline' | 'danger';
   children: ReactNode;
+  size?: 'sm' | 'md';
   fullWidth?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   variant = 'primary',
+  size = 'md',
   children,
   fullWidth = false,
   className = '',
   ...props
 }, ref) => {
-  const baseStyles = 'px-6 py-3 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm inline-flex items-center justify-center gap-2';
+  const sizes = { sm: 'px-4 py-2', md: 'px-6 py-3' };
+  const baseStyles = 'rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm inline-flex items-center justify-center gap-2';
 
   const variants = {
     primary: 'neon-btn-gradient text-white shadow-lg',
@@ -32,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
         transition: { type: 'spring', stiffness: 400, damping: 10 }
       }}
       whileTap={{ scale: 0.98 }}
-      className={`${baseStyles} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`${baseStyles} ${sizes[size]} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
     >
       <span className="whitespace-nowrap flex items-center gap-2">{children}</span>

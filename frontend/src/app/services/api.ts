@@ -760,7 +760,11 @@ export const api = {
 
     // ── Users ─────────────────────────────────────────────────────────
 
-    async updateProfile(data: { fullName?: string; userBio?: string; phoneNumber?: string }): Promise<void> {
+    async updateProfile(data: {
+        fullName?: string; userBio?: string; phoneNumber?: string;
+        universityName?: string; studyField?: string; userSkills?: string[]; avatarUrl?: string;
+        primaryInterest?: string; availability?: string[];
+    }): Promise<void> {
         const response = await this.authFetch('/users/profile', {
             method: 'PUT',
             body: JSON.stringify(data),
