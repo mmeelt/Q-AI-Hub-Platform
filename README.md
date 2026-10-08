@@ -41,6 +41,23 @@ and startup profiles. Built as a team project at ENICarthage.
 
 <sub>Screenshots use fictional demo data.</sub>
 
+## My contributions (Meriem Eltaief)
+
+This is a team project. My part:
+
+- **Backend (Spring Boot)**: REST API, services and data model for events, applications,
+  phases, pitch rounds and startups, with versioned database migrations (Flyway).
+- **AI features (Google Gemini)**: AI refinement of startup descriptions, and AI feedback
+  generated for each startup from the judges' pitch-round scores.
+- **Two-step login (OTP)**: password, then a 6-digit code sent by email, with expiry and a
+  limited number of attempts; the same flow protects password reset and admin login.
+- **Security**: JWT kept in HttpOnly SameSite cookies with refresh-token rotation and revocation,
+  rate limiting, security headers, password policy, input sanitizing, per-event judge access.
+- **Emails**: asynchronous SMTP notifications for login codes, application and phase decisions,
+  pitch results, expert and teammate invitations, event registrations and "notify me" alerts.
+- **Frontend–backend integration**: connected the React app to the API (REST client,
+  cookie session with automatic refresh, error handling).
+
 ## Tech stack
 
 | Part | Stack |
