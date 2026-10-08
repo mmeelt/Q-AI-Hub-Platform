@@ -118,6 +118,12 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.BAD_GATEWAY);
     }
 
+    @ExceptionHandler(AiUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleAiUnavailable(AiUnavailableException ex) {
+        log.warn("AI unavailable: {}", ex.getMessage());
+        return buildResponse("The AI assistant is unavailable right now. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleEntityNotFound(jakarta.persistence.EntityNotFoundException ex) {
         return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND);

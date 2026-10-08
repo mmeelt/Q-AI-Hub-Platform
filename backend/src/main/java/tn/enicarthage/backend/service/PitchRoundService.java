@@ -590,9 +590,13 @@ public class PitchRoundService {
                         "Their final decision is: " + evaluation.getFinalDecision() + ". " +
                         "Write a short, professional, 2-sentence feedback for the startup. " +
                         "Do not use markdown. Do not mention that you are an AI or an automated system.";
-                String aiFeedback = geminiService.getAiFeedback(prompt);
-                evaluation.setAiGeneratedFeedback(aiFeedback);
-                log.info("Gemini final feedback generated for applicationId {}", applicationId);
+                try {
+                    evaluation.setAiGeneratedFeedback(geminiService.getAiFeedback(prompt));
+                    log.info("Gemini final feedback generated for applicationId {}", applicationId);
+                } catch (tn.enicarthage.backend.exception.AiUnavailableException e) {
+                    // the final score and decision are saved even without AI feedback
+                    log.warn("No AI final feedback for applicationId {}: {}", applicationId, e.getMessage());
+                }
             }
 
             pitchEvaluationRepository.save(evaluation);

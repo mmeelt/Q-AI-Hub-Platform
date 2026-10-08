@@ -71,8 +71,12 @@ public class PitchEvaluationService {
                 "The human judge left these notes: '" + (evaluation.getEvaluatorNotes() != null ? evaluation.getEvaluatorNotes() : "No notes provided") + "'. " +
                 "Write a short, professional, 2-sentence feedback for the startup explaining why they were " + evaluation.getFinalDecision() + ". Do not use markdown.";
 
-        String realAiResponse = geminiService.getAiFeedback(aiPrompt);
-        evaluation.setAiGeneratedFeedback(realAiResponse);
+        try {
+            evaluation.setAiGeneratedFeedback(geminiService.getAiFeedback(aiPrompt));
+        } catch (tn.enicarthage.backend.exception.AiUnavailableException e) {
+            // The evaluation is still saved; it simply has no AI feedback
+            log.warn("No AI feedback for evaluation of {}: {}", evaluation.getApplicationId(), e.getMessage());
+        }
 
         // 5. Save to database
         evaluation.setEvaluatorAdminId(userId);

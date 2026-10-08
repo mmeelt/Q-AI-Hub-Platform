@@ -188,7 +188,7 @@ then sent with the next requests. The raw spec is at `/v3/api-docs`.
 ## Tests and quality checks
 
 ```bash
-cd backend && ./mvnw test           # 151 tests: services, controllers, security filters, multi-judge scoring
+cd backend && ./mvnw test           # 155 tests: services, controllers, security filters, multi-judge scoring
 cd frontend && npm run typecheck    # TypeScript in strict mode
 cd frontend && npm run build        # production build (Vite)
 ```
