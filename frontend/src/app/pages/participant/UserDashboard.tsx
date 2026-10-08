@@ -620,12 +620,12 @@ export function UserDashboard() {
                                 : 'border-border hover:border-border/80'
                             }`}
                           >
-                            <div className="flex justify-between items-start mb-4">
-                              <div>
-                                <h3 className="text-xl mb-1">{app.startupName || app.projectName}</h3>
+                            <div className="flex justify-between items-start gap-3 mb-4">
+                              <div className="min-w-0">
+                                <h3 className="text-xl mb-1 break-words">{app.startupName || app.projectName}</h3>
                                 <p className="text-sm text-muted-foreground">{app.eventTitle || app.eventName}</p>
                               </div>
-                              <span className={`px-3 py-1 rounded-full text-xs ${statusColors[app.status] || 'bg-foreground/10 text-muted-foreground'}`}>
+                              <span className={`shrink-0 px-3 py-1 rounded-full text-xs ${statusColors[app.status] || 'bg-foreground/10 text-muted-foreground'}`}>
                                 {app.status}
                               </span>
                             </div>

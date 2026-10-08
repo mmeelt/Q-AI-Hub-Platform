@@ -4,6 +4,8 @@ Showcase website and management dashboard of the Q-AI Hub incubator (ENICarthage
 events and registrations, startup incubation programs (phases), multi-judge pitch evaluation,
 and startup profiles. Built as a team project at ENICarthage.
 
+![Q-AI Hub home page](docs/screenshots/home.png)
+
 ## Features
 
 - **Two kinds of events**: simple events (register with name + email, custom questions set by the admin)
@@ -17,6 +19,22 @@ and startup profiles. Built as a team project at ENICarthage.
   (applications, jury scores, events)
 - **Security**: two-step login (password + emailed code), HttpOnly cookies, rate limiting,
   per-event judge access, ownership checks, optional anonymous applicants for judges
+
+## Screenshots
+
+| Events | Registration to a simple event |
+|---|---|
+| ![Events](docs/screenshots/events.png) | ![Event registration](docs/screenshots/event-registration.png) |
+| **Pitch evaluation: every judge, the average and the final decision** | **Admin dashboard** |
+| ![Pitch evaluation](docs/screenshots/pitch-results.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
+| **Events manager** | **Founder: application progress** |
+| ![Events manager](docs/screenshots/admin-events.png) | ![Applications](docs/screenshots/user-applications.png) |
+| **Light theme** | **Mobile** |
+| ![Light theme](docs/screenshots/home-light.png) | <img src="docs/screenshots/mobile-home.png" width="49%"> <img src="docs/screenshots/mobile-applications.png" width="49%"> |
+
+<sub>Screenshots use fictional demo data.</sub>
+
+## Tech stack
 
 | Part | Stack |
 |------|-------|
@@ -151,3 +169,11 @@ Serve `frontend/dist` and reverse-proxy `/api` and `/uploads` to the API on the 
 - **Expert / judge** – invited by an admin to an event; reviews startups and scores pitches.
 - **Admin** – manages events, phases, users and startups; sees every judge's scores and
   sends the averaged results.
+
+## Team
+
+Team project built at ENICarthage by:
+
+- **Meriem Eltaief**
+- **Maram Bouchrit**
+- **Bacem Sakji**

@@ -32,6 +32,7 @@ public class DashboardService {
     private final PitchEvaluationRepository pitchEvaluationRepository;
     private final UserRepository userRepository;
     private final StartupRepository startupRepository;
+    private final tn.enicarthage.backend.repository.PitchRoundResultRepository pitchRoundResultRepository;
 
 
     // ── GET SYSTEM STATISTICS ─────────────────────────────────────
@@ -49,7 +50,7 @@ public class DashboardService {
         stats.put("metricActiveStartups",
             startupRepository.findByStartupStatus(Startup.StartupStatus.ACTIVE).size());
 
-        stats.put("metricPitchesEvaluated", pitchEvaluationRepository.count());
+        stats.put("metricPitchesEvaluated", pitchesEvaluated());
 
         stats.put("totalApplications", applicationRepository.count());
 
@@ -61,10 +62,10 @@ public class DashboardService {
                 .sum());
 
 
-        // chartSectorFocusData — events grouped by category
-        Map<String, Long> sectorFocus = eventRepository.findAll().stream()
-                .filter(e -> e.getCategory() != null)
-                .collect(Collectors.groupingBy(Event::getCategory, Collectors.counting()));
+        // chartSectorFocusData — startups grouped by business sector
+        Map<String, Long> sectorFocus = startupRepository.findAll().stream()
+                .filter(st -> st.getBusinessSector() != null && !st.getBusinessSector().isBlank())
+                .collect(Collectors.groupingBy(Startup::getBusinessSector, Collectors.counting()));
         stats.put("chartSectorFocusData", sectorFocus);
 
         // chartGrowthByYear — events grouped by start year
@@ -138,7 +139,7 @@ public class DashboardService {
         metrics.put("metricTotalFunding", totalFunding);
 
         // Total pitch evaluations
-        metrics.put("metricPitchesEvaluated", pitchEvaluationRepository.count());
+        metrics.put("metricPitchesEvaluated", pitchesEvaluated());
 
         // Average phase submission score
         List<PhaseSubmission> allSubmissions = submissionRepository.findAll();
@@ -171,5 +172,13 @@ public class DashboardService {
         data.put("startupMetrics", getStartupMetrics());
         data.put("lastRefreshed",  LocalDateTime.now());
         return data;
+    }
+
+    /** Startups scored in a pitch round (counted once per round, whatever the number of judges). */
+    private long pitchesEvaluated() {
+        long roundPitches = pitchRoundResultRepository.findAll().stream()
+                .map(r -> (r.getPitchRound() == null ? "" : r.getPitchRound().getId()) + ":" + r.getApplicationId())
+                .distinct().count();
+        return roundPitches + pitchEvaluationRepository.count(); // + older single-judge evaluations
     }
 }

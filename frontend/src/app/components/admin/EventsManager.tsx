@@ -776,7 +776,7 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
                     date: e.startDate ? new Date(e.startDate).toLocaleDateString() : 'TBD',
                     location: e.location || 'Online',
                     category: e.category || e.eventCategory || 'Workshop',
-                    applicants: e.currentRegisteredCount || 0,
+                    applicants: e.participantCount ?? e.currentRegisteredCount ?? 0, // applications (incubation) or registrations (simple)
                     maxCapacity: e.maxParticipants || 50,
                     status: e.status === 'ACTIVE' ? 'Open' : e.status === 'DRAFT' ? 'Upcoming' : 'Closed',
                     image: e.coverImageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
@@ -859,7 +859,7 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {[
                     { label: 'Total Events', value: eventsList.length, gradient: 'from-brand-cyan to-brand-blue' },
-                    { label: 'Total Applicants', value: totalApplicants, gradient: 'from-brand-teal to-brand-sky' },
+                    { label: 'Total Participants', value: totalApplicants, gradient: 'from-brand-teal to-brand-sky' },
                     { label: 'Open Events', value: openCount, gradient: 'from-brand-purple to-brand-cyan' },
                     { label: 'Avg per Event', value: eventsList.length > 0 ? Math.round(totalApplicants / eventsList.length) : 0, gradient: 'from-brand-cyan to-brand-sky' },
                 ].map((stat, i) => (
