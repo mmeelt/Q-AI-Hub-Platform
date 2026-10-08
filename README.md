@@ -1,5 +1,12 @@
 # Q-AI Hub
 
+[![CI](https://github.com/mmeelt/Q-AI-Hub-Platform/actions/workflows/ci.yml/badge.svg)](https://github.com/mmeelt/Q-AI-Hub-Platform/actions/workflows/ci.yml)
+![Java 17](https://img.shields.io/badge/Java-17-orange)
+![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4-6db33f)
+![React 18](https://img.shields.io/badge/React-18-61dafb)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Showcase website and management dashboard of the Q-AI Hub incubator (ENICarthage):
 events and registrations, startup incubation programs (phases), multi-judge pitch evaluation,
 and startup profiles. Built as a team project at ENICarthage.
@@ -61,8 +68,10 @@ and startup profiles. Built as a team project at ENICarthage.
 │   │   └── db/migration/                Flyway SQL migrations (V1 baseline, V2 indexes...)
 │   ├── src/test/                Unit + integration tests (JUnit 5, Mockito, H2)
 │   ├── .env.example             template for backend/.env (secrets, gitignored)
+│   ├── Dockerfile               API image (multi-stage, non-root)
 │   └── pom.xml
 ├── frontend/                    React single-page app (port 5173)
+│   ├── Dockerfile, docker/      Website image: nginx serves the build and proxies /api
 │   └── src/
 │       ├── main.tsx
 │       ├── styles/              Tailwind + theme tokens (light / dark)
@@ -72,7 +81,7 @@ and startup profiles. Built as a team project at ENICarthage.
 │           ├── pages/
 │           │   ├── public/      Landing, events, track, guest event registration
 │           │   ├── auth/        Login, register, OTP
-│           │   ├── participant/ Dashboard, applications, startups, invitations
+│           │   ├── participant/ Dashboard (one component per tab in dashboard/), applications, startups
 │           │   ├── expert/      Judge view of an event (review + pitch scoring)
 │           │   └── admin/       Admin dashboard, events, users, submissions
 │           ├── components/
@@ -85,12 +94,34 @@ and startup profiles. Built as a team project at ENICarthage.
 │           │   ├── admin/       Admin dashboard sections
 │           │   └── ui/          shadcn/ui primitives
 │           └── utils/
+├── .github/workflows/ci.yml     CI: backend tests, frontend type check + build, Docker images
+├── docker-compose.yml           MySQL + API + website with one command
 ├── database/                    SQL maintenance scripts
-├── docs/                        Class diagram, design guidelines
+├── docs/                        Class diagram, design guidelines, deployment guide
 └── scripts/run-dev.bat          Starts API + frontend in two windows (Windows)
 ```
 
-## Getting started (local)
+## Quick start with Docker
+
+The fastest way to try the platform, with nothing installed except Docker:
+
+```bash
+docker compose up --build
+```
+
+| | |
+|---|---|
+| Website | http://localhost:8080 |
+| API documentation (Swagger UI) | http://localhost:8081/swagger-ui.html |
+| Admin account | `admin@platform.com` / `Admin#Demo2026` (tick *Admin* on the login page) |
+| Founder account | `test@mail.com` / `User#Demo2026` |
+| Login code | `123456` (no email server in this setup) |
+
+These demo values are for local use only. Override them, or change the ports if 8080 / 8081
+are taken, in a `.env` file next to `docker-compose.yml` (see `.env.example`).
+`docker compose down -v` removes the containers and the demo database.
+
+## Getting started without Docker
 
 Prerequisites: JDK 17+, Node.js 18+, MySQL 8 running on `localhost:3306`.
 
@@ -125,16 +156,28 @@ All secrets come from environment variables or `backend/.env`:
 | `SEED_ADMIN_PASSWORD`, `SEED_USER_PASSWORD` | | Passwords of the demo accounts created by the `dev` profile |
 | `COOKIE_SECURE` | | `true` (default) = session cookies only over HTTPS; dev uses `false` |
 | `FLYWAY_ENABLED` | | `true` (default) runs the database migrations at startup |
+| `API_DOCS_ENABLED` | | Swagger UI and `/v3/api-docs`: on in `dev`, off by default otherwise |
 
 In `prod`, `spring.jpa.hibernate.ddl-auto` defaults to `validate`: apply schema changes with
 migration scripts instead of letting Hibernate alter the production database.
 
-## Tests
+## API documentation
+
+The API is described with OpenAPI. With the `dev` profile (or `API_DOCS_ENABLED=true`), open
+**http://localhost:8081/swagger-ui.html** to browse every endpoint grouped by feature and try them:
+log in with `POST /api/auth/login` and `POST /api/auth/verify-otp`, and the session cookie is
+then sent with the next requests. The raw spec is at `/v3/api-docs`.
+
+## Tests and quality checks
 
 ```bash
-cd backend && ./mvnw test      # 146 tests: services, controllers, security filters, multi-judge scoring
-cd frontend && npm run build   # production build (Vite)
+cd backend && ./mvnw test           # 151 tests: services, controllers, security filters, multi-judge scoring
+cd frontend && npm run typecheck    # TypeScript in strict mode
+cd frontend && npm run build        # production build (Vite)
 ```
+
+[GitHub Actions](.github/workflows/ci.yml) runs all of them, and builds the Docker images,
+on every push and pull request.
 
 ## Database migrations (Flyway)
 
@@ -161,6 +204,7 @@ cd frontend && npm run build          # static files in frontend/dist
 cd backend  && ./mvnw clean package   # backend/target/*.jar
 ```
 Serve `frontend/dist` and reverse-proxy `/api` and `/uploads` to the API on the same domain.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for a step-by-step deployment on free hosting.
 
 ## Roles
 
@@ -177,3 +221,7 @@ Team project built at ENICarthage by:
 - **Meriem Eltaief**
 - **Maram Bouchrit**
 - **Bacem Sakji**
+
+## License
+
+[MIT](LICENSE)
