@@ -25,7 +25,11 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
             response.setHeader("Pragma", "no-cache");
         }
-        response.setHeader("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'");
+        // Swagger UI (dev only) needs inline styles and data: images; everything else keeps the strict policy
+        String csp = request.getRequestURI().startsWith("/swagger-ui")
+                ? "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'"
+                : "default-src 'self'; frame-ancestors 'none'";
+        response.setHeader("Content-Security-Policy", csp);
 
         filterChain.doFilter(request, response);
     }

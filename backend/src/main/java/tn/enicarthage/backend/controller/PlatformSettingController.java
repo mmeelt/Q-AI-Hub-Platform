@@ -1,11 +1,13 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import tn.enicarthage.backend.service.PlatformSettingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Platform settings", description = "Settings managed by administrators")
 @RestController
 @RequestMapping("/api/settings")
 @RequiredArgsConstructor

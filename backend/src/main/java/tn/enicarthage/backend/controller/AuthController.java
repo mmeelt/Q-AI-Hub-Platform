@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import tn.enicarthage.backend.dto.*;
 import tn.enicarthage.backend.exception.InvalidCredentialsException;
 import tn.enicarthage.backend.service.AuthService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
 
+@Tag(name = "Authentication", description = "Sign-up, two-step login (password + emailed code), session refresh, password reset")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

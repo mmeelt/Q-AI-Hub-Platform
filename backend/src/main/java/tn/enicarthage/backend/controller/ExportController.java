@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 /** "Data & Exports" (admin Settings): CSV downloads. */
+@Tag(name = "Exports", description = "CSV exports (applications, jury scores, events)")
 @RestController
 @RequestMapping("/api/admin/exports")
 @RequiredArgsConstructor

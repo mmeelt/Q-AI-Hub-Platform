@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Events", description = "Events, incubation programs and their phases")
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor

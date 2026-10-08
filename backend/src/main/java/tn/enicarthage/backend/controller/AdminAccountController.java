@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /** Administrator accounts (admin Settings page). */
+@Tag(name = "Admin accounts", description = "Administrator accounts and admin login")
 @RestController
 @RequestMapping("/api/admin/admins")
 @RequiredArgsConstructor

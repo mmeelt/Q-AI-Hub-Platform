@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,6 +12,7 @@ import tn.enicarthage.backend.service.TeammateInvitationService;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Teammates", description = "Teammate invitations to a startup")
 @RestController
 @RequestMapping("/api/team-invitations")
 @RequiredArgsConstructor

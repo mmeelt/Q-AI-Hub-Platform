@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.Map;
  * Pitch rounds. Admins manage rounds; admins and the experts invited to the event judge them.
  * Judge access is checked per event (JudgeAccessService), not with a global role.
  */
+@Tag(name = "Pitch rounds", description = "Multi-judge pitch rounds: criteria, scores, averaged results")
 @RestController
 @RequestMapping("/api/pitch-rounds")
 @RequiredArgsConstructor

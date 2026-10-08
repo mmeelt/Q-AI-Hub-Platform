@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 
+@Tag(name = "Applications", description = "Applications of startups to incubation programs")
 @RestController
 @RequestMapping("/api/applications")
 public class ApplicationController {

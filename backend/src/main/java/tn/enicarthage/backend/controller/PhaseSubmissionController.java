@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Phase submissions", description = "Answers submitted for a phase, follow-up questions and decisions")
 @RestController
 @RequestMapping("/api/submissions")
 @RequiredArgsConstructor

@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+@Tag(name = "Dashboard", description = "Statistics for the admin dashboard")
 @RestController
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor

@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
+@Tag(name = "Event registrations", description = "Registrations to simple events")
 @RestController
 @RequestMapping("/api/registrations")
 @RequiredArgsConstructor

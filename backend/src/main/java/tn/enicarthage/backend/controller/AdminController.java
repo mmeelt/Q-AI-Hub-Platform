@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import tn.enicarthage.backend.dto.AdminLoginRequest;
 import tn.enicarthage.backend.dto.InviteExpertRequest;
 import tn.enicarthage.backend.dto.ManageUserRequest;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 
+@Tag(name = "Administration", description = "Admin-only management of users, startups and applications")
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor

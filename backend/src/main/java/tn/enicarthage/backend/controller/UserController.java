@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import tn.enicarthage.backend.dto.UpdateProfileRequest;
 import tn.enicarthage.backend.dto.UserProfileResponse;
 import tn.enicarthage.backend.entity.Startup;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Users", description = "Profile of the signed-in user")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

@@ -60,6 +60,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Internal error forwards (e.g. a 403 rendered by /error) must keep their status
                         .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR, jakarta.servlet.DispatcherType.FORWARD).permitAll()
+                        // API docs: only served when springdoc is enabled (dev profile or API_DOCS_ENABLED=true)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/auth/change-password").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/login", "/api/admin/verify-otp").permitAll()

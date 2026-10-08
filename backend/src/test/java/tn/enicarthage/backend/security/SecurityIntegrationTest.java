@@ -43,6 +43,13 @@ class SecurityIntegrationTest {
     }
 
     @Test
+    void apiDocs_areOffUnlessEnabled() throws Exception {
+        // springdoc is only turned on by the dev profile (or API_DOCS_ENABLED=true)
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void whenAuthenticatedUser_accessesAdminEndpoint_returns403() throws Exception {
         String userToken = jwtUtil.generateToken("test-user-id", "test@example.com", "USER");
         

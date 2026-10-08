@@ -1,5 +1,6 @@
 package tn.enicarthage.backend.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import tn.enicarthage.backend.dto.CreateStartupRequest;
 import tn.enicarthage.backend.dto.StartupMetricsRequest;
 import tn.enicarthage.backend.dto.UpdateStartupRequest;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
+@Tag(name = "Startups", description = "Startup profiles and AI description refinement")
 @RestController
 @RequestMapping("/api/startups")
 @RequiredArgsConstructor
