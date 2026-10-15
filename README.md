@@ -1,6 +1,6 @@
 # Q-AI Hub
 
-[![CI](https://github.com/mmeelt/Q-AI-Hub-Platform/actions/workflows/ci.yml/badge.svg)](https://github.com/mmeelt/Q-AI-Hub-Platform/actions/workflows/ci.yml)
+[![CI](https://github.com/mmeelt/TEST-Q-AI-HUB/actions/workflows/ci.yml/badge.svg)](https://github.com/mmeelt/TEST-Q-AI-HUB/actions/workflows/ci.yml)
 ![Java 17](https://img.shields.io/badge/Java-17-orange)
 ![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4-6db33f)
 ![React 18](https://img.shields.io/badge/React-18-61dafb)
@@ -12,6 +12,34 @@ events and registrations, startup incubation programs (phases), multi-judge pitc
 and startup profiles. Built as a team project at ENICarthage.
 
 ![Q-AI Hub home page](docs/screenshots/home.png)
+
+## Test accounts (for testers)
+
+Start the platform (see [Quick start with Docker](#quick-start-with-docker)), open
+**http://localhost:8080** and click **Login**. These accounts already exist on a new database:
+
+| Role | Email | Password | How to log in |
+|------|-------|----------|---------------|
+| **Admin** | `admin@platform.com` | `Admin#Demo2026` | Tick **Admin sign-in** under the password field |
+| **Founder / participant** | `test@mail.com` | `User#Demo2026` | Leave **Admin sign-in** unticked |
+
+After the password, the site asks for a **6-digit login code**: type **`123456`**.
+No email is sent in this test setup.
+
+- **Admin**: lands on the admin dashboard (`/admin/dashboard`): events, users, startups,
+  pitch evaluation, settings.
+- **Founder**: lands on `/dashboard`: applications, startups, invitations. A demo event is
+  already there to apply to.
+- **Judge / expert**: there is no ready-made judge account, and no invitation email is sent in
+  this setup, so:
+  1. **Register** a normal account, for example `judge@mail.com` (login code `123456`), and log out.
+  2. Log in as **admin**, go to **Users → Invite**, choose **Expert**, enter `judge@mail.com`
+     and pick the event *National AI Challenge 2024*.
+  3. Log in again as `judge@mail.com`: the notification opens the event's judge page
+     (review applications and score pitches).
+- **New account**: anyone can also sign up from **Register**; the login code is still `123456`.
+
+These passwords are for local testing only. Never use them on a real server.
 
 ## Features
 
@@ -130,7 +158,7 @@ docker compose up --build
 |---|---|
 | Website | http://localhost:8080 |
 | API documentation (Swagger UI) | http://localhost:8081/swagger-ui.html |
-| Admin account | `admin@platform.com` / `Admin#Demo2026` (tick *Admin* on the login page) |
+| Admin account | `admin@platform.com` / `Admin#Demo2026` (tick *Admin sign-in* on the login page) |
 | Founder account | `test@mail.com` / `User#Demo2026` |
 | Login code | `123456` (no email server in this setup) |
 
@@ -146,6 +174,13 @@ Prerequisites: JDK 17+, Node.js 18+, MySQL 8 running on `localhost:3306`.
    `DB_PASSWORD` (your MySQL password) and `JWT_SECRET` (`openssl rand -base64 64`).
    Login codes are sent by email: fill the `MAIL_*` values, or, for a quick local try only,
    set `OTP_FIXED_ENABLED=true` and an `OTP_FIXED_CODE`.
+   To get the same [test accounts](#test-accounts-for-testers) as with Docker, add:
+   ```
+   SEED_ADMIN_PASSWORD=Admin#Demo2026
+   SEED_USER_PASSWORD=User#Demo2026
+   OTP_FIXED_ENABLED=true
+   OTP_FIXED_CODE=123456
+   ```
 2. **Start everything**: double-click `scripts/run-dev.bat`, or run manually:
    ```bash
    cd backend  && ./mvnw spring-boot:run      # API  → http://localhost:8081
