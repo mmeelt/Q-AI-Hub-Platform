@@ -25,7 +25,8 @@ export function OTPPage() {
 
   const email = (location.state as any)?.email || 'your email';
   const destination = (location.state as any)?.destination;
-  const otpSessionId = (location.state as any)?.otpSessionId;
+  // Each resend replaces the code and returns a new session id: keep the latest one
+  const [otpSessionId, setOtpSessionId] = useState<string | undefined>((location.state as any)?.otpSessionId);
   const rememberMe = Boolean((location.state as any)?.rememberMe);
 
 
@@ -90,7 +91,9 @@ export function OTPPage() {
         toast.error('Session expired. Please try again.');
         return;
       }
-      await api.resendOtp(otpSessionId);
+      const data = await api.resendOtp(otpSessionId);
+      if (data?.otpSessionId) setOtpSessionId(data.otpSessionId);
+      setOtp('');
       setCountdown(60);
       setCanResend(false);
       toast.success('A new verification code has been sent to your email.');

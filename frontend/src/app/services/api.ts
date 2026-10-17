@@ -357,13 +357,16 @@ export const api = {
     /**
      * Resends the 6-digit OTP.
      */
-    async resendOtp(otpSessionId: string): Promise<any> {
+    async resendOtp(otpSessionId: string): Promise<{ requiresOtp: boolean; otpSessionId: string; message: string; expiresIn: number }> {
         const response = await fetch(`${BASE_URL}/auth/resend-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ otpSessionId }),
         });
-        if (!response.ok) throw new Error('Failed to resend code');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(getApiErrorMessage(errorData, 'Failed to resend code'));
+        }
         return await response.json();
     },
 
