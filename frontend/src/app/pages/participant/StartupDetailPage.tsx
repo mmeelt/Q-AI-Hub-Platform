@@ -404,7 +404,7 @@ export function StartupDetailPage() {
                                                         onClick={() => handleToggleMilestone(m.id)}
                                                         className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
                                                             m.completed 
-                                                                ? 'bg-brand-mint/10 border-brand-mint/30 text-brand-mint shadow-[0_0_10px_rgba(0,245,160,0.1)]' 
+                                                                ? 'bg-brand-mint/10 border-brand-mint/30 text-brand-mint shadow-[0_0_10px_rgba(63,163,124,0.1)]' 
                                                                 : 'bg-foreground/5 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
                                                         }`}
                                                     >

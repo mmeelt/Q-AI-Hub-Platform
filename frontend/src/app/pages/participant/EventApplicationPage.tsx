@@ -474,7 +474,7 @@ export function EventApplicationPage() {
                                 }}
                                 className={`w-12 h-12 rounded-xl text-sm font-bold border transition-all duration-200 ${
                                   isSelected
-                                    ? 'bg-brand-cyan/20 border-brand-cyan text-brand-cyan shadow-[0_0_12px_rgba(0,229,255,0.3)]'
+                                    ? 'bg-brand-cyan/20 border-brand-cyan text-brand-cyan shadow-[0_0_12px_rgba(59,155,176,0.3)]'
                                     : 'bg-card border-border text-muted-foreground hover:border-brand-cyan/50 hover:text-foreground'
                                 }`}
                               >

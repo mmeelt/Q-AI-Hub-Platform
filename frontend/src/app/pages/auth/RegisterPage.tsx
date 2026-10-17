@@ -190,7 +190,7 @@ export function RegisterPage() {
 
   const strengthLabel = ['', 'Too weak', 'Weak', 'Medium', 'Strong'];
 
-  const strengthColor = ['', '#FF4757', '#FFB800', '#00D9F5', '#00F5A0'];
+  const strengthColor = ['', '#C8545E', '#C9973A', '#4A9CB5', '#3FA37C'];
 
 
 

@@ -25,8 +25,8 @@ const typeColors: Record<string, { bg: string; text: string; border: string }> =
 };
 
 const statusConfig: Record<string, { label: string; color: string; glow: string }> = {
-    Open: { label: 'Open', color: 'bg-brand-mint/20 text-emerald-600 dark:text-brand-mint border-brand-mint/30', glow: 'shadow-[0_0_12px_rgba(0,245,160,0.15)]' },
-    'Coming Soon': { label: 'Coming Soon', color: 'bg-brand-purple/15 text-purple-600 dark:text-brand-purple border-brand-purple/30', glow: 'shadow-[0_0_12px_rgba(123,47,255,0.15)]' },
+    Open: { label: 'Open', color: 'bg-brand-mint/20 text-emerald-600 dark:text-brand-mint border-brand-mint/30', glow: 'shadow-[0_0_12px_rgba(63,163,124,0.15)]' },
+    'Coming Soon': { label: 'Coming Soon', color: 'bg-brand-purple/15 text-purple-600 dark:text-brand-purple border-brand-purple/30', glow: 'shadow-[0_0_12px_rgba(117,89,184,0.15)]' },
     Closed: { label: 'Closed', color: 'bg-foreground/5 text-muted-foreground border-border', glow: '' },
 };
 
@@ -236,7 +236,7 @@ export function EventsPage() {
             {!isLoggedIn && (
                 <section className="relative z-10 pt-32 pb-16 px-6">
                     <div className="relative max-w-6xl mx-auto text-center rounded-3xl p-12 lg:p-16 border border-border/50 bg-card/40"
-                        style={{ boxShadow: '0 20px 80px rgba(0, 229, 255, 0.1)' }}
+                        style={{ boxShadow: '0 20px 80px rgba(59,155,176, 0.1)' }}
                     >
                         <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 opacity-50 rounded-3xl" />
                         <FadeInSection variant="fade-up">

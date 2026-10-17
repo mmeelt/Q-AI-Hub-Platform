@@ -11,7 +11,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       className={`relative p-2 rounded-full transition-colors flex items-center justify-center
         ${theme === 'light' 
-          ? 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100 shadow-[0_0_10px_rgba(0,186,255,0.1)]' 
+          ? 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100 shadow-[0_0_10px_rgba(59,155,176,0.1)]' 
           : 'bg-white/5 text-white hover:bg-white/10'
         } border ${theme === 'light' ? 'border-cyan-200' : 'border-border'}`}
       aria-label="Toggle theme"

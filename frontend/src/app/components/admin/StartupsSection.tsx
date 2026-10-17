@@ -20,11 +20,11 @@ function StageBadge({ stage }: { stage: string }) {
 
 function StatusDot({ status }: { status: string }) {
     const c: Record<string, { dot: string; glow: string }> = {
-        Active: { dot: 'bg-brand-teal', glow: 'shadow-[0_0_6px_rgba(0,255,194,0.5)]' },
-        'On Hold': { dot: 'bg-brand-purple', glow: 'shadow-[0_0_6px_rgba(123,47,255,0.5)]' },
-        Graduated: { dot: 'bg-brand-cyan', glow: 'shadow-[0_0_6px_rgba(0,229,255,0.5)]' },
-        Pending: { dot: 'bg-brand-sky', glow: 'shadow-[0_0_6px_rgba(0,217,245,0.5)]' },
-        Rejected: { dot: 'bg-brand-purple', glow: 'shadow-[0_0_6px_rgba(123,47,255,0.5)]' },
+        Active: { dot: 'bg-brand-teal', glow: 'shadow-[0_0_6px_rgba(58,161,143,0.5)]' },
+        'On Hold': { dot: 'bg-brand-purple', glow: 'shadow-[0_0_6px_rgba(117,89,184,0.5)]' },
+        Graduated: { dot: 'bg-brand-cyan', glow: 'shadow-[0_0_6px_rgba(59,155,176,0.5)]' },
+        Pending: { dot: 'bg-brand-sky', glow: 'shadow-[0_0_6px_rgba(74,156,181,0.5)]' },
+        Rejected: { dot: 'bg-brand-purple', glow: 'shadow-[0_0_6px_rgba(117,89,184,0.5)]' },
     };
     const style = c[status] || { dot: 'bg-muted-foreground/30', glow: '' };
     return <div className="flex items-center gap-1.5"><div className={`h-2 w-2 rounded-full ${style.dot} ${style.glow}`} /><span className="text-xs text-muted-foreground">{status}</span></div>;
@@ -260,7 +260,7 @@ function StartupDetailPanel({ startup: initialStartup, onClose }: { startup: any
 
                 <div className="border-t border-border p-6">
                     <div className="grid grid-cols-3 gap-3 mb-6">
-                        {[{ l: 'Founded', v: startup.foundedDate, c: '#00E5FF' }, { l: 'Funding', v: startup.funding, c: '#00FFC2' }, { l: 'Team Size', v: startup.teamSize, c: '#7B2FFF' }].map(s => (
+                        {[{ l: 'Founded', v: startup.foundedDate, c: '#3B9BB0' }, { l: 'Funding', v: startup.funding, c: '#3AA18F' }, { l: 'Team Size', v: startup.teamSize, c: '#7559B8' }].map(s => (
                             <div key={s.l} className="rounded-xl bg-muted p-3 text-center border border-border"><p className="text-base font-bold" style={{ color: s.c }}>{s.v}</p><p className="text-[10px] text-muted-foreground">{s.l}</p></div>
                         ))}
                     </div>
@@ -479,7 +479,7 @@ export function StartupsSection() {
             <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filtered.map(startup => (
                     <motion.div key={startup.id} variants={cardItem}
-                        whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(0,229,255,0.06)' }}
+                        whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(59,155,176,0.06)' }}
                         className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-colors hover:border-border/80">
                         <div className="flex items-start gap-4 p-5">
                             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-cyan/20 to-brand-purple/20 text-lg font-bold text-cyan-600 dark:text-brand-cyan ring-2 ring-brand-cyan/10 group-hover:ring-brand-cyan/25 transition-all">{startup.logo}</div>

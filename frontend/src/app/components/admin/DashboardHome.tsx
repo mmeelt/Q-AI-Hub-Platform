@@ -138,10 +138,10 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
     }, []);
 
     const stats = [
-        { label: 'Total Events', value: statsData?.metricTotalEvents?.toString() || '0', change: '', icon: Calendar, gradient: 'from-brand-cyan to-brand-blue', glow: 'rgba(0,229,255,0.15)' },
-        { label: 'Active Startups', value: statsData?.metricActiveStartups?.toString() || '0', change: '', icon: Rocket, gradient: 'from-brand-teal to-brand-sky', glow: 'rgba(0,255,194,0.15)' },
-        { label: 'Total Users', value: statsData?.metricTotalUsers?.toString() || '0', change: '', icon: Users, gradient: 'from-brand-purple to-brand-cyan', glow: 'rgba(123,47,255,0.15)' },
-        { label: 'Pitches Evaluated', value: statsData?.metricPitchesEvaluated?.toString() || '0', change: '', icon: Zap, gradient: 'from-brand-purple to-brand-blue', glow: 'rgba(123,47,255,0.15)' },
+        { label: 'Total Events', value: statsData?.metricTotalEvents?.toString() || '0', change: '', icon: Calendar, gradient: 'from-brand-cyan to-brand-blue', glow: 'rgba(59,155,176,0.15)' },
+        { label: 'Active Startups', value: statsData?.metricActiveStartups?.toString() || '0', change: '', icon: Rocket, gradient: 'from-brand-teal to-brand-sky', glow: 'rgba(58,161,143,0.15)' },
+        { label: 'Total Users', value: statsData?.metricTotalUsers?.toString() || '0', change: '', icon: Users, gradient: 'from-brand-purple to-brand-cyan', glow: 'rgba(117,89,184,0.15)' },
+        { label: 'Pitches Evaluated', value: statsData?.metricPitchesEvaluated?.toString() || '0', change: '', icon: Zap, gradient: 'from-brand-purple to-brand-blue', glow: 'rgba(117,89,184,0.15)' },
     ];
 
     const recentActivity = statsData?.feedRecentActivity?.map((a: any) => ({
@@ -149,20 +149,20 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
         detail: `ID: ${a.applicationId} - Score: ${a.score || 'Pending'}`,
         time: new Date(a.submittedAt).toLocaleDateString(),
         dotColor: a.status === 'ACCEPTED' ? 'bg-brand-teal' : 'bg-brand-purple',
-        glowColor: a.status === 'ACCEPTED' ? 'shadow-[0_0_6px_rgba(0,255,194,0.5)]' : 'shadow-[0_0_6px_rgba(123,47,255,0.5)]'
+        glowColor: a.status === 'ACCEPTED' ? 'shadow-[0_0_6px_rgba(58,161,143,0.5)]' : 'shadow-[0_0_6px_rgba(117,89,184,0.5)]'
     })) || [];
 
     const fundingStats = [
-        { label: 'Total Funding Raised', value: formatMoney(statsData?.metricTotalFunding), icon: DollarSign, gradient: 'from-brand-teal to-brand-cyan', glow: 'rgba(0,255,194,0.12)' },
-        { label: 'Total Applications', value: statsData?.totalApplications?.toString() || '0', icon: TrendingUp, gradient: 'from-brand-purple to-brand-cyan', glow: 'rgba(123,47,255,0.12)' },
-        { label: 'Investment Rounds', value: '0', icon: Layers, gradient: 'from-brand-cyan to-brand-blue', glow: 'rgba(0,229,255,0.12)' },
+        { label: 'Total Funding Raised', value: formatMoney(statsData?.metricTotalFunding), icon: DollarSign, gradient: 'from-brand-teal to-brand-cyan', glow: 'rgba(58,161,143,0.12)' },
+        { label: 'Total Applications', value: statsData?.totalApplications?.toString() || '0', icon: TrendingUp, gradient: 'from-brand-purple to-brand-cyan', glow: 'rgba(117,89,184,0.12)' },
+        { label: 'Investment Rounds', value: '0', icon: Layers, gradient: 'from-brand-cyan to-brand-blue', glow: 'rgba(59,155,176,0.12)' },
     ];
 
     const sectorData = statsData?.chartSectorFocusData ? 
         Object.entries(statsData.chartSectorFocusData).map(([label, value]: [string, any], idx) => ({
             label,
             value: Number(value),
-            color: ['#00E5FF', '#7B2FFF', '#00FFC2', '#0061FF', '#00D9F5'][idx % 5]
+            color: ['#3B9BB0', '#7559B8', '#3AA18F', '#3563B8', '#4A9CB5'][idx % 5]
         })) : [];
 
     const growthData = statsData?.chartGrowthByYear ? 
@@ -239,9 +239,9 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
             {/* ─── Growth Charts ─── */}
             <motion.div variants={item} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 {[
-                    { title: 'Event Growth', data: growthData, color: '#00E5FF', latest: statsData?.metricTotalEvents?.toString() || '0', change: '' },
-                    { title: 'Total Startups', data: [statsData?.metricActiveStartups || 0], color: '#00FFC2', latest: statsData?.metricActiveStartups?.toString() || '0', change: '' },
-                    { title: 'Total Applications', data: [statsData?.totalApplications || 0], color: '#7B2FFF', latest: statsData?.totalApplications?.toString() || '0', change: '' },
+                    { title: 'Event Growth', data: growthData, color: '#3B9BB0', latest: statsData?.metricTotalEvents?.toString() || '0', change: '' },
+                    { title: 'Total Startups', data: [statsData?.metricActiveStartups || 0], color: '#3AA18F', latest: statsData?.metricActiveStartups?.toString() || '0', change: '' },
+                    { title: 'Total Applications', data: [statsData?.totalApplications || 0], color: '#7559B8', latest: statsData?.totalApplications?.toString() || '0', change: '' },
                 ].map((chart, ci) => (
                     <motion.div key={chart.title}
                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + ci * 0.1 }}
@@ -364,8 +364,8 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
                                 whileHover={{ 
                                     scale: 1.02, 
                                     x: 4,
-                                    backgroundColor: 'rgba(0, 229, 255, 0.05)',
-                                    borderColor: 'rgba(0, 229, 255, 0.2)'
+                                    backgroundColor: 'rgba(59,155,176, 0.05)',
+                                    borderColor: 'rgba(59,155,176, 0.2)'
                                 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => action.nav === 'create-event' ? navigate('/admin/events/create') : onNavigate(action.nav)}
@@ -419,7 +419,7 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.6 + i * 0.1 }}
-                                whileHover={{ y: -2, borderColor: 'rgba(0,229,255,0.15)' }}
+                                whileHover={{ y: -2, borderColor: 'rgba(59,155,176,0.15)' }}
                                 onClick={() => navigate('/admin/events')}
                                 className="rounded-xl border border-border p-4 transition-all hover:bg-muted/50 cursor-pointer"
                             >

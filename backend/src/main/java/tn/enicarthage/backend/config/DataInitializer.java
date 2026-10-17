@@ -76,13 +76,13 @@ public class DataInitializer implements ApplicationRunner {
             String adminPassword = orRandom(seedAdminPassword);
             adminRepository.save(Admin.builder()
                     .adminId("admin_1")
-                    .adminEmail("admin@platform.com")
+                    .adminEmail("qaihubb@gmail.com")
                     .adminName("Admin")
                     .passwordHash(passwordEncoder.encode(adminPassword))
                     .adminRole("SUPER_ADMIN")
                     .build());
-            log.warn("Dev seed: admin admin@platform.com created{}. Change its email to a real inbox "
-                    + "and its password before using real login codes.",
+            log.warn("Dev seed: admin qaihubb@gmail.com created{}. Change its password "
+                    + "before using real login codes.",
                     seedAdminPassword == null || seedAdminPassword.isBlank() ? " with generated password: " + adminPassword : "");
         }
 

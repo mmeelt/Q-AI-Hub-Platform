@@ -116,7 +116,7 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
                             title={item.label}
                             aria-current={activeTab === item.id ? 'page' : undefined}
                             className={`flex items-center gap-2 px-3 xl:px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 ${activeTab === item.id
-                                ? 'bg-brand-cyan/15 text-cyan-500 dark:text-brand-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)] border border-brand-cyan/30'
+                                ? 'bg-brand-cyan/15 text-cyan-500 dark:text-brand-cyan shadow-[0_0_15px_rgba(59,155,176,0.2)] border border-brand-cyan/30'
                                 : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
                                 }`}
                         >

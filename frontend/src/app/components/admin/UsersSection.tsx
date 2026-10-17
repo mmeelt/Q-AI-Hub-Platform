@@ -76,7 +76,7 @@ function UserProfilePanel({ user, onClose }: { user: any; onClose: () => void })
                 <div className="border-b border-border p-6">
                     <h5 className="mb-3 text-xs font-bold tracking-[0.15em] text-muted-foreground uppercase">Activity Stats</h5>
                     <div className="grid grid-cols-4 gap-2">
-                        {[{ l: 'Applied', v: user.applied, c: '#00E5FF' }, { l: 'Accepted', v: user.accepted, c: '#00FFC2' }, { l: 'Rate', v: user.applied > 0 ? `${Math.round((user.accepted / user.applied) * 100)}%` : '0%', c: '#7B2FFF' }, { l: 'Active', v: user.applications.filter((a: any) => a.status === 'Pending' || a.status === 'Under Review').length, c: '#00D9F5' }].map(stat => (
+                        {[{ l: 'Applied', v: user.applied, c: '#3B9BB0' }, { l: 'Accepted', v: user.accepted, c: '#3AA18F' }, { l: 'Rate', v: user.applied > 0 ? `${Math.round((user.accepted / user.applied) * 100)}%` : '0%', c: '#7559B8' }, { l: 'Active', v: user.applications.filter((a: any) => a.status === 'Pending' || a.status === 'Under Review').length, c: '#4A9CB5' }].map(stat => (
                             <div key={stat.l} className="rounded-xl bg-muted p-3 text-center border border-border">
                                 <p className="text-lg font-bold" style={{ color: stat.c }}>{stat.v}</p>
                                 <p className="text-[10px] font-medium text-muted-foreground">{stat.l}</p>
@@ -269,7 +269,7 @@ export function UsersSection() {
             <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {filtered.map(user => (
                     <motion.div key={user.id} variants={cardItem}
-                        whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(0,229,255,0.06)' }}
+                        whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(59,155,176,0.06)' }}
                         className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-colors hover:border-border/80">
                         <div className="flex items-start gap-4 p-5">
                             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-cyan/20 to-brand-purple/20 text-lg font-bold text-cyan-600 dark:text-brand-cyan ring-2 ring-brand-cyan/10 group-hover:ring-brand-cyan/25 transition-all">{user.avatar}</div>
@@ -281,7 +281,7 @@ export function UsersSection() {
                             </div>
                         </div>
                         <div className="mx-5 mb-4 grid grid-cols-3 gap-2">
-                            {[{ l: 'Applied', v: user.applied, c: '#00E5FF' }, { l: 'Accepted', v: user.accepted, c: '#00FFC2' }, { l: 'Rate', v: user.applied > 0 ? `${Math.round((user.accepted / user.applied) * 100)}%` : '0%', c: '#7B2FFF' }].map(s => (
+                            {[{ l: 'Applied', v: user.applied, c: '#3B9BB0' }, { l: 'Accepted', v: user.accepted, c: '#3AA18F' }, { l: 'Rate', v: user.applied > 0 ? `${Math.round((user.accepted / user.applied) * 100)}%` : '0%', c: '#7559B8' }].map(s => (
                                 <div key={s.l} className="rounded-xl bg-muted p-2.5 text-center border border-border"><p className="text-sm font-bold" style={{ color: s.c }}>{s.v}</p><p className="text-[10px] text-muted-foreground">{s.l}</p></div>
                             ))}
                         </div>

@@ -9,7 +9,7 @@ interface Particle {
 }
 
 const CONNECTION_DISTANCE = 150;
-const LIGHT_DOTS = ['rgba(0, 229, 255, 0.5)', 'rgba(0, 245, 160, 0.5)', 'rgba(123, 47, 255, 0.4)'];
+const LIGHT_DOTS = ['rgba(59,155,176, 0.5)', 'rgba(63,163,124, 0.5)', 'rgba(117,89,184, 0.4)'];
 
 export function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,7 +61,7 @@ export function ParticleBackground() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = light ? LIGHT_DOTS[i % 3] : 'rgba(0, 245, 160, 0.3)';
+        ctx.fillStyle = light ? LIGHT_DOTS[i % 3] : 'rgba(63,163,124, 0.3)';
         ctx.fill();
 
         for (let j = i + 1; j < particles.length; j++) {
@@ -75,8 +75,8 @@ export function ParticleBackground() {
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(o.x, o.y);
           ctx.strokeStyle = light
-            ? (i % 2 === 0 ? `rgba(0, 229, 255, ${opacity * 1.5})` : `rgba(123, 47, 255, ${opacity * 1.2})`)
-            : `rgba(0, 217, 245, ${opacity})`;
+            ? (i % 2 === 0 ? `rgba(59,155,176, ${opacity * 1.5})` : `rgba(117,89,184, ${opacity * 1.2})`)
+            : `rgba(74,156,181, ${opacity})`;
           ctx.lineWidth = 1;
           ctx.stroke();
         }

@@ -206,7 +206,7 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                 <h3 className="mb-3 text-lg font-bold text-foreground">About this Event</h3>
                 <p className="leading-relaxed text-foreground/70">{event.description}</p>
                 <div className="mt-4 grid grid-cols-3 gap-4">
-                    {[{ l: 'Category', v: event.category, c: '#00E5FF' }, { l: 'Capacity', v: `${event.maxCapacity} spots`, c: '#00FFC2' }, { l: 'Status', v: event.status, c: '#00D9F5' }].map(s => (
+                    {[{ l: 'Category', v: event.category, c: '#3B9BB0' }, { l: 'Capacity', v: `${event.maxCapacity} spots`, c: '#3AA18F' }, { l: 'Status', v: event.status, c: '#4A9CB5' }].map(s => (
                         <div key={s.l} className="rounded-xl bg-muted p-4 border border-border"><p className="text-xs text-muted-foreground">{s.l}</p><p className="mt-1 text-sm font-semibold" style={{ color: s.c }}>{s.v}</p></div>
                     ))}
                 </div>
@@ -214,10 +214,10 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                 {eventStats && (
                     <div className="mt-4 grid grid-cols-4 gap-3">
                         {[
-                            { l: 'Total Applications', v: eventStats.totalApplications ?? allApplicants.length, c: '#00E5FF' },
-                            { l: 'Accepted', v: eventStats.acceptedCount ?? allApplicants.filter(a => a.status === 'Accepted').length, c: '#00FFC2' },
-                            { l: 'Pending', v: eventStats.pendingCount ?? allApplicants.filter(a => a.status === 'Pending').length, c: '#FFB800' },
-                            { l: 'Rejected', v: eventStats.rejectedCount ?? allApplicants.filter(a => a.status === 'Rejected').length, c: '#FF4757' },
+                            { l: 'Total Applications', v: eventStats.totalApplications ?? allApplicants.length, c: '#3B9BB0' },
+                            { l: 'Accepted', v: eventStats.acceptedCount ?? allApplicants.filter(a => a.status === 'Accepted').length, c: '#3AA18F' },
+                            { l: 'Pending', v: eventStats.pendingCount ?? allApplicants.filter(a => a.status === 'Pending').length, c: '#C9973A' },
+                            { l: 'Rejected', v: eventStats.rejectedCount ?? allApplicants.filter(a => a.status === 'Rejected').length, c: '#C8545E' },
                         ].map(s => {
                             const val = typeof s.v === 'number' ? s.v : parseInt(String(s.v)) || 0;
                             return (

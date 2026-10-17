@@ -108,7 +108,7 @@ export function AdminSidebar({ activeSection, mobileOpen = false, onClose }: Adm
                                     onClick={onClose}
                                     aria-current={isActive ? 'page' : undefined}
                                     className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${isActive
-                                        ? 'bg-primary/10 text-primary shadow-[0_0_15px_rgba(0,229,255,0.05)]'
+                                        ? 'bg-primary/10 text-primary shadow-[0_0_15px_rgba(59,155,176,0.05)]'
                                         : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground/80'
                                         }`}
                                 >

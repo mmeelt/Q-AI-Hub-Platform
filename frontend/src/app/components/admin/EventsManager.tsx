@@ -151,7 +151,7 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
             <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filtered.map(event => (
                     <motion.div key={event.id} variants={cardItem}
-                        whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(0,229,255,0.08)' }}
+                        whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(59,155,176,0.08)' }}
                         className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-colors hover:border-primary/30">
                         <div className="relative h-44 overflow-hidden">
                             <img src={event.image} alt={event.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" crossOrigin="anonymous" />

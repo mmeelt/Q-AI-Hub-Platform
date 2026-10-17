@@ -20,7 +20,7 @@ Start the platform (see [Quick start with Docker](#quick-start-with-docker)), op
 
 | Role | Email | Password | How to log in |
 |------|-------|----------|---------------|
-| **Admin** | `admin@platform.com` | `Admin#Demo2026` | Tick **Admin sign-in** under the password field |
+| **Admin** | `qaihubb@gmail.com` | `Admin#Demo2026` | Tick **Admin sign-in** under the password field |
 | **Founder / participant** | `test@mail.com` | `User#Demo2026` | Leave **Admin sign-in** unticked |
 
 After the password, the site asks for a **6-digit login code**: type **`123456`**.
@@ -158,7 +158,7 @@ docker compose up --build
 |---|---|
 | Website | http://localhost:8080 |
 | API documentation (Swagger UI) | http://localhost:8081/swagger-ui.html |
-| Admin account | `admin@platform.com` / `Admin#Demo2026` (tick *Admin sign-in* on the login page) |
+| Admin account | `qaihubb@gmail.com` / `Admin#Demo2026` (tick *Admin sign-in* on the login page) |
 | Founder account | `test@mail.com` / `User#Demo2026` |
 | Login code | `123456` (no email server in this setup) |
 
@@ -187,7 +187,7 @@ Prerequisites: JDK 17+, Node.js 18+, MySQL 8 running on `localhost:3306`.
    cd frontend && npm install && npm run dev  # Web  → http://localhost:5173
    ```
    The API must be started **from the `backend/` folder** so it finds `backend/.env` and `backend/uploads/`.
-3. On a brand-new database the `dev` profile creates demo accounts (`admin@platform.com`,
+3. On a brand-new database the `dev` profile creates demo accounts (`qaihubb@gmail.com`,
    `test@mail.com`) and a demo event. Their passwords come from `SEED_ADMIN_PASSWORD` /
    `SEED_USER_PASSWORD`, or are generated and printed once in the API log.
    Never deploy with the `dev` profile.

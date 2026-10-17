@@ -58,7 +58,7 @@ export function NotificationsTab({ notifications, setNotifications }: Notificati
                   transition={{ delay: index * 0.07 }}
                   className={`bg-muted border border-border rounded-xl p-4 hover:border-border/80 transition-all flex items-start gap-4 text-foreground ${!notifRead ? 'border-primary/30 bg-primary/5' : ''}`}
                 >
-                  <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ background: notifType === 'ALARM' ? '#FF4757' : '#00F5A0' }} />
+                  <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ background: notifType === 'ALARM' ? '#C8545E' : '#3FA37C' }} />
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="text-sm font-medium">{notifTitle}</h3>
