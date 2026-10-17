@@ -23,21 +23,22 @@ Start the platform (see [Quick start with Docker](#quick-start-with-docker)), op
 | **Admin** | `qaihubb@gmail.com` | `Admin#Demo2026` | Tick **Admin sign-in** under the password field |
 | **Founder / participant** | `test@mail.com` | `User#Demo2026` | Leave **Admin sign-in** unticked |
 
-After the password, the site asks for a **6-digit login code**: type **`123456`**.
-No email is sent in this test setup.
+After the password, the site asks for a **6-digit login code**, sent by email to the account's
+address. Use your own email address (sign up from **Register**) to receive it: `test@mail.com` is
+not a real inbox. When no SMTP account is configured (no `MAIL_*` values), no email is sent and
+the code is always **`123456`**.
 
 - **Admin**: lands on the admin dashboard (`/admin/dashboard`): events, users, startups,
   pitch evaluation, settings.
 - **Founder**: lands on `/dashboard`: applications, startups, invitations. A demo event is
   already there to apply to.
-- **Judge / expert**: there is no ready-made judge account, and no invitation email is sent in
-  this setup, so:
-  1. **Register** a normal account, for example `judge@mail.com` (login code `123456`), and log out.
-  2. Log in as **admin**, go to **Users → Invite**, choose **Expert**, enter `judge@mail.com`
+- **Judge / expert**: there is no ready-made judge account, so:
+  1. **Register** a normal account with a real address, for example `judge@yourmail.com`, and log out.
+  2. Log in as **admin**, go to **Users → Invite**, choose **Expert**, enter that address
      and pick the event *National AI Challenge 2024*.
-  3. Log in again as `judge@mail.com`: the notification opens the event's judge page
+  3. Log in again with that account: the notification opens the event's judge page
      (review applications and score pitches).
-- **New account**: anyone can also sign up from **Register**; the login code is still `123456`.
+- **New account**: anyone can sign up from **Register**; the login code is emailed to them.
 
 These passwords are for local testing only. Never use them on a real server.
 
@@ -160,7 +161,7 @@ docker compose up --build
 | API documentation (Swagger UI) | http://localhost:8081/swagger-ui.html |
 | Admin account | `qaihubb@gmail.com` / `Admin#Demo2026` (tick *Admin sign-in* on the login page) |
 | Founder account | `test@mail.com` / `User#Demo2026` |
-| Login code | `123456` (no email server in this setup) |
+| Login code | emailed through the SMTP account in `backend/.env` or `.env`; `123456` when none is set |
 
 These demo values are for local use only. Override them, or change the ports if 8080 / 8081
 are taken, in a `.env` file next to `docker-compose.yml` (see `.env.example`).

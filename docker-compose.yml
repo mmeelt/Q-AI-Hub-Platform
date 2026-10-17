@@ -4,10 +4,10 @@ name: qaihub
 #
 #   docker compose up --build        then open http://localhost:8080
 #
-# Runs the "dev" profile: demo accounts and a demo event on a new database, a fixed
-# login code instead of emails, Swagger UI at http://localhost:8081/swagger-ui.html.
-# For local use only. Every value below can be overridden in a .env file next to this one
-# (see .env.example).
+# Runs the "dev" profile: demo accounts and a demo event on a new database, Swagger UI at
+# http://localhost:8081/swagger-ui.html. For local use only.
+# Login codes are emailed through the SMTP account in backend/.env (or a .env next to this
+# file, see .env.example). Without one, every login code is the fixed test code 123456.
 
 services:
   db:
@@ -28,6 +28,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # MAIL_*, OTP_* and GEMINI_API_KEY come from these files (later ones win);
+    # the values under "environment" always take precedence over them
+    env_file:
+      - path: .env
+        required: false
+      - path: backend/.env
+        required: false
     environment:
       SPRING_PROFILES_ACTIVE: dev
       DB_URL: jdbc:mysql://db:3306/qaihub?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
@@ -37,17 +44,8 @@ services:
       FRONTEND_URL: http://localhost:${WEB_PORT:-8080}
       CORS_ALLOWED_ORIGINS: http://localhost:*
       COOKIE_SECURE: "false"
-      # No email server here: every login code is this one (allowed with the dev profile only)
-      OTP_FIXED_ENABLED: ${OTP_FIXED_ENABLED:-true}
-      OTP_FIXED_CODE: ${OTP_FIXED_CODE:-123456}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin#Demo2026}
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-User#Demo2026}
-      MAIL_HOST: ${MAIL_HOST:-}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - uploads:/app/uploads
     ports:
