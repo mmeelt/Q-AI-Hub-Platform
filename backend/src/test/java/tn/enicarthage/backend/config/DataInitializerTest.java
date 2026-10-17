@@ -14,8 +14,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DataInitializerTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private StartupRepository startupRepository;
     @Mock private AdminRepository adminRepository;
     @Mock private PlatformSettingRepository platformSettingRepository;
     @Mock private EventRepository eventRepository;
@@ -28,7 +26,6 @@ class DataInitializerTest {
 
     @Test
     void existingDatabase_isNeverModified() {
-        lenient().when(userRepository.count()).thenReturn(15L);
         when(adminRepository.count()).thenReturn(1L);
         when(platformSettingRepository.count()).thenReturn(1L);
         lenient().when(eventRepository.count()).thenReturn(7L);
@@ -36,14 +33,12 @@ class DataInitializerTest {
         initializer.run(null);
 
         verify(phaseRepository, never()).save(any());
-        verify(userRepository, never()).save(any());
         verify(eventRepository, never()).save(any());
     }
 
     @Test
     void emptiedDatabase_withItsAdmin_staysEmpty() {
-        // the admin emptied the platform on purpose: no demo user / startup / event comes back
-        lenient().when(userRepository.count()).thenReturn(0L);
+        // the admin emptied the platform on purpose: no demo event comes back
         when(adminRepository.count()).thenReturn(1L);
         when(platformSettingRepository.count()).thenReturn(1L);
         lenient().when(eventRepository.count()).thenReturn(0L);
@@ -54,8 +49,6 @@ class DataInitializerTest {
         verify(phaseRepository, never()).save(any());
         verify(phaseRepository, never()).findAll();
         verify(pitchRoundRepository, never()).save(any());
-        verify(userRepository, never()).save(any());
-        verify(startupRepository, never()).save(any());
         verify(adminRepository, never()).save(any());
         verify(eventRepository, never()).save(any());
         verify(platformSettingRepository, never()).save(any());
@@ -68,7 +61,6 @@ class DataInitializerTest {
 
         initializer.run(null);
 
-        verify(userRepository).save(any());
         verify(adminRepository).save(any());
         verify(eventRepository).save(any());
         verify(phaseRepository, times(3)).save(any());

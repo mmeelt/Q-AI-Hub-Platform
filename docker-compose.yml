@@ -45,7 +45,6 @@ services:
       CORS_ALLOWED_ORIGINS: http://localhost:*
       COOKIE_SECURE: "false"
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin#Demo2026}
-      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-User#Demo2026}
     volumes:
       - uploads:/app/uploads
     ports:

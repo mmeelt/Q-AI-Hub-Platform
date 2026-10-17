@@ -9,7 +9,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -27,8 +26,6 @@ import java.util.List;
 @Slf4j
 public class DataInitializer implements ApplicationRunner {
 
-    private final UserRepository userRepository;
-    private final StartupRepository startupRepository;
     private final AdminRepository adminRepository;
     private final PlatformSettingRepository platformSettingRepository;
     private final EventRepository eventRepository;
@@ -36,41 +33,16 @@ public class DataInitializer implements ApplicationRunner {
     private final PasswordEncoder passwordEncoder;
     private final PitchRoundRepository pitchRoundRepository;
 
-    // Demo passwords come from backend/.env (SEED_ADMIN_PASSWORD / SEED_USER_PASSWORD).
+    // Admin password comes from backend/.env (SEED_ADMIN_PASSWORD).
     // Left empty, a random one is generated and printed once in the log: no default password in the code.
     @org.springframework.beans.factory.annotation.Value("${app.seed.admin-password:}")
     private String seedAdminPassword;
-
-    @org.springframework.beans.factory.annotation.Value("${app.seed.user-password:}")
-    private String seedUserPassword;
 
     @Override
     public void run(ApplicationArguments args) {
         // Demo data only for a brand-new database (no admin yet). A database that was emptied on
         // purpose (only the admin kept) must stay empty after a restart.
         boolean brandNewDatabase = adminRepository.count() == 0;
-
-        if (brandNewDatabase && userRepository.count() == 0) {
-            String userPassword = orRandom(seedUserPassword);
-            userRepository.save(User.builder()
-                    .userId("user_1")
-                    .emailAddress("test@mail.com")
-                    .passwordHash(passwordEncoder.encode(userPassword))
-                    .fullName("Test User")
-                    .userStatus(User.UserStatus.ACTIVE)
-                    .accountCreatedAt(new Date())
-                    .build());
-            startupRepository.save(Startup.builder()
-                    .startupId("startup_1")
-                    .founderUserId("user_1")
-                    .projectName("TechVenture")
-                    .startupStatus(Startup.StartupStatus.ACTIVE)
-                    .totalFundingRaised(BigDecimal.ZERO)
-                    .currentTeamSize(1)
-                    .build());
-            log.info("Dev seed: test user test@mail.com with startup TechVenture{}",
-                    seedUserPassword == null || seedUserPassword.isBlank() ? ", generated password: " + userPassword : "");
-        }
 
         if (adminRepository.count() == 0) {
             String adminPassword = orRandom(seedAdminPassword);

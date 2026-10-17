@@ -16,17 +16,16 @@ and startup profiles. Built as a team project at ENICarthage.
 ## Test accounts (for testers)
 
 Start the platform (see [Quick start with Docker](#quick-start-with-docker)), open
-**http://localhost:8080** and click **Login**. These accounts already exist on a new database:
+**http://localhost:8080** and click **Login**. This account already exists on a new database:
 
 | Role | Email | Password | How to log in |
 |------|-------|----------|---------------|
 | **Admin** | `qaihubb@gmail.com` | `Admin#Demo2026` | Tick **Admin sign-in** under the password field |
-| **Founder / participant** | `test@mail.com` | `User#Demo2026` | Leave **Admin sign-in** unticked |
+| **Founder / participant** | your own email | chosen at sign-up | **Register** first, then log in with **Admin sign-in** unticked |
 
 After the password, the site asks for a **6-digit login code**, sent by email to the account's
-address. Use your own email address (sign up from **Register**) to receive it: `test@mail.com` is
-not a real inbox. When no SMTP account is configured (no `MAIL_*` values), no email is sent and
-the code is always **`123456`**.
+address. When no SMTP account is configured (no `MAIL_*` values), no email is sent and the code
+is always **`123456`**.
 
 - **Admin**: lands on the admin dashboard (`/admin/dashboard`): events, users, startups,
   pitch evaluation, settings.
@@ -40,7 +39,7 @@ the code is always **`123456`**.
      (review applications and score pitches).
 - **New account**: anyone can sign up from **Register**; the login code is emailed to them.
 
-These passwords are for local testing only. Never use them on a real server.
+This password is for local testing only. Never use it on a real server.
 
 ## Features
 
@@ -160,7 +159,7 @@ docker compose up --build
 | Website | http://localhost:8080 |
 | API documentation (Swagger UI) | http://localhost:8081/swagger-ui.html |
 | Admin account | `qaihubb@gmail.com` / `Admin#Demo2026` (tick *Admin sign-in* on the login page) |
-| Founder account | `test@mail.com` / `User#Demo2026` |
+| Founder account | sign up from **Register** with your own email |
 | Login code | emailed through the SMTP account in `backend/.env` or `.env`; `123456` when none is set |
 
 These demo values are for local use only. Override them, or change the ports if 8080 / 8081
@@ -178,7 +177,6 @@ Prerequisites: JDK 17+, Node.js 18+, MySQL 8 running on `localhost:3306`.
    To get the same [test accounts](#test-accounts-for-testers) as with Docker, add:
    ```
    SEED_ADMIN_PASSWORD=Admin#Demo2026
-   SEED_USER_PASSWORD=User#Demo2026
    OTP_FIXED_ENABLED=true
    OTP_FIXED_CODE=123456
    ```
@@ -188,9 +186,9 @@ Prerequisites: JDK 17+, Node.js 18+, MySQL 8 running on `localhost:3306`.
    cd frontend && npm install && npm run dev  # Web  → http://localhost:5173
    ```
    The API must be started **from the `backend/` folder** so it finds `backend/.env` and `backend/uploads/`.
-3. On a brand-new database the `dev` profile creates demo accounts (`qaihubb@gmail.com`,
-   `test@mail.com`) and a demo event. Their passwords come from `SEED_ADMIN_PASSWORD` /
-   `SEED_USER_PASSWORD`, or are generated and printed once in the API log.
+3. On a brand-new database the `dev` profile creates the admin account (`qaihubb@gmail.com`)
+   and a demo event. Its password comes from `SEED_ADMIN_PASSWORD`, or is generated and
+   printed once in the API log.
    Never deploy with the `dev` profile.
 
 ## Configuration
@@ -206,7 +204,7 @@ All secrets come from environment variables or `backend/.env`:
 | `MAIL_*` | for real OTP | SMTP account used to send codes and notifications |
 | `GEMINI_API_KEY` | | AI feedback / description refinement |
 | `OTP_FIXED_ENABLED`, `OTP_FIXED_CODE` | local only | Fixed login code instead of emails (never on a real server) |
-| `SEED_ADMIN_PASSWORD`, `SEED_USER_PASSWORD` | | Passwords of the demo accounts created by the `dev` profile |
+| `SEED_ADMIN_PASSWORD` | | Password of the admin account created by the `dev` profile |
 | `COOKIE_SECURE` | | `true` (default) = session cookies only over HTTPS; dev uses `false` |
 | `FLYWAY_ENABLED` | | `true` (default) runs the database migrations at startup |
 | `API_DOCS_ENABLED` | | Swagger UI and `/v3/api-docs`: on in `dev`, off by default otherwise |
