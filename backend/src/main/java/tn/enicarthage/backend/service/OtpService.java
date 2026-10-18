@@ -38,13 +38,6 @@ public class OtpService {
 
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /** Temporary dev switch: every code is this fixed 6-digit value and no email is sent. */
-    @Value("${otp.fixed.enabled:false}")
-    private boolean fixedOtpEnabled;
-
-    @Value("${otp.fixed.code:}")
-    private String fixedOtpCode;
-
     @Value("${otp.expiry.minutes:5}")
     private int otpExpiryMinutes;
 
@@ -72,10 +65,7 @@ public class OtpService {
         // One pending code per account: a new request replaces the previous one
         otpTokenRepository.deleteByUserId(userId);
 
-        boolean useFixedCode = fixedOtpEnabled && fixedOtpCode != null && fixedOtpCode.matches("^\\d{6}$");
-        String rawCode = useFixedCode
-                ? fixedOtpCode
-                : String.format("%06d", secureRandom.nextInt(1_000_000));
+        String rawCode = String.format("%06d", secureRandom.nextInt(1_000_000));
 
         String otpSessionId = UUID.randomUUID().toString();
         otpTokenRepository.save(OtpToken.builder()
@@ -91,9 +81,7 @@ public class OtpService {
 
         // Sent synchronously: if delivery fails, the request fails too (and this transaction
         // rolls back) instead of the user waiting for a code that never arrives.
-        if (useFixedCode) {
-            log.warn("Fixed OTP mode is ON (otp.fixed.enabled): no email sent to {}. Disable it once SMTP is configured.", email);
-        } else if (OtpToken.PASSWORD_RESET.equals(purpose)) {
+        if (OtpToken.PASSWORD_RESET.equals(purpose)) {
             emailService.sendPasswordResetCodeNow(email, fullName, rawCode, otpExpiryMinutes);
             log.info("Password reset code generated for {} and sent to {}", userId, email);
         } else {

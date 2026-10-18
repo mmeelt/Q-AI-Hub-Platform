@@ -24,8 +24,8 @@ Start the platform (see [Quick start with Docker](#quick-start-with-docker)), op
 | **Founder / participant** | your own email | chosen at sign-up | **Register** first, then log in with **Admin sign-in** unticked |
 
 After the password, the site asks for a **6-digit login code**, sent by email to the account's
-address. When no SMTP account is configured (no `MAIL_*` values), no email is sent and the code
-is always **`123456`**.
+address. The code is random, valid for 2 minutes, and a new one can be requested with
+**Resend code**. An SMTP account (`MAIL_*` values) is required.
 
 - **Admin**: lands on the admin dashboard (`/admin/dashboard`): events, users, startups,
   pitch evaluation, settings.
@@ -160,7 +160,7 @@ docker compose up --build
 | API documentation (Swagger UI) | http://localhost:8081/swagger-ui.html |
 | Admin account | `qaihubb@gmail.com` / `Admin#Demo2026` (tick *Admin sign-in* on the login page) |
 | Founder account | sign up from **Register** with your own email |
-| Login code | emailed through the SMTP account in `backend/.env` or `.env`; `123456` when none is set |
+| Login code | random, emailed through the SMTP account in `backend/.env` or `.env` |
 
 These demo values are for local use only. Override them, or change the ports if 8080 / 8081
 are taken, in a `.env` file next to `docker-compose.yml` (see `.env.example`).
@@ -172,13 +172,10 @@ Prerequisites: JDK 17+, Node.js 18+, MySQL 8 running on `localhost:3306`.
 
 1. **Configure the API**: copy `backend/.env.example` to `backend/.env` and set at least
    `DB_PASSWORD` (your MySQL password) and `JWT_SECRET` (`openssl rand -base64 64`).
-   Login codes are sent by email: fill the `MAIL_*` values, or, for a quick local try only,
-   set `OTP_FIXED_ENABLED=true` and an `OTP_FIXED_CODE`.
+   Login codes are sent by email: fill the `MAIL_*` values (required to log in).
    To get the same [test accounts](#test-accounts-for-testers) as with Docker, add:
    ```
    SEED_ADMIN_PASSWORD=Admin#Demo2026
-   OTP_FIXED_ENABLED=true
-   OTP_FIXED_CODE=123456
    ```
 2. **Start everything**: double-click `scripts/run-dev.bat`, or run manually:
    ```bash
@@ -201,9 +198,8 @@ All secrets come from environment variables or `backend/.env`:
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | prod | MySQL connection (dev has local defaults except the password) |
 | `JWT_SECRET` | prod | ≥ 64 random characters (`openssl rand -base64 64`) |
 | `FRONTEND_URL` / `CORS_ALLOWED_ORIGINS` | prod | Site URL for CORS and email links |
-| `MAIL_*` | for real OTP | SMTP account used to send codes and notifications |
+| `MAIL_*` | yes | SMTP account used to send login codes and notifications |
 | `GEMINI_API_KEY` | | AI feedback / description refinement |
-| `OTP_FIXED_ENABLED`, `OTP_FIXED_CODE` | local only | Fixed login code instead of emails (never on a real server) |
 | `SEED_ADMIN_PASSWORD` | | Password of the admin account created by the `dev` profile |
 | `COOKIE_SECURE` | | `true` (default) = session cookies only over HTTPS; dev uses `false` |
 | `FLYWAY_ENABLED` | | `true` (default) runs the database migrations at startup |

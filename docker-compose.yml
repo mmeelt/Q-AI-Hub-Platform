@@ -7,7 +7,7 @@ name: qaihub
 # Runs the "dev" profile: demo accounts and a demo event on a new database, Swagger UI at
 # http://localhost:8081/swagger-ui.html. For local use only.
 # Login codes are emailed through the SMTP account in backend/.env (or a .env next to this
-# file, see .env.example). Without one, every login code is the fixed test code 123456.
+# file, see .env.example). An SMTP account is required to log in.
 
 services:
   db:

@@ -295,8 +295,8 @@ class AuthServiceTest {
     void verifyOtp_marksTheEmailAsVerified() {
         VerifyOtpRequest req = new VerifyOtpRequest();
         req.setOtpSessionId("session-123");
-        req.setOtpCode("123456");
-        when(otpService.validateOtp("session-123", "123456")).thenReturn("user-1");
+        req.setOtpCode("482913");
+        when(otpService.validateOtp("session-123", "482913")).thenReturn("user-1");
         when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
         when(jwtUtil.generateToken(any(), any(), any())).thenReturn("access-token");
         when(refreshTokenService.createRefreshToken("user-1")).thenReturn(testRt);
@@ -359,9 +359,9 @@ class AuthServiceTest {
     void verifyOtpAndLogin_success() {
         VerifyOtpRequest req = new VerifyOtpRequest();
         req.setOtpSessionId("session-123");
-        req.setOtpCode("123456");
+        req.setOtpCode("482913");
 
-        when(otpService.validateOtp("session-123", "123456")).thenReturn("user-1");
+        when(otpService.validateOtp("session-123", "482913")).thenReturn("user-1");
         when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
         when(jwtUtil.generateToken("user-1", "test@example.com", "USER")).thenReturn("access-token");
         when(refreshTokenService.createRefreshToken("user-1")).thenReturn(testRt);
@@ -420,7 +420,7 @@ class AuthServiceTest {
     @Test
     void resetPassword_weakPassword_isRefusedBeforeCheckingTheCode() {
         doThrow(new PasswordWeakException("Password must be at least 8 characters")).when(passwordValidator).validate("short");
-        assertThrows(PasswordWeakException.class, () -> authService.resetPassword("reset-session", "123456", "short"));
+        assertThrows(PasswordWeakException.class, () -> authService.resetPassword("reset-session", "482913", "short"));
         verify(otpService, never()).validatePasswordResetCode(any(), any());
     }
 
@@ -428,11 +428,11 @@ class AuthServiceTest {
     void resetPassword_success_unlocks_verifies_signsOutEverywhere_andNotifies() {
         testUser.setAccountLocked(true);
         testUser.setFailedLoginAttempts(5);
-        when(otpService.validatePasswordResetCode("reset-session", "123456")).thenReturn("user-1");
+        when(otpService.validatePasswordResetCode("reset-session", "482913")).thenReturn("user-1");
         when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.encode("NewStrong#2026")).thenReturn("new-hash");
 
-        authService.resetPassword("reset-session", "123456", "NewStrong#2026");
+        authService.resetPassword("reset-session", "482913", "NewStrong#2026");
 
         assertEquals("new-hash", testUser.getPasswordHash());
         assertFalse(testUser.getAccountLocked());

@@ -110,7 +110,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/verify-otp")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"otpSessionId\":\"otp-session-1\",\"otpCode\":\"123456\"}"))
+                        .content("{\"otpSessionId\":\"otp-session-1\",\"otpCode\":\"482913\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").doesNotExist())
                 .andExpect(jsonPath("$.refreshToken").doesNotExist())
@@ -242,7 +242,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/verify-otp")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"otpSessionId\":\"s\",\"otpCode\":\"123456\"}"))
+                        .content("{\"otpSessionId\":\"s\",\"otpCode\":\"482913\"}"))
                 .andExpect(status().isOk())
                 .andExpect(header().stringValues("Set-Cookie", hasItem(allOf(
                         org.hamcrest.Matchers.startsWith("qa_access=access.jwt"),
@@ -255,7 +255,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/verify-otp")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"otpSessionId\":\"s\",\"otpCode\":\"123456\",\"rememberMe\":true}"))
+                        .content("{\"otpSessionId\":\"s\",\"otpCode\":\"482913\",\"rememberMe\":true}"))
                 .andExpect(status().isOk())
                 .andExpect(header().stringValues("Set-Cookie", hasItems(
                         allOf(org.hamcrest.Matchers.startsWith("qa_access=access.jwt"), containsString("Max-Age=3600")),

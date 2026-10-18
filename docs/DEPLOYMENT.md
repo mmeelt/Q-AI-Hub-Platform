@@ -62,16 +62,15 @@ takes about a minute), and its disk is not persistent, so uploaded files disappe
 
 ## 4. Demo accounts
 
-The `prod` profile creates no accounts, and the fixed login code is refused outside `dev`
-(anyone could log in with it). Two ways to let reviewers in:
+The `prod` profile creates no accounts. Login codes are always random and sent by email,
+so `MAIL_*` must be configured. Two ways to let reviewers in:
 
 - **Real login codes (recommended)**: configure `MAIL_*`, register founder accounts through the
   site, and create the first administrator directly in the database.
   Visitors then sign up with their own email.
-- **Demo instance**: run the API with `SPRING_PROFILES_ACTIVE=dev`, `COOKIE_SECURE=true`,
-  `OTP_FIXED_ENABLED=true` and an `OTP_FIXED_CODE` published in the README. The demo accounts and
-  event are created automatically, but **every visitor can log in to every account, including
-  the admin**. Only use this with fictional data, and expect to reset the database from time to time.
+- **Demo instance**: run the API with `SPRING_PROFILES_ACTIVE=dev` and `COOKIE_SECURE=true`.
+  The demo admin account and event are created automatically; the admin's login code is emailed
+  to its address, so share access only with people you trust, and use fictional data.
 
 ## Checking the deployment
 
