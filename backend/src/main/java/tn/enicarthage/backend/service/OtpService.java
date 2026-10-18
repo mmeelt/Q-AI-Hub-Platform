@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -49,6 +50,11 @@ public class OtpService {
 
     @Value("${otp.max.attempts:3}")
     private int otpMaxAttempts;
+
+    /** How long a code stays valid, sent to the frontend for its countdown. */
+    public int getExpirySeconds() {
+        return otpExpiryMinutes * 60;
+    }
 
     /** Login / email-verification code. */
     @Transactional
@@ -97,14 +103,20 @@ public class OtpService {
         return otpSessionId;
     }
 
-    /** Checks a login code and returns the account id. Reset codes are refused. */
-    @Transactional
+    /**
+     * Checks a login code and returns the account id. Reset codes are refused.
+     * Runs in its own transaction that is NOT rolled back on a wrong/expired code: otherwise the
+     * attempt counter was rolled back with the exception and the attempt limit never applied.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW,
+            noRollbackFor = {OtpInvalidException.class, OtpMaxAttemptsException.class, OtpExpiredException.class})
     public String validateOtp(String otpSessionId, String rawCode) {
         return validate(otpSessionId, rawCode, OtpToken.LOGIN);
     }
 
     /** Checks a password-reset code and returns the account id. Login codes are refused. */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW,
+            noRollbackFor = {OtpInvalidException.class, OtpMaxAttemptsException.class, OtpExpiredException.class})
     public String validatePasswordResetCode(String sessionId, String rawCode) {
         return validate(sessionId, rawCode, OtpToken.PASSWORD_RESET);
     }
@@ -122,22 +134,25 @@ public class OtpService {
             throw new OtpAlreadyUsedException("OTP already used");
         }
 
+        // Expired or locked codes are kept (not deleted) so "Resend code" still works from this
+        // session; OtpCleanupTask removes them later.
         if (otpToken.getExpiryTime().before(new Date())) {
-            otpTokenRepository.delete(otpToken);
-            throw new OtpExpiredException("OTP expired");
+            throw new OtpExpiredException("This code has expired. Click \"Resend code\" to get a new one.");
+        }
+
+        if (otpToken.getAttempts() >= otpMaxAttempts) {
+            throw new OtpMaxAttemptsException("Too many wrong codes. Click \"Resend code\" to get a new one.");
         }
 
         int attempts = otpToken.getAttempts() + 1;
         otpToken.setAttempts(attempts);
         otpTokenRepository.save(otpToken);
 
-        if (attempts > otpMaxAttempts) {
-            otpTokenRepository.delete(otpToken);
-            throw new OtpMaxAttemptsException("Maximum OTP attempts exceeded. Request a new code.");
-        }
-
         if (!passwordEncoder.matches(rawCode, otpToken.getOtpCode())) {
-            throw new OtpInvalidException("Invalid OTP code", otpMaxAttempts - attempts);
+            int remaining = otpMaxAttempts - attempts;
+            throw new OtpInvalidException(remaining > 0
+                    ? "Invalid code. " + remaining + (remaining == 1 ? " attempt" : " attempts") + " left."
+                    : "Invalid code. Click \"Resend code\" to get a new one.", remaining);
         }
 
         otpToken.setIsUsed(true);
@@ -149,15 +164,17 @@ public class OtpService {
     @Transactional
     public String resendOtp(String otpSessionId) {
         OtpToken existing = otpTokenRepository.findByOtpSessionId(otpSessionId)
-                .orElseThrow(() -> new OtpNotFoundException("Invalid session"));
+                .orElseThrow(() -> new OtpNotFoundException("This verification session has ended. Please start again."));
+        if (Boolean.TRUE.equals(existing.getIsUsed())) {
+            throw new OtpNotFoundException("This code was already used. Please start again.");
+        }
 
         String accountId = existing.getUserId();
         // The new code keeps the purpose of the one it replaces
         String purpose = existing.getPurpose() == null ? OtpToken.LOGIN : existing.getPurpose();
 
-        // Delete old token and generate a new one
-        otpTokenRepository.delete(existing);
-
+        // generate() replaces the old code (one pending code per account). If the email cannot be
+        // sent, the transaction rolls back and the previous session stays usable for another resend.
         // The id stored in OtpToken can belong to either a User or an Admin.
         User user = userRepository.findById(accountId).orElse(null);
         if (user != null) {

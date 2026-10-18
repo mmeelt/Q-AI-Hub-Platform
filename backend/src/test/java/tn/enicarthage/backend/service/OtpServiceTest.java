@@ -111,7 +111,8 @@ class OtpServiceTest {
         when(otpTokenRepository.findByOtpSessionId("session-123")).thenReturn(Optional.of(testToken));
 
         assertThrows(OtpExpiredException.class, () -> otpService.validateOtp("session-123", "123456"));
-        verify(otpTokenRepository).delete(testToken);
+        // kept so the user can still resend from this session
+        verify(otpTokenRepository, never()).delete(any(OtpToken.class));
     }
 
     @Test
@@ -133,7 +134,59 @@ class OtpServiceTest {
         when(otpTokenRepository.findByOtpSessionId("session-123")).thenReturn(Optional.of(testToken));
 
         assertThrows(OtpMaxAttemptsException.class, () -> otpService.validateOtp("session-123", "000000"));
-        verify(otpTokenRepository).delete(testToken);
+        verify(otpTokenRepository, never()).delete(any(OtpToken.class));
+        verify(passwordEncoder, never()).matches(any(), any());
+    }
+
+    @Test
+    void validateOtp_thirdWrongCodeLocksTheSession() {
+        testToken.setAttempts(2);
+        when(otpTokenRepository.findByOtpSessionId("session-123")).thenReturn(Optional.of(testToken));
+        when(passwordEncoder.matches("000000", "encoded-123456")).thenReturn(false);
+
+        OtpInvalidException ex = assertThrows(OtpInvalidException.class,
+                () -> otpService.validateOtp("session-123", "000000"));
+        assertEquals(0, ex.getAttemptsRemaining());
+        // even the right code is now refused until a new one is sent
+        assertThrows(OtpMaxAttemptsException.class, () -> otpService.validateOtp("session-123", "123456"));
+    }
+
+    // ── Resend ────────────────────────────────────────────────────
+
+    @Test
+    void resendOtp_worksAfterTheCodeExpired() {
+        testToken.setExpiryTime(new Date(System.currentTimeMillis() - 10000));
+        when(otpTokenRepository.findByOtpSessionId("session-123")).thenReturn(Optional.of(testToken));
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encoded-new");
+
+        String newSession = otpService.resendOtp("session-123");
+
+        assertNotNull(newSession);
+        assertNotEquals("session-123", newSession);
+        verify(emailService).sendOtpCodeNow(eq("test@example.com"), eq("Test User"), anyString(), anyInt());
+    }
+
+    @Test
+    void resendOtp_keepsThePasswordResetPurpose() {
+        testToken.setPurpose(OtpToken.PASSWORD_RESET);
+        when(otpTokenRepository.findByOtpSessionId("session-123")).thenReturn(Optional.of(testToken));
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encoded-new");
+
+        otpService.resendOtp("session-123");
+
+        verify(emailService).sendPasswordResetCodeNow(eq("test@example.com"), eq("Test User"), anyString(), anyInt());
+        verify(emailService, never()).sendOtpCodeNow(any(), any(), any(), anyInt());
+    }
+
+    @Test
+    void resendOtp_refusedOnceTheCodeWasUsed() {
+        testToken.setIsUsed(true);
+        when(otpTokenRepository.findByOtpSessionId("session-123")).thenReturn(Optional.of(testToken));
+
+        assertThrows(OtpNotFoundException.class, () -> otpService.resendOtp("session-123"));
+        verifyNoInteractions(emailService);
     }
 
     // ── Login codes and reset codes never mix ─────────────────────

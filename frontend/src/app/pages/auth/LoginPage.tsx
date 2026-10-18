@@ -43,7 +43,7 @@ export function LoginPage() {
         localStorage.setItem('tempEmail', email);
         toast.success('Admin credentials verified. Check your email for the OTP code.');
 
-        navigate('/otp', { state: { email, otpSessionId, destination: '/admin', rememberMe } });
+        navigate('/otp', { state: { email, otpSessionId, destination: '/admin', rememberMe, expiresIn: data.expiresIn } });
       } else {
         // Normal user login: usually a code is emailed (OTP page)
         const data = await api.login(email, password, rememberMe);
@@ -63,11 +63,11 @@ export function LoginPage() {
         localStorage.setItem('tempEmail', email);
 
         toast.success('Credentials verified. Check your email for the OTP code.');
-        
+
         if (returnUrl) {
-          navigate('/otp', { state: { email, returnUrl, eventName, otpSessionId, rememberMe } });
+          navigate('/otp', { state: { email, returnUrl, eventName, otpSessionId, rememberMe, expiresIn: data.expiresIn } });
         } else {
-          navigate('/otp', { state: { email, otpSessionId, rememberMe } });
+          navigate('/otp', { state: { email, otpSessionId, rememberMe, expiresIn: data.expiresIn } });
         }
       }
     } catch (error: any) {

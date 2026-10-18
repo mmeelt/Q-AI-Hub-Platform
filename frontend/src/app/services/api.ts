@@ -18,7 +18,7 @@ export const api = {
      */
     // Usually returns an otpSessionId (code emailed). When the email is already verified and the admin
     // turned off "code at every login", returns requiresOtp=false + the profile (session cookies are set).
-    async login(email: string, password: string, rememberMe = false): Promise<{ requiresOtp?: boolean; otpSessionId?: string; email?: string; role?: string; fullName?: string; userId?: string }> {
+    async login(email: string, password: string, rememberMe = false): Promise<{ requiresOtp?: boolean; otpSessionId?: string; expiresIn?: number; email?: string; role?: string; fullName?: string; userId?: string }> {
         const response = await fetch(`${BASE_URL}/auth/login`, {
             method: 'POST',
             headers: {
@@ -107,7 +107,7 @@ export const api = {
     /**
      * Registers a new student user.
      */
-    async register(data: any): Promise<{ requiresOtp: boolean; otpSessionId: string; message: string }> {
+    async register(data: any): Promise<{ requiresOtp: boolean; otpSessionId: string; message: string; expiresIn?: number }> {
         const response = await fetch(`${BASE_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -365,7 +365,11 @@ export const api = {
         });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(getApiErrorMessage(errorData, 'Failed to resend code'));
+            const error: Error & { status?: number } = new Error(response.status === 429
+                ? 'Too many codes requested. Please wait a few minutes before asking for a new one.'
+                : getApiErrorMessage(errorData, 'Failed to resend code'));
+            error.status = response.status;
+            throw error;
         }
         return await response.json();
     },
@@ -838,7 +842,7 @@ export const api = {
     },
 
     /** "Forgot password": emails a reset code (same answer whether or not the account exists). */
-    async forgotPassword(email: string): Promise<{ resetSessionId: string; message: string }> {
+    async forgotPassword(email: string): Promise<{ resetSessionId: string; message: string; expiresIn?: number }> {
         const response = await fetch(`${BASE_URL}/auth/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

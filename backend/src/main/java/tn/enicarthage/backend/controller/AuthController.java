@@ -54,7 +54,7 @@ public class AuthController {
                 .requiresOtp(true)
                 .otpSessionId(newSessionId)
                 .message("OTP resent")
-                .expiresIn(300)
+                .expiresIn(authService.getOtpExpirySeconds())
                 .build());
     }
 
@@ -145,7 +145,7 @@ public class AuthController {
         return ResponseEntity.ok(java.util.Map.of(
                 "resetSessionId", sessionId,
                 "message", "If an account exists for this email, a reset code has been sent.",
-                "expiresIn", 300));
+                "expiresIn", authService.getOtpExpirySeconds()));
     }
 
     // POST /api/auth/reset-password

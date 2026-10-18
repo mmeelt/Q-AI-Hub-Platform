@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Mail, Lock, Eye, EyeOff, KeyRound, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Logo } from '../../components/common/Logo';
 import { Button } from '../../components/common/Button';
 import { toast } from 'sonner';
 import { api } from '../../services/api';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../components/ui/input-otp';
+import { CodeExpiryClock, DEFAULT_CODE_SECONDS, useCodeExpiry } from '../../components/common/CodeExpiryClock';
 
 type Step = 'email' | 'reset' | 'done';
 
@@ -40,6 +42,11 @@ export function ForgotPasswordPage() {
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
+  // Lifetime of the code (2 minutes), counted down every second
+  const [expirySeconds, setExpirySeconds] = useState(DEFAULT_CODE_SECONDS);
+  const secondsLeft = useCodeExpiry(sessionId || undefined, expirySeconds);
+  const expired = secondsLeft <= 0;
 
   const sendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -50,6 +57,7 @@ export function ForgotPasswordPage() {
     setBusy(true);
     try {
       const res = await api.forgotPassword(email.trim());
+      if (res.expiresIn) setExpirySeconds(res.expiresIn);
       setSessionId(res.resetSessionId);
       setCode('');
       setStep('reset');
@@ -61,10 +69,32 @@ export function ForgotPasswordPage() {
     }
   };
 
+  // Same request as the first one (so it never reveals whether the account exists); the new code
+  // replaces the previous one, so the new session id must be kept.
+  const resendCode = async () => {
+    if (resending || busy) return;
+    setResending(true);
+    try {
+      const res = await api.forgotPassword(email.trim());
+      if (res.expiresIn) setExpirySeconds(res.expiresIn);
+      setSessionId(res.resetSessionId); // new session = the clock restarts
+      setCode('');
+      toast.success('A new code has been sent. Use the most recent email only.');
+    } catch (err: any) {
+      toast.error(err.message || 'Could not send the code');
+    } finally {
+      setResending(false);
+    }
+  };
+
   const resetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\d{6}$/.test(code)) {
       toast.error('Enter the 6-digit code from the email');
+      return;
+    }
+    if (expired) {
+      toast.error('This code has expired. Click "Resend code" to get a new one.');
       return;
     }
     const problem = passwordProblem(password);
@@ -130,17 +160,24 @@ export function ForgotPasswordPage() {
                   <h1 className="text-3xl font-bold mb-2">Choose a new password</h1>
                   <p className="text-muted-foreground text-sm">
                     If <span className="text-foreground font-medium">{email}</span> has an account, a 6-digit code was sent to it.
-                    It expires in 5 minutes.
                   </p>
                 </div>
                 <form onSubmit={resetPassword} className="space-y-5">
                   <div>
                     <label htmlFor="fp-code" className={labelClass}>Code from the email</label>
-                    <div className="relative">
-                      <KeyRound size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <input id="fp-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code}
-                        onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-                        placeholder="123456" className={`${inputClass} tracking-[0.4em] font-mono`} autoFocus />
+                    <div className="flex justify-center">
+                      <InputOTP id="fp-code" maxLength={6} value={code} autoFocus
+                        onChange={(val) => setCode(val.replace(/\D/g, ''))}>
+                        <InputOTPGroup className="gap-2 sm:gap-3">
+                          {[0, 1, 2, 3, 4, 5].map(i => (
+                            <InputOTPSlot key={i} index={i}
+                              className="w-11 h-13 sm:w-12 sm:h-14 text-xl font-semibold bg-accent/50 border-border/50 rounded-xl" />
+                          ))}
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                    <div className="mt-4">
+                      <CodeExpiryClock secondsLeft={secondsLeft} total={expirySeconds} />
                     </div>
                   </div>
                   <div>
@@ -168,14 +205,22 @@ export function ForgotPasswordPage() {
                     </div>
                     {confirm && confirm !== password && <p className="mt-1.5 text-xs text-destructive">The passwords do not match</p>}
                   </div>
-                  <Button type="submit" fullWidth disabled={busy}>{busy ? 'Saving…' : 'Change my password'}</Button>
-                  <p className="text-center text-sm text-muted-foreground">
-                    No email?{' '}
-                    <button type="button" onClick={() => sendCode()} disabled={busy} className="text-primary hover:text-primary/80 font-medium">
-                      Send a new code
-                    </button>{' '}
-                    (check your spam folder too)
-                  </p>
+                  <Button type="submit" fullWidth disabled={busy || expired}>{busy ? 'Saving…' : 'Change my password'}</Button>
+                  <div className="pt-4 border-t border-border/50 text-center">
+                    <p className="text-sm text-muted-foreground mb-2">Didn't receive the code? Check your spam folder, then:</p>
+                    <button type="button" onClick={resendCode} disabled={busy || resending}
+                      className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+                        busy || resending
+                          ? 'text-muted-foreground cursor-not-allowed opacity-60'
+                          : 'text-primary hover:text-primary/80 cursor-pointer'
+                      }`}>
+                      {resending ? (
+                        <><RefreshCw size={14} className="animate-spin" /> Sending a new code…</>
+                      ) : (
+                        <><RefreshCw size={14} /> Resend code</>
+                      )}
+                    </button>
+                  </div>
                 </form>
               </>
             )}

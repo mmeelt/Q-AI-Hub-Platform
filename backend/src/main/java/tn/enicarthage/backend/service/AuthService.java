@@ -147,7 +147,7 @@ public class AuthService {
                 .requiresOtp(true)
                 .otpSessionId(otpSessionId)
                 .message("Account created. Please verify your email with the OTP sent.")
-                .expiresIn(300)
+                .expiresIn(otpService.getExpirySeconds())
                 .build();
     }
 
@@ -208,7 +208,7 @@ public class AuthService {
                     .requiresOtp(true)
                     .otpSessionId(otpSessionId)
                     .message("OTP sent to your email")
-                    .expiresIn(300)
+                    .expiresIn(otpService.getExpirySeconds())
                     .build();
         }
 
@@ -231,12 +231,16 @@ public class AuthService {
                     .requiresOtp(true)
                     .otpSessionId(otpSessionId)
                     .message("Admin OTP sent to your email")
-                    .expiresIn(300)
+                    .expiresIn(otpService.getExpirySeconds())
                     .build();
         }
 
         log.warn("No user or admin found for: {}", cleanEmail);
         throw new InvalidCredentialsException("Invalid email or password");
+    }
+
+    public int getOtpExpirySeconds() {
+        return otpService.getExpirySeconds();
     }
 
     @Transactional

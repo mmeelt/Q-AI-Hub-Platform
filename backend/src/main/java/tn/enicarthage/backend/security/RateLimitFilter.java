@@ -38,11 +38,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
             capacity = 5;
             duration = Duration.ofMinutes(15);
         } else if (path.equals("/api/auth/resend-otp")) {
-            capacity = 3;
+            // "Resend code" is available at any time (no waiting delay on the page)
+            capacity = 5;
             duration = Duration.ofMinutes(5);
         } else if (path.equals("/api/auth/forgot-password")) {
-            // each request sends an email
-            capacity = 3;
+            // each request sends an email; the reset page also uses it for "Resend code"
+            capacity = 5;
             duration = Duration.ofMinutes(15);
         } else if (path.equals("/api/auth/reset-password")) {
             capacity = 5;

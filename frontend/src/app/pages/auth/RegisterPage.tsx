@@ -152,23 +152,24 @@ export function RegisterPage() {
 
       toast.success(response.message || 'Account created! Please verify your email.');
 
-      
+
 
       // Redirect to OTP verification
 
-      navigate('/otp', { 
+      navigate('/otp', {
 
-        state: { 
+        state: {
 
           email: formData.email,
 
           otpSessionId: response.otpSessionId,
+          expiresIn: response.expiresIn,
 
           returnUrl,
 
           eventName
 
-        } 
+        }
 
       });
 

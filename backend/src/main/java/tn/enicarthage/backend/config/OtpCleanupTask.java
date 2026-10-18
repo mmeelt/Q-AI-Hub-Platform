@@ -23,8 +23,9 @@ public class OtpCleanupTask {
     @Transactional
     public void cleanExpiredOtps() {
         log.info("Starting scheduled cleanup of expired OTP tokens and JTIs...");
-        Date now = new Date();
-        otpTokenRepository.deleteByExpiryTimeBefore(now);
+        // Expired codes are kept 30 minutes so the user can still click "Resend code" on that session
+        Date expiredThreshold = new Date(System.currentTimeMillis() - 30L * 60 * 1000);
+        otpTokenRepository.deleteByExpiryTimeBefore(expiredThreshold);
         
         // Clean revoked tokens older than 24 hours (assuming max token lifetime is < 24h)
         Date jtiThreshold = new Date(System.currentTimeMillis() - 24L * 60 * 60 * 1000);

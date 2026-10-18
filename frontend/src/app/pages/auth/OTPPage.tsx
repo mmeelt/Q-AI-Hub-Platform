@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Shield, ArrowLeft, RefreshCw } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Button } from '../../components/common/Button';
 import { toast } from 'sonner';
 import { api } from '../../services/api';
 import { saveSession } from '../../utils/localStorage';
+import { CodeExpiryClock, DEFAULT_CODE_SECONDS, useCodeExpiry } from '../../components/common/CodeExpiryClock';
 
 import {
   InputOTP,
@@ -20,32 +21,27 @@ export function OTPPage() {
   const location = useLocation();
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [countdown, setCountdown] = useState(60);
-  const [canResend, setCanResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const email = (location.state as any)?.email || 'your email';
   const destination = (location.state as any)?.destination;
   // Each resend replaces the code and returns a new session id: keep the latest one
   const [otpSessionId, setOtpSessionId] = useState<string | undefined>((location.state as any)?.otpSessionId);
   const rememberMe = Boolean((location.state as any)?.rememberMe);
+  // Lifetime of the code (2 minutes), counted down every second
+  const [expirySeconds, setExpirySeconds] = useState<number>(Number((location.state as any)?.expiresIn) || DEFAULT_CODE_SECONDS);
+  const secondsLeft = useCodeExpiry(otpSessionId, expirySeconds);
+  const expired = secondsLeft <= 0;
 
-
-  useEffect(() => {
-    let timer: any;
-    if (countdown > 0 && !canResend) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    } else {
-      setCanResend(true);
-    }
-    return () => clearInterval(timer);
-  }, [countdown, canResend]);
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length < 6) {
+  const handleVerify = async (e?: React.FormEvent, code: string = otp) => {
+    e?.preventDefault();
+    if (isLoading) return;
+    if (code.length < 6) {
       toast.error('Please enter the full 6-digit code');
+      return;
+    }
+    if (expired) {
+      toast.error('This code has expired. Click "Resend code" to get a new one.');
       return;
     }
 
@@ -56,17 +52,17 @@ export function OTPPage() {
       }
 
       // Call the unified verifyOtp endpoint
-      const tokenData = await api.verifyOtp(email, otp, otpSessionId, rememberMe);
+      const tokenData = await api.verifyOtp(email, code, otpSessionId, rememberMe);
 
       // The API set the HttpOnly session cookies; keep only the profile for the UI
       saveSession(tokenData);
       const role = String(tokenData.role || 'USER').replace(/^ROLE_/i, '').toUpperCase();
 
       toast.success('Verification successful!');
-      
+
       const returnUrl = (location.state as any)?.returnUrl;
       const eventName = (location.state as any)?.eventName;
-      
+
       const isSafeReturn = typeof returnUrl === 'string' && returnUrl.startsWith('/') && !returnUrl.startsWith('//');
       if (isSafeReturn && role !== 'ADMIN') {
         if (eventName) toast.success(`Welcome back! Resuming your application for ${eventName}`);
@@ -86,19 +82,25 @@ export function OTPPage() {
 
 
   const handleResend = async () => {
+    if (isResending) return; // one email per click: a second one would replace this code
+    if (!otpSessionId) {
+      toast.error('Session expired. Please log in again.');
+      navigate('/login');
+      return;
+    }
+    setIsResending(true);
     try {
-      if (!otpSessionId) {
-        toast.error('Session expired. Please try again.');
-        return;
-      }
       const data = await api.resendOtp(otpSessionId);
-      if (data?.otpSessionId) setOtpSessionId(data.otpSessionId);
+      if (data?.expiresIn) setExpirySeconds(data.expiresIn);
+      if (data?.otpSessionId) setOtpSessionId(data.otpSessionId); // new session = the clock restarts
       setOtp('');
-      setCountdown(60);
-      setCanResend(false);
-      toast.success('A new verification code has been sent to your email.');
+      toast.success('A new code has been sent. Use the most recent email only.');
     } catch (error: any) {
       toast.error(error.message || 'Failed to resend code');
+      // The session is gone (used, or too old): the only way forward is a new login
+      if (error.status === 404) navigate('/login', { state: { email: email === 'your email' ? '' : email } });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -119,7 +121,7 @@ export function OTPPage() {
       >
         <div className="p-px rounded-3xl bg-gradient-to-br from-primary/30 via-foreground/5 to-accent/20">
           <div className="bg-card backdrop-blur-2xl rounded-3xl p-10 shadow-glass">
-            
+
             <div className="flex justify-center mb-8">
               <Logo size="md" />
             </div>
@@ -139,7 +141,9 @@ export function OTPPage() {
                 <InputOTP
                   maxLength={6}
                   value={otp}
-                  onChange={(val) => setOtp(val)}
+                  onChange={(val) => setOtp(val.replace(/\D/g, ''))}
+                  onComplete={(val: string) => handleVerify(undefined, val)}
+                  disabled={isLoading || expired}
                 >
                   <InputOTPGroup className="gap-3">
                     <InputOTPSlot index={0} className="w-12 h-14 text-xl font-semibold bg-accent/50 border-border/50 rounded-xl" />
@@ -152,10 +156,12 @@ export function OTPPage() {
                 </InputOTP>
               </div>
 
+              <CodeExpiryClock secondsLeft={secondsLeft} total={expirySeconds} />
+
               <div className="space-y-4">
                 <Button
                   type="submit"
-                  disabled={isLoading || otp.length < 6}
+                  disabled={isLoading || expired || otp.length < 6}
                   fullWidth
                   className="h-12 text-base font-semibold"
                 >
@@ -181,25 +187,28 @@ export function OTPPage() {
 
               <div className="pt-4 border-t border-border/50 text-center">
                 <p className="text-sm text-muted-foreground mb-3">
-                  Didn't receive the code?
+                  Didn't receive the code? Check your spam folder, then:
                 </p>
                 <button
                   type="button"
                   onClick={handleResend}
-                  disabled={!canResend}
+                  disabled={isResending}
                   className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
-                    canResend 
-                      ? 'text-primary hover:text-primary/80 cursor-pointer' 
+                    !isResending
+                      ? 'text-primary hover:text-primary/80 cursor-pointer'
                       : 'text-muted-foreground cursor-not-allowed opacity-60'
                   }`}
                 >
-                  {canResend ? (
+                  {isResending ? (
                     <>
-                      <RefreshCw size={14} />
-                      Resend Verification Code
+                      <RefreshCw size={14} className="animate-spin" />
+                      Sending a new code…
                     </>
                   ) : (
-                    `Resend code in ${countdown}s`
+                    <>
+                      <RefreshCw size={14} />
+                      Resend code
+                    </>
                   )}
                 </button>
               </div>

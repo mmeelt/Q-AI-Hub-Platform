@@ -44,7 +44,7 @@ public class AdminService {
                 .requiresOtp(true)
                 .otpSessionId(otpSessionId)
                 .message("Admin OTP sent to your email")
-                .expiresIn(300)
+                .expiresIn(otpService.getExpirySeconds())
                 .build();
     }
 
