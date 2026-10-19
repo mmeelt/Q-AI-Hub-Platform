@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X, Trash2, RotateCcw, Lock } from 'lucide-react';
 import { Button } from '../common/Button';
 import { api } from '../../services/api';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { toast } from 'sonner';
 import { Phase2QuestionsEditor } from './Phase2QuestionsEditor';
 import { PitchJudgingPanel } from '../pitch/PitchJudgingPanel';
@@ -30,8 +31,13 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
     const [phaseStats, setPhaseStats] = useState<Record<string, { enrolled: number; submitted: number }>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
-    const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
-    const [managingPitchPhase, setManagingPitchPhase] = useState<Phase | null>(null);
+    // Open windows live in the URL so the back arrow closes them instead of leaving the event
+    const [editingPhaseId, setEditingPhaseId, closeEditing] = useUrlParam('editPhase');
+    const [pitchPhaseId, setPitchPhaseId, closePitchPanel] = useUrlParam('pitchPhase', { children: ['pitchView', 'score'] });
+    const editingPhase = phases.find(p => p.phaseId === editingPhaseId) || null;
+    const managingPitchPhase = phases.find(p => p.phaseId === pitchPhaseId) || null;
+    const setEditingPhase = (phase: Phase | null) => phase ? setEditingPhaseId(phase.phaseId) : closeEditing();
+    const setManagingPitchPhase = (phase: Phase | null) => phase ? setPitchPhaseId(phase.phaseId) : closePitchPanel();
     const [isCreating, setIsCreating] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [confirmReopenId, setConfirmReopenId] = useState<string | null>(null);

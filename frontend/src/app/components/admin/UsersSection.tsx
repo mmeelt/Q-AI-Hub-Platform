@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, Mail, Phone, Calendar, X, ExternalLink, ArrowRight, Shield, MessageCircle, Ban, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -151,8 +152,11 @@ function UserProfilePanel({ user, onClose }: { user: any; onClose: () => void })
 export function UsersSection() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
-    const [selectedUser, setSelectedUser] = useState<any | null>(null);
     const [allUsers, setAllUsers] = useState<any[]>([]);
+    // The open profile lives in the URL (?user=id): the back arrow closes it
+    const [userParam, setUserParam, closeUser] = useUrlParam('user');
+    const selectedUser = allUsers.find(u => String(u.id) === userParam) || null;
+    const setSelectedUser = (u: any | null) => u ? setUserParam(String(u.id)) : closeUser();
     const navigate = useNavigate();
 
     useEffect(() => {

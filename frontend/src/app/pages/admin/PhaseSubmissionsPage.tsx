@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGoBack } from '../../hooks/useGoBack';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Users, FileText, Star, MessageSquare, CheckCircle, X, Clock, TrendingUp, Search, Filter } from 'lucide-react';
 import { Button } from '../../components/common/Button';
@@ -289,8 +290,10 @@ export function PhaseSubmissionsPage() {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'ACCEPTED' | 'REJECTED'>('ALL');
-    const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-    const [isGradingModalOpen, setIsGradingModalOpen] = useState(false);
+    // The submission being reviewed lives in the URL (?review=id): the back arrow closes the window
+    const [reviewParam, setReviewParam, closeReview] = useUrlParam('review');
+    const selectedSubmission = submissions.find(s => String(s.id) === reviewParam) || null;
+    const isGradingModalOpen = selectedSubmission !== null;
 
     useEffect(() => {
         if (phaseId) {
@@ -332,8 +335,7 @@ export function PhaseSubmissionsPage() {
     };
 
     const openGradingModal = (submission: Submission) => {
-        setSelectedSubmission(submission);
-        setIsGradingModalOpen(true);
+        setReviewParam(String(submission.id));
     };
 
 
@@ -571,10 +573,7 @@ export function PhaseSubmissionsPage() {
                     <GradingModal
                         submission={selectedSubmission}
                         isOpen={isGradingModalOpen}
-                        onClose={() => {
-                            setIsGradingModalOpen(false);
-                            setSelectedSubmission(null);
-                        }}
+                        onClose={closeReview}
                         onGrade={handleGrade}
                         onDecide={handleDecide}
                     />

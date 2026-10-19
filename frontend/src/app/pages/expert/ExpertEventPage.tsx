@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useGoBack } from '../../hooks/useGoBack';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, CalendarDays, MapPin, Users, Search, Eye, 
@@ -16,6 +17,12 @@ import { toast } from 'sonner';
 import { PitchJudgingPanel } from '../../components/pitch/PitchJudgingPanel';
 import { PitchVideo } from '../../components/common/PitchVideo';
 import { MyApplicationGrade } from '../../components/pitch/ApplicationGrades';
+
+/** "Wed 21 Oct 2026 · 15:00" in the viewer's language and time zone. */
+const formatPitchDate = (value: string | number | Date) => {
+    const d = new Date(value);
+    return `${d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })} · ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+};
 
 // Backend statuses are upper-case (PENDING, ACCEPTED...); the UI shows them as 'Accepted', 'Under Review'...
 const displayStatus = (raw?: string) => {
@@ -75,6 +82,26 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* The pitch date set by the admin */}
+                <section className={`p-4 rounded-xl border ${applicant.pitchDate ? 'bg-violet-500/10 border-violet-500/25' : 'bg-muted/30 border-border/50'}`}>
+                    <div className="flex items-center gap-2 text-sm font-medium mb-1 text-violet-600 dark:text-violet-400">
+                        <CalendarDays size={14} /> Pitch
+                    </div>
+                    {applicant.pitchDate ? (
+                        <>
+                            <p className="text-foreground font-semibold">
+                                {new Date(applicant.pitchDate).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                                <Clock size={13} /> {new Date(applicant.pitchDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(applicant.pitchDate).getTime() < Date.now() && <span className="ml-2 text-xs">(past)</span>}
+                            </p>
+                        </>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">Not scheduled yet</p>
+                    )}
+                </section>
+
                 {/* The expert's own grade of this application (/20) */}
                 <MyApplicationGrade applicationId={applicant.applicationId} />
 
@@ -253,10 +280,15 @@ export function ExpertEventPage() {
     const [applicants, setApplicants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
     const [statusFilter, setStatusFilter] = useState('All');
     const [phases, setPhases] = useState<any[]>([]);
-    const [tab, setTab] = useState<'startups' | 'pitch'>('startups');
+    // The open tab and startup live in the URL, so Back returns to the exact previous view
+    const [tabParam, setTabParam] = useUrlParam('tab', { children: ['pitchView', 'score'] });
+    const tab: 'startups' | 'pitch' = tabParam === 'pitch' ? 'pitch' : 'startups';
+    const setTab = (next: 'startups' | 'pitch') => setTabParam(next === 'startups' ? null : next);
+    const [applicantId, setApplicantId, closeApplicant] = useUrlParam('applicant');
+    const selectedApplicant = applicants.find(a => String(a.applicationId) === applicantId) || null;
+    const setSelectedApplicant = (a: any | null) => a ? setApplicantId(String(a.applicationId)) : closeApplicant();
 
     useEffect(() => {
         const loadData = async () => {
@@ -412,6 +444,37 @@ export function ExpertEventPage() {
                         </div>
                     )}
 
+                    {/* Pitch schedule: the dates set by the admin, soonest first */}
+                    {(() => {
+                        const scheduled = applicants.filter(a => a.pitchDate)
+                            .sort((a, b) => new Date(a.pitchDate).getTime() - new Date(b.pitchDate).getTime());
+                        if (scheduled.length === 0) return null;
+                        const nextId = scheduled.find(a => new Date(a.pitchDate).getTime() >= Date.now())?.applicationId;
+                        return (
+                            <div className="p-5 rounded-2xl bg-card/60 border border-border">
+                                <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <CalendarDays size={14} /> Pitch schedule
+                                </h2>
+                                <div className="space-y-2">
+                                    {scheduled.map(a => {
+                                        const past = new Date(a.pitchDate).getTime() < Date.now();
+                                        const isNext = a.applicationId === nextId;
+                                        return (
+                                            <button key={a.applicationId} onClick={() => setSelectedApplicant(a)}
+                                                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-left transition-colors hover:bg-muted/40 ${isNext ? 'bg-violet-500/10 border-violet-500/30' : 'bg-muted/20 border-border/50'} ${past ? 'opacity-60' : ''}`}>
+                                                <span className="font-semibold text-foreground truncate">{a.startupName || 'Unnamed Startup'}</span>
+                                                <span className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+                                                    {isNext && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-600 dark:text-violet-400">NEXT</span>}
+                                                    <Clock size={13} /> {formatPitchDate(a.pitchDate)}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* Tabs: startups review / pitch scoring (incubation events only) */}
                     {(event.eventType || '').toUpperCase() !== 'SIMPLE' && (
                         <div className="flex gap-2">
@@ -481,6 +544,7 @@ export function ExpertEventPage() {
                                             <th className="px-6 py-3">Tracking Code</th>
                                             <th className="px-6 py-3">Status</th>
                                             <th className="px-6 py-3">Submitted</th>
+                                            <th className="px-6 py-3">Pitch</th>
                                             <th className="px-6 py-3 text-right">Action</th>
                                         </tr>
                                     </thead>
@@ -508,6 +572,11 @@ export function ExpertEventPage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-muted-foreground">
                                                     {a.applicationSubmittedAt ? new Date(a.applicationSubmittedAt).toLocaleDateString() : 'N/A'}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm">
+                                                    {a.pitchDate
+                                                        ? <span className="text-violet-600 dark:text-violet-400 font-medium whitespace-nowrap">{formatPitchDate(a.pitchDate)}</span>
+                                                        : <span className="text-muted-foreground">—</span>}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <button

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
@@ -267,7 +266,6 @@ function SettingsSection() {
 export function AdminDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
-  const goBackFromPitch = useGoBack('/admin/events');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Close the mobile menu whenever the page changes
   useEffect(() => { setMobileNavOpen(false); }, [location.pathname]);
@@ -284,7 +282,6 @@ export function AdminDashboard() {
   };
   
   const [activeSection, setActiveSection] = useState(getSectionFromPath());
-  const [pitchEventId, setPitchEventId] = useState<string | null>(null);
 
   // Update active section when URL changes
   useEffect(() => {
@@ -292,8 +289,8 @@ export function AdminDashboard() {
   }, [location.pathname]);
 
   const handleNavigateToPitch = (eventId: string) => {
-    setPitchEventId(eventId);
-    navigate('/admin/pitch');
+    // Opened from the event page: the pitch page's Back returns there (see useUrlParam)
+    navigate(`/admin/pitch?event=${encodeURIComponent(eventId)}`, { state: { 'prev:event': null } });
   };
 
   const handleSectionChange = (section: string) => {
@@ -306,7 +303,7 @@ export function AdminDashboard() {
       case 'events': return <EventsManager onStartPitch={handleNavigateToPitch} />;
       case 'users': return <UsersSection />;
       case 'startups': return <StartupsSection />;
-      case 'pitch': return <PitchEvaluation initialEventId={pitchEventId} onBack={goBackFromPitch} />;
+      case 'pitch': return <PitchEvaluation />;
       case 'settings': return <SettingsSection />;
       default: return <DashboardHome onNavigate={handleSectionChange} />;
     }

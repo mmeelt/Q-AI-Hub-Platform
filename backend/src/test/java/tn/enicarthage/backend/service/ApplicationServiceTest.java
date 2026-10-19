@@ -121,6 +121,34 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void schedulePitch_savesTheDate_andTellsTheApplicantAndTheEventsExperts() {
+        Event event = eventRepository.findById("e1").orElseThrow();
+        event.getExpertInvitations().add(new Event.ExpertInvite("judge@test.com", "Judge", null));
+        Application app = Application.builder().applicationId("a1").applicantUserId("user-1").targetEventId("e1")
+                .linkedStartupId("s1").applicationStatus("ACCEPTED").build();
+        when(applicationRepository.findById("a1")).thenReturn(Optional.of(app));
+        when(userRepository.findByEmailAddress("judge@test.com"))
+                .thenReturn(Optional.of(User.builder().userId("judge-1").emailAddress("judge@test.com").build()));
+        java.util.Date date = new java.util.GregorianCalendar(2026, java.util.Calendar.OCTOBER, 21, 15, 0).getTime();
+
+        service.schedulePitch("a1", date);
+
+        assertEquals(date, app.getPitchDate());
+        verify(notificationService).createNotification(eq("user-1"), eq("Pitch Scheduled"),
+                contains("21 October 2026 at 15:00"), eq("PITCH_SCHEDULED"));
+        verify(notificationService).createNotification(eq("judge-1"), contains("AI Incubator"),
+                eq("Test Project will pitch on Wednesday 21 October 2026 at 15:00."), eq("PITCH_SCHEDULED"), eq("/expert/event/e1"));
+    }
+
+    @Test
+    void schedulePitch_withoutADate_isRefused() {
+        when(applicationRepository.findById("a1")).thenReturn(Optional.of(Application.builder().applicationId("a1").build()));
+
+        assertThrows(IllegalArgumentException.class, () -> service.schedulePitch("a1", null));
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
     void accept_anAlreadyReviewedApplication_isRefused() {
         Application app = Application.builder().applicationId("a1").applicationStatus("REJECTED").build();
         when(applicationRepository.findById("a1")).thenReturn(Optional.of(app));

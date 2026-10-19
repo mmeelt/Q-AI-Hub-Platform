@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import {
     ArrowLeft, Brain, Calendar, CheckCircle, ChevronDown, ChevronRight, ListOrdered,
     Plus, Send, Settings2, Star, Trash2, Trophy, Users, X, XCircle,
@@ -75,8 +76,11 @@ export function PitchJudgingPanel({ eventId, mode, onBack, phaseId }: { eventId:
     const [isLoading, setIsLoading] = useState(true);
     const [pitchPhase, setPitchPhase] = useState<any>(null);
     const [rounds, setRounds] = useState<PitchRound[]>([]);
-    const [view, setView] = useState<'rounds' | 'evaluate' | 'results'>('rounds');
-    const [selectedRound, setSelectedRound] = useState<PitchRound | null>(null);
+    // The open view lives in the URL (?pitchView=evaluate:12) so Back returns to the exact previous view
+    const [pitchView, setPitchView, backFromView] = useUrlParam('pitchView', { children: ['score'] });
+    const [viewName, viewRoundId] = (pitchView || '').split(':');
+    const view: 'rounds' | 'evaluate' | 'results' = viewName === 'evaluate' || viewName === 'results' ? viewName : 'rounds';
+    const selectedRound = rounds.find(r => String(r.id) === viewRoundId) || null;
 
     const loadRounds = async () => {
         setIsLoading(true);
@@ -112,14 +116,10 @@ export function PitchJudgingPanel({ eventId, mode, onBack, phaseId }: { eventId:
         }
     };
 
-    const openRound = (round: PitchRound, next: 'evaluate' | 'results') => {
-        setSelectedRound(round);
-        setView(next);
-    };
+    const openRound = (round: PitchRound, next: 'evaluate' | 'results') => setPitchView(`${next}:${round.id}`);
 
     const backToRounds = () => {
-        setView('rounds');
-        setSelectedRound(null);
+        backFromView();
         loadRounds();
     };
 
@@ -148,7 +148,7 @@ export function PitchJudgingPanel({ eventId, mode, onBack, phaseId }: { eventId:
 
     if (view === 'evaluate' && selectedRound) {
         return <EvaluateView round={selectedRound} mode={mode} onBack={backToRounds}
-            onViewResults={isAdmin ? () => setView('results') : undefined} />;
+            onViewResults={isAdmin ? () => openRound(selectedRound, 'results') : undefined} />;
     }
 
     if (view === 'results' && selectedRound && isAdmin) {
@@ -358,7 +358,10 @@ function EvaluateView({ round, mode, onBack, onViewResults }: {
     const [loading, setLoading] = useState(true);
     const [candidates, setCandidates] = useState<any[]>([]);
     const [myResults, setMyResults] = useState<Record<string, any>>({});
-    const [scoring, setScoring] = useState<any | null>(null);
+    // The startup being scored (?score=applicationId): the back arrow closes the scoring window first
+    const [scoringId, setScoringId, closeScoring] = useUrlParam('score');
+    const scoring = candidates.find(c => String(c.applicationId) === scoringId) || null;
+    const setScoring = (c: any | null) => c ? setScoringId(String(c.applicationId)) : closeScoring();
 
     const load = async () => {
         setLoading(true);

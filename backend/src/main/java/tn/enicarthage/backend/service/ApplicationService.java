@@ -227,18 +227,45 @@ public class ApplicationService {
         Application app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
+        if (pitchDate == null) {
+            throw new IllegalArgumentException("A pitch date is required");
+        }
         app.setPitchDate(pitchDate);
         applicationRepository.save(app);
+        String when = formatPitchDate(pitchDate);
 
         // Notify user
         notificationService.createNotification(
             app.getApplicantUserId(),
             "Pitch Scheduled",
-            "Your pitch has been scheduled for " + pitchDate.toString(),
+            "Your pitch has been scheduled for " + when,
             "PITCH_SCHEDULED"
         );
 
+        // The event's experts see the schedule on their event page; tell them a date was set
+        eventRepository.findById(app.getTargetEventId()).ifPresent(event -> {
+            String startupName = app.getLinkedStartupId() == null ? "A startup" : startupRepository.findById(app.getLinkedStartupId())
+                    .map(Startup::getProjectName).orElse("A startup");
+            event.getExpertInvitations().stream()
+                .map(invite -> invite.getEmail())
+                .filter(email -> email != null && !email.isBlank())
+                .distinct()
+                .forEach(email -> userRepository.findByEmailAddress(email.trim().toLowerCase()).ifPresent(expert ->
+                    notificationService.createNotification(
+                        expert.getUserId(),
+                        "Pitch scheduled — " + event.getTitle(),
+                        startupName + " will pitch on " + when + ".",
+                        "PITCH_SCHEDULED",
+                        "/expert/event/" + event.getEventId()
+                    )));
+        });
+
         return app;
+    }
+
+    /** "Wednesday 21 October 2026 at 15:00", in the server's time zone. */
+    private static String formatPitchDate(Date date) {
+        return new java.text.SimpleDateFormat("EEEE d MMMM yyyy 'at' HH:mm", java.util.Locale.ENGLISH).format(date);
     }
 
     // ── READ ──────────────────────────────────────────────────────

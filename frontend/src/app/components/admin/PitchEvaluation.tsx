@@ -3,18 +3,16 @@ import { ArrowLeft, Calendar, Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { api } from '../../services/api';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { PitchJudgingPanel } from '../pitch/PitchJudgingPanel';
 
 // Admin pitch evaluation: pick an event, then manage rounds, score like any judge,
 // see every judge's scores + the average, and send the results.
-export function PitchEvaluation({ initialEventId, onBack }: { initialEventId?: string | null, onBack?: () => void }) {
-    const [selectedEventId, setSelectedEventId] = useState<string | null>(initialEventId || null);
+export function PitchEvaluation() {
+    // The chosen event lives in the URL (?event=id): Back returns to the event list, or to the page it was opened from
+    const [selectedEventId, setSelectedEventId, backFromEvent] = useUrlParam('event', { children: ['pitchView', 'score'] });
     const [events, setEvents] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(!initialEventId);
-
-    useEffect(() => {
-        setSelectedEventId(initialEventId || null);
-    }, [initialEventId]);
+    const [isLoading, setIsLoading] = useState(!selectedEventId);
 
     useEffect(() => {
         if (selectedEventId) return;
@@ -31,7 +29,7 @@ export function PitchEvaluation({ initialEventId, onBack }: { initialEventId?: s
             <PitchJudgingPanel
                 eventId={selectedEventId}
                 mode="admin"
-                onBack={() => (initialEventId && onBack ? onBack() : setSelectedEventId(null))}
+                onBack={backFromEvent}
             />
         );
     }
@@ -39,11 +37,6 @@ export function PitchEvaluation({ initialEventId, onBack }: { initialEventId?: s
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center gap-4">
-                {onBack && (
-                    <button onClick={onBack} className="p-2 rounded-lg hover:bg-foreground/5 transition-colors">
-                        <ArrowLeft size={20} />
-                    </button>
-                )}
                 <div>
                     <h2 className="text-2xl font-bold text-foreground">Select Event</h2>
                     <p className="text-muted-foreground">Choose an incubation event to manage its pitch evaluations</p>

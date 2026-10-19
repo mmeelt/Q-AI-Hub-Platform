@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useGoBack } from '../../hooks/useGoBack';
+import { useNavigate } from 'react-router-dom';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { Search, Plus, MapPin, CalendarDays, Users, ArrowRight, Filter, X, UserPlus, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../services/api';
@@ -12,7 +12,6 @@ import { EventDetail } from './events/EventDetail';
 
 export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => void }) {
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [eventsList, setEventsList] = useState<any[]>([]);
@@ -46,9 +45,10 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
     }, []);
 
     // The open event lives in the URL, so the browser's back button returns to the list
-    const reviewId = searchParams.get('reviewEvent');
+    // (the views opened inside the event close with it)
+    const [reviewId, setReviewId, goBackToList] = useUrlParam('reviewEvent',
+        { children: ['applicant', 'pitchPhase', 'pitchView', 'score', 'editPhase'] });
     const selectedEvent = reviewId ? eventsList.find(ev => String(ev.id) === String(reviewId)) || null : null;
-    const goBackToList = useGoBack('/admin/events');
 
     useEffect(() => {
         const handler = (e: any) => {
@@ -165,8 +165,7 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
                                     variant="outline"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setSearchParams({ reviewEvent: String(event.id) });
-                                        setSearchParams({ reviewEvent: String(event.id) });
+                                        setReviewId(String(event.id));
                                     }}
                                     className="!px-3 !py-2 !text-xs group/btn !h-9"
                                 >

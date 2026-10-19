@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, MapPin, CalendarDays, Users, X, ArrowLeft, Eye, CheckCircle2, TrendingUp, UserPlus, Pencil, ClipboardCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../../services/api';
+import { useUrlParam } from '../../../hooks/useUrlParam';
 import { Button } from '../../common/Button';
 import { PhasesManager } from '../PhasesManager';
 import { toast } from 'sonner';
@@ -9,9 +10,12 @@ import { StatusBadge } from './shared';
 import { ApplicantPanel } from './ApplicantPanel';
 
 export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: any; onBack: () => void; navigate: (path: string) => void; onStartPitch: (id: string) => void }) {
-    const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
     const [searchApplicant, setSearchApplicant] = useState('');
     const [allApplicants, setAllApplicants] = useState<any[]>([]);
+    // The applicant panel lives in the URL (?applicant=id): the back arrow closes it instead of leaving the event
+    const [applicantId, setApplicantId, closeApplicant] = useUrlParam('applicant');
+    const selectedApplicant = allApplicants.find(a => String(a.id) === applicantId) || null;
+    const setSelectedApplicant = (a: any | null) => a ? setApplicantId(String(a.id)) : closeApplicant();
     const [eventStats, setEventStats] = useState<any>(null);
     const [simpleRegistrations, setSimpleRegistrations] = useState<any[]>([]);
     const [isActing, setIsActing] = useState(false);

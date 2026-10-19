@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGoBack } from '../../hooks/useGoBack';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
     Rocket, ArrowLeft, Save, Users, Target, Info, Globe, Video, 
@@ -21,7 +22,10 @@ export function ManageStartupPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const goBack = useGoBack('/my-startups');
-    const [activeTab, setActiveTab] = useState<TabType>('info');
+    // The open tab lives in the URL (?tab=team): the back arrow returns to the previous tab
+    const [tabParam, setTabParam] = useUrlParam('tab');
+    const activeTab = (tabParam || 'info') as TabType;
+    const setActiveTab = (tab: TabType) => setTabParam(tab === 'info' ? null : tab);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isRefining, setIsRefining] = useState(false);

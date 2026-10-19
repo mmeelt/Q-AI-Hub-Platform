@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { Search, Filter, X, Users, DollarSign, TrendingUp, Calendar, CheckCircle, Clock, ChevronRight, Video, Save, Percent, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../services/api';
@@ -345,8 +346,11 @@ export function StartupsSection() {
     const [search, setSearch] = useState('');
     const [stageFilter, setStageFilter] = useState('All');
     const [eventFilter, setEventFilter] = useState('All');
-    const [selectedStartup, setSelectedStartup] = useState<any | null>(null);
     const [allStartups, setAllStartups] = useState<any[]>([]);
+    // The open startup lives in the URL (?startup=id): the back arrow closes it
+    const [startupParam, setStartupParam, closeStartup] = useUrlParam('startup');
+    const selectedStartup = allStartups.find(s => String(s.id) === startupParam) || null;
+    const setSelectedStartup = (s: any | null) => s ? setStartupParam(String(s.id)) : closeStartup();
     const [events, setEvents] = useState<any[]>([]);
 
     useEffect(() => {

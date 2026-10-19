@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { useUrlParam } from '../../hooks/useUrlParam';
 import { Mail, Lock, Eye, EyeOff, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Logo } from '../../components/common/Logo';
@@ -36,7 +37,10 @@ export function ForgotPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useI18n();
-  const [step, setStep] = useState<Step>('email');
+  // The step lives in the URL so the back arrow returns to the previous step (a fresh visit starts at the e-mail)
+  const [stepParam, setStepParam] = useUrlParam('step', { resetOnMount: true });
+  const step: Step = stepParam === 'reset' || stepParam === 'done' ? stepParam : 'email';
+  const setStep = (next: Step) => setStepParam(next === 'email' ? null : next);
   // ?email= comes from the "you are now an administrator" email link
   const [email, setEmail] = useState<string>(
     (location.state as any)?.email || new URLSearchParams(location.search).get('email') || '');
