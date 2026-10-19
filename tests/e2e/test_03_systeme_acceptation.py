@@ -170,8 +170,8 @@ def test_ACC03_jury_evalue_candidatures_et_pitchs(driver):
         ui.type("//input[@type='number' and @max='20']", str(grade))
         ui.click("//button[contains(., 'Recommend accept')]")
         ui.type("//textarea[starts-with(@placeholder,'Comment for the admin')]", f'Dossier {name}.')
-        ui.click("//button[contains(., 'Save my grade')]")
-        ui.el("//button[contains(., 'Grade saved')]")
+        ui.click("//button[contains(., 'Send my grade')]")
+        ui.text_visible('Your grade was sent to the admin')
         ui.shot('note_candidature_' + name)
     for app in apps.values():
         reviews = admin.get(qa.API + f"/applications/{app['applicationId']}/reviews").json()

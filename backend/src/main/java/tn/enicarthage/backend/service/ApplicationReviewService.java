@@ -49,8 +49,11 @@ public class ApplicationReviewService {
         }
 
         String reviewerId = SecurityContextHolder.getContext().getAuthentication().getName();
-        ApplicationReview review = reviewRepository.findByApplicationIdAndReviewerUserId(applicationId, reviewerId)
-                .orElseGet(() -> ApplicationReview.builder().applicationId(applicationId).reviewerUserId(reviewerId).build());
+        // A grade is final once sent: the admin decides on what the experts sent
+        if (reviewRepository.findByApplicationIdAndReviewerUserId(applicationId, reviewerId).isPresent()) {
+            throw new IllegalStateException("Your grade has already been sent and can no longer be changed");
+        }
+        ApplicationReview review = ApplicationReview.builder().applicationId(applicationId).reviewerUserId(reviewerId).build();
         userRepository.findById(reviewerId).ifPresent(user -> {
             review.setReviewerEmail(user.getEmailAddress());
             review.setReviewerName(user.getFullName());

@@ -245,7 +245,7 @@ public class PitchRoundService {
 
     /**
      * Saves the score of one judge for one startup in one round.
-     * Each judge has a single, editable evaluation per startup and round (re-submitting updates it).
+     * Each judge has a single evaluation per startup and round, final once sent.
      * Nothing is sent to the startup here: the admin sends the averaged results with sendBulkResults.
      */
     @Transactional
@@ -289,13 +289,14 @@ public class PitchRoundService {
             throw new IllegalArgumentException("Total score " + totalScore + " exceeds the round maximum of " + maxScore);
         }
 
-        PitchRoundResult result = resultRepository
-                .findByPitchRoundIdAndApplicationIdAndEvaluatedByIgnoreCase(roundId, applicationId, judgeEmail)
-                .orElseGet(() -> PitchRoundResult.builder()
-                        .pitchRound(round)
-                        .applicationId(applicationId)
-                        .evaluatedBy(judgeEmail)
-                        .build());
+        if (resultRepository.findByPitchRoundIdAndApplicationIdAndEvaluatedByIgnoreCase(roundId, applicationId, judgeEmail).isPresent()) {
+            throw new IllegalStateException("Your score for this startup has already been sent and can no longer be changed");
+        }
+        PitchRoundResult result = PitchRoundResult.builder()
+                .pitchRound(round)
+                .applicationId(applicationId)
+                .evaluatedBy(judgeEmail)
+                .build();
         result.setScoresJson(scoresJson);
         result.setTotalScore(totalScore);
         result.setDecision(decision);

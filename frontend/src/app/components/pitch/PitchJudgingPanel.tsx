@@ -448,9 +448,10 @@ function EvaluateView({ round, mode, onBack, onViewResults }: {
                                             )}
                                         </div>
                                     </div>
-                                    <button disabled={locked} onClick={() => setScoring(c)}
+                                    {/* A sent score is final: it can be viewed, not edited */}
+                                    <button disabled={locked && !mine} onClick={() => setScoring(c)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${mine ? 'bg-foreground/10 text-foreground hover:bg-foreground/20' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
-                                        <Star size={14} /> {mine ? 'Edit my score' : 'Score'}
+                                        <Star size={14} /> {mine ? 'View my score' : 'Score'}
                                     </button>
                                 </div>
                             </Card>
@@ -484,6 +485,8 @@ function ScoreModal({ round, criteria, candidate, existing, onClose, onSaved }: 
     onSaved: () => void;
 }) {
     const maxScore = maxOf(criteria);
+    // A score and its feedback are final once sent: the window only shows them
+    const readOnly = !!existing;
     const [scores, setScores] = useState<Record<string, number>>(() => {
         try { return existing?.scoresJson ? JSON.parse(existing.scoresJson) : {}; } catch { return {}; }
     });
@@ -530,7 +533,7 @@ function ScoreModal({ round, criteria, candidate, existing, onClose, onSaved }: 
                 decision: effectiveDecision,
                 feedback,
             });
-            toast.success(existing ? 'Your score was updated' : 'Score submitted');
+            toast.success('Score submitted');
             onSaved();
         } catch (e: any) {
             toast.error(e.message || 'Failed to submit score');
@@ -547,7 +550,7 @@ function ScoreModal({ round, criteria, candidate, existing, onClose, onSaved }: 
                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h3 className="text-xl font-semibold text-foreground">Score {candidate.startupName}</h3>
+                        <h3 className="text-xl font-semibold text-foreground">{readOnly ? 'Your score for' : 'Score'} {candidate.startupName}</h3>
                         <p className="text-sm text-muted-foreground">{roundTitle(round)} · {candidate.founderName}</p>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-lg hover:bg-foreground/5"><X size={20} /></button>
@@ -563,14 +566,14 @@ function ScoreModal({ round, criteria, candidate, existing, onClose, onSaved }: 
                             {c.maxPoints <= 10 ? (
                                 <div className="flex items-center gap-2 flex-wrap">
                                     {Array.from({ length: c.maxPoints + 1 }, (_, i) => i).map(v => (
-                                        <button key={v} type="button" onClick={() => setScore(c.key, v, c.maxPoints)}
+                                        <button key={v} type="button" disabled={readOnly} onClick={() => setScore(c.key, v, c.maxPoints)}
                                             className={`w-10 h-10 rounded-lg border transition-colors ${scores[c.key] === v ? 'bg-primary border-primary text-primary-foreground' : 'border-border hover:border-primary/50'}`}>
                                             {v}
                                         </button>
                                     ))}
                                 </div>
                             ) : (
-                                <input type="number" min={0} max={c.maxPoints} value={scores[c.key] ?? ''}
+                                <input type="number" min={0} max={c.maxPoints} value={scores[c.key] ?? ''} disabled={readOnly}
                                     onChange={e => setScore(c.key, Number(e.target.value), c.maxPoints)}
                                     className="w-28 px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground outline-none focus:border-primary/40" />
                             )}
@@ -586,7 +589,7 @@ function ScoreModal({ round, criteria, candidate, existing, onClose, onSaved }: 
                     <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground mr-1">Your decision</span>
                         {(['PASSED', 'REJECTED'] as const).map(d => (
-                            <button key={d} type="button" onClick={() => setDecision(d)}
+                            <button key={d} type="button" disabled={readOnly} onClick={() => setDecision(d)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${effectiveDecision === d
                                     ? (d === 'PASSED' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-500' : 'bg-red-500/15 border-red-500/40 text-red-500')
                                     : 'border-border text-muted-foreground hover:bg-foreground/5'}`}>
@@ -599,22 +602,31 @@ function ScoreModal({ round, criteria, candidate, existing, onClose, onSaved }: 
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-medium text-foreground">Feedback for the startup</label>
-                        <button type="button" disabled={!feedback.trim() || enhancing} onClick={enhance}
+                        {!readOnly && <button type="button" disabled={!feedback.trim() || enhancing} onClick={enhance}
                             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-violet-500/15 text-violet-400 border border-violet-500/25 text-xs hover:bg-violet-500/25 disabled:opacity-40 disabled:cursor-not-allowed">
                             <Brain size={12} /> {enhancing ? 'Enhancing...' : 'Enhance with AI'}
-                        </button>
+                        </button>}
                     </div>
-                    <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
+                    <textarea value={feedback} onChange={e => setFeedback(e.target.value)} readOnly={readOnly}
                         placeholder="Strengths, weaknesses, advice..."
                         className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground outline-none focus:border-primary/40 min-h-[100px] resize-none" />
                 </div>
 
+                <p className="text-xs text-muted-foreground mb-3">
+                    {readOnly
+                        ? 'Your score and feedback were sent. They are final and can no longer be changed.'
+                        : 'Once sent, your score and feedback can no longer be changed.'}
+                </p>
                 <div className="flex gap-3">
-                    <button onClick={onClose} className="flex-1 px-4 py-2 bg-foreground/10 text-foreground rounded-lg hover:bg-foreground/20">Cancel</button>
-                    <button disabled={saving} onClick={submit}
-                        className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-60">
-                        {saving ? 'Saving...' : existing ? 'Update my score' : 'Submit score'}
+                    <button onClick={onClose} className="flex-1 px-4 py-2 bg-foreground/10 text-foreground rounded-lg hover:bg-foreground/20">
+                        {readOnly ? 'Close' : 'Cancel'}
                     </button>
+                    {!readOnly && (
+                        <button disabled={saving} onClick={submit}
+                            className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-60">
+                            {saving ? 'Sending...' : 'Submit score'}
+                        </button>
+                    )}
                 </div>
             </motion.div>
         </motion.div>

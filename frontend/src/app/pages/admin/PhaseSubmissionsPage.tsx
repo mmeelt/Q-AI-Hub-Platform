@@ -81,6 +81,9 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
     if (!isOpen || !submission) return null;
 
     const answers = JSON.parse(submission.answersJson || '{}');
+    // A grade, a decision and their feedback are final once sent: the window only shows them
+    const decided = submission.decisionStatus === 'ACCEPTED' || submission.decisionStatus === 'REJECTED';
+    const locked = decided || (submission.phaseOrder > 1 && submission.evaluationScore != null);
 
     return (
         <motion.div
@@ -101,7 +104,7 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border">
                     <div>
-                        <h3 className="text-xl font-semibold text-foreground">Grade Submission</h3>
+                        <h3 className="text-xl font-semibold text-foreground">{locked ? 'Submission' : 'Grade Submission'}</h3>
                         <p className="text-sm text-muted-foreground mt-1">
                             {submission.user?.fullName || 'Unknown User'} • {submission.user?.startupName || 'No startup'}
                         </p>
@@ -187,6 +190,7 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
                                             max="100"
                                             value={score}
                                             onChange={(e) => setScore(Number(e.target.value))}
+                                            disabled={locked}
                                             className="flex-1"
                                         />
                                         <input
@@ -195,6 +199,7 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
                                             max="100"
                                             value={score}
                                             onChange={(e) => setScore(Number(e.target.value))}
+                                            disabled={locked}
                                             className="w-20 px-3 py-2 bg-background border border-border rounded-lg text-center"
                                         />
                                     </div>
@@ -222,6 +227,7 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
                         <textarea
                             value={feedback}
                             onChange={(e) => setFeedback(e.target.value)}
+                            readOnly={locked}
                             placeholder="Provide detailed feedback on the submission..."
                             className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground outline-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground/40 min-h-[120px] resize-none"
                         />
@@ -229,9 +235,14 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-between p-6 border-t border-border">
+                <div className="flex items-center justify-between gap-4 p-6 border-t border-border">
                     <div className="flex gap-2">
-                        {submission.phaseOrder === 1 ? (
+                        {locked ? (
+                            <p className="text-sm text-muted-foreground">
+                                {decided ? `Decision sent: ${submission.decisionStatus === 'ACCEPTED' ? 'accepted' : 'rejected'}.` : 'Grade sent.'}
+                                {' '}It is final and can no longer be changed.
+                            </p>
+                        ) : submission.phaseOrder === 1 ? (
                             <>
                                 <Button
                                     variant="outline"
@@ -273,7 +284,7 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
                         onClick={onClose}
                         disabled={isSubmitting}
                     >
-                        Cancel
+                        {locked ? 'Close' : 'Cancel'}
                     </Button>
                 </div>
             </motion.div>

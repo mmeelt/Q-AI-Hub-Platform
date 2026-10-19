@@ -80,18 +80,18 @@ class PitchRoundServiceTest {
     }
 
     @Test
-    void evaluate_again_updatesTheSameJudgeResult() {
+    void evaluate_again_isRefused_theSentScoreAndFeedbackAreFinal() {
         PitchRoundResult existing = result(7L, "judge@x.com", 10, PitchRoundResult.RoundDecision.REJECTED);
         when(resultRepository.findByPitchRoundIdAndApplicationIdAndEvaluatedByIgnoreCase(1L, "app-1", "judge@x.com"))
                 .thenReturn(Optional.of(existing));
 
-        PitchRoundResult saved = service.evaluateParticipant(1L, "app-1",
+        assertThrows(IllegalStateException.class, () -> service.evaluateParticipant(1L, "app-1",
                 "{\"A\":5,\"B\":5,\"C\":5,\"D\":5,\"E\":5}", PitchRoundResult.RoundDecision.PASSED,
-                "Changed my mind", "judge@x.com", null);
+                "Changed my mind", "judge@x.com", null));
 
-        assertSame(existing, saved);
-        assertEquals(25.0, saved.getTotalScore());
-        assertEquals(PitchRoundResult.RoundDecision.PASSED, saved.getDecision());
+        assertEquals(10.0, existing.getTotalScore());
+        assertEquals("feedback judge@x.com", existing.getFeedback());
+        verify(resultRepository, never()).save(any());
     }
 
     @Test

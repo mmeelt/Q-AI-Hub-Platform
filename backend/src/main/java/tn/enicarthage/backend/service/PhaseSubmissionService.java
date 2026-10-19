@@ -261,6 +261,16 @@ public class PhaseSubmissionService {
             throw new IllegalArgumentException("Score must be between 0 and 100");
         }
         PhaseSubmission submission = getSubmissionById(id);
+        // A grade and its feedback are final once sent, and nothing is graded after the decision
+        if (submission.getEvaluationScore() != null) {
+            throw new IllegalStateException("This submission has already been graded: the grade can no longer be changed");
+        }
+        if (submission.getDecisionStatus() != null && submission.getDecisionStatus() != PhaseSubmission.DecisionStatus.PENDING) {
+            throw new IllegalStateException("A decision has already been made for this submission: " + submission.getDecisionStatus());
+        }
+        if (submission.getStatus() == PhaseSubmission.SubmissionStatus.DRAFT) {
+            throw new IllegalStateException("The participant has not submitted answers for this phase yet");
+        }
         submission.gradeSubmission(score, feedback);
         PhaseSubmission saved = submissionRepository.save(submission);
 
@@ -300,7 +310,9 @@ public class PhaseSubmissionService {
         }
 
         submission.setDecisionStatus(decision);
-        if (feedback != null && !feedback.isBlank()) {
+        // Feedback already sent with a grade is final: the decision does not replace it
+        if (feedback != null && !feedback.isBlank()
+                && (submission.getEvaluatorFeedback() == null || submission.getEvaluatorFeedback().isBlank())) {
             submission.setEvaluatorFeedback(feedback);
         }
         submission.setStatus(PhaseSubmission.SubmissionStatus.GRADED);

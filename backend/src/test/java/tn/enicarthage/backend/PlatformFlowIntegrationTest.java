@@ -289,17 +289,17 @@ class PlatformFlowIntegrationTest {
 
         grade(reviews, expert1, 16, "ACCEPT").andExpect(status().isOk());
         grade(reviews, expert2, 11, "REJECT").andExpect(status().isOk());
-        grade(reviews, expert2, 13, "ACCEPT").andExpect(status().isOk()); // re-grading replaces the first grade
+        grade(reviews, expert2, 13, "ACCEPT").andExpect(status().isConflict()); // a sent grade is final
         grade(reviews, outsider, 20, "ACCEPT").andExpect(status().isForbidden());
         grade(reviews, admin, 20, "ACCEPT").andExpect(status().isForbidden()); // the admin decides, does not grade
         grade(reviews, expert1, 25, "ACCEPT").andExpect(status().isBadRequest()); // above 20
 
         JsonNode forAdmin = body(perform(get(reviews), admin).andExpect(status().isOk()));
         assertEquals(2, forAdmin.path("reviews").size());
-        assertEquals(14.5, forAdmin.path("averageScore").asDouble());
-        assertEquals(2, forAdmin.path("acceptVotes").asInt());
+        assertEquals(13.5, forAdmin.path("averageScore").asDouble());
+        assertEquals(1, forAdmin.path("acceptVotes").asInt());
         JsonNode inList = body(perform(get("/api/applications/event/" + eventId), admin).andExpect(status().isOk())).get(0);
-        assertEquals(14.5, inList.path("reviewAverage").asDouble());
+        assertEquals(13.5, inList.path("reviewAverage").asDouble());
 
         JsonNode forExpert = body(perform(get(reviews), expert1).andExpect(status().isOk()));
         assertTrue(forExpert.path("reviews").isMissingNode(), "an expert must not see the other grades");

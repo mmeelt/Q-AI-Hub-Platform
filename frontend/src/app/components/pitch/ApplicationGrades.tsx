@@ -8,7 +8,7 @@ type Recommendation = 'ACCEPT' | 'REJECT';
 const scoreColor = (score: number) =>
     score >= 14 ? 'text-emerald-600 dark:text-emerald-400' : score >= 10 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
 
-/** Expert side: grade the application /20 with a recommendation; editable until the admin decides. */
+/** Expert side: grade the application /20 with a recommendation; final once sent. */
 export function MyApplicationGrade({ applicationId }: { applicationId: string }) {
     const [loading, setLoading] = useState(true);
     const [canGrade, setCanGrade] = useState(false);
@@ -49,7 +49,7 @@ export function MyApplicationGrade({ applicationId }: { applicationId: string })
         try {
             await api.submitMyApplicationReview(applicationId, { score: value, recommendation, comment });
             setSaved(true);
-            toast.success('Your grade was saved. The admin will see it.');
+            toast.success('Your grade was sent to the admin.');
         } catch (e: any) {
             toast.error(e.message || 'Failed to save your grade');
         } finally {
@@ -58,13 +58,19 @@ export function MyApplicationGrade({ applicationId }: { applicationId: string })
     };
 
     if (loading) return null;
+    // A grade is sent once: after that it is shown, never edited
+    const editable = canGrade && !saved;
 
     return (
         <section className="p-4 rounded-xl bg-card border border-border">
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Star size={12} /> Your grade
             </h4>
-            {!canGrade && (
+            {saved ? (
+                <p className="text-xs text-muted-foreground mb-3">
+                    Your grade was sent to the admin. It is final and can no longer be changed.
+                </p>
+            ) : !canGrade && (
                 <p className="text-xs text-muted-foreground mb-3">
                     The admin has already decided on this application: grades are closed.
                 </p>
@@ -73,8 +79,8 @@ export function MyApplicationGrade({ applicationId }: { applicationId: string })
                 <input
                     type="number" min={0} max={20} step={0.25}
                     value={score}
-                    onChange={e => { setScore(e.target.value); setSaved(false); }}
-                    disabled={!canGrade}
+                    onChange={e => setScore(e.target.value)}
+                    disabled={!editable}
                     className="w-24 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50 disabled:opacity-60"
                     aria-label="Grade out of 20"
                 />
@@ -91,8 +97,8 @@ export function MyApplicationGrade({ applicationId }: { applicationId: string })
                         <button
                             key={r}
                             type="button"
-                            disabled={!canGrade}
-                            onClick={() => { setRecommendation(r); setSaved(false); }}
+                            disabled={!editable}
+                            onClick={() => setRecommendation(r)}
                             className={`flex-1 flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-60 ${active ? tone : 'border-border text-muted-foreground hover:text-foreground'}`}
                         >
                             <Icon size={14} /> {r === 'ACCEPT' ? 'Recommend accept' : 'Recommend reject'}
@@ -102,21 +108,24 @@ export function MyApplicationGrade({ applicationId }: { applicationId: string })
             </div>
             <textarea
                 value={comment}
-                onChange={e => { setComment(e.target.value); setSaved(false); }}
-                disabled={!canGrade}
+                onChange={e => setComment(e.target.value)}
+                disabled={!editable}
                 placeholder="Comment for the admin (strengths, weaknesses...)"
                 rows={3}
                 className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50 disabled:opacity-60 mb-3"
             />
-            {canGrade && (
-                <button
-                    type="button"
-                    onClick={save}
-                    disabled={busy}
-                    className="w-full flex items-center justify-center gap-2 rounded-lg neon-btn-gradient text-white px-4 py-2 text-sm font-semibold disabled:opacity-50"
-                >
-                    <Save size={14} /> {saved ? 'Grade saved — update it' : 'Save my grade'}
-                </button>
+            {editable && (
+                <>
+                    <p className="text-xs text-muted-foreground mb-2">Once sent, your grade and comment can no longer be changed.</p>
+                    <button
+                        type="button"
+                        onClick={save}
+                        disabled={busy}
+                        className="w-full flex items-center justify-center gap-2 rounded-lg neon-btn-gradient text-white px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                    >
+                        <Save size={14} /> Send my grade
+                    </button>
+                </>
             )}
         </section>
     );
