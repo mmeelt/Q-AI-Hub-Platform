@@ -66,6 +66,8 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                         startup: data.startupName || data.projectName || parsedAnswers.projectName || 'Unnamed Startup',
                         avatar: (data.startupName || data.projectName || parsedAnswers.projectName || 'U')[0].toUpperCase(),
                         status: (data.applicationStatus || data.status || 'PENDING'),
+                        reviewAverage: data.reviewAverage ?? null,
+                        reviewCount: data.reviewCount ?? 0,
                         submittedAt: data.applicationSubmittedAt
                             ? new Date(data.applicationSubmittedAt).toLocaleDateString()
                             : 'Recent',
@@ -298,7 +300,7 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                         <table className="w-full">
                             <thead><tr className="border-b border-border bg-muted">
-                                {['Startup', 'Founder/Lead', 'Submitted', 'Status', 'Actions'].map(h => <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">{h}</th>)}
+                                {['Startup', 'Founder/Lead', 'Submitted', 'Expert grade', 'Status', 'Actions'].map(h => <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">{h}</th>)}
                             </tr></thead>
                             <tbody>
                                 {filtered.map((a, i) => (
@@ -319,6 +321,16 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                                             </div>
                                         </td>
                                         <td className="px-5 py-3.5 text-sm text-muted-foreground">{a.submittedAt}</td>
+                                        <td className="px-5 py-3.5 text-sm">
+                                            {a.reviewCount > 0 ? (
+                                                <span className="font-semibold text-foreground">
+                                                    {Number(a.reviewAverage).toFixed(2)}/20
+                                                    <span className="ml-1 text-[10px] font-normal text-muted-foreground">({a.reviewCount} expert{a.reviewCount > 1 ? 's' : ''})</span>
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-muted-foreground">Not graded</span>
+                                            )}
+                                        </td>
                                         <td className="px-5 py-3.5"><StatusBadge status={a.status} /></td>
                                         <td className="px-5 py-3.5 text-right">
                                             <Button

@@ -27,6 +27,9 @@ import org.springframework.http.HttpStatus;
 public class ApplicationController {
 
     @Autowired
+    private tn.enicarthage.backend.service.ApplicationReviewService applicationReviewService;
+
+    @Autowired
     private tn.enicarthage.backend.service.ApplicantAnonymizer anonymizer;
 
     @Autowired
@@ -204,6 +207,15 @@ public class ApplicationController {
                     .followupAnswersJson(app.getFollowupAnswersJson())
                     .build();
         }).collect(Collectors.toList());
+        if (isAdmin()) {
+            var reviewSummaries = applicationReviewService.summariesFor(
+                    responses.stream().map(ApplicationResponse::getApplicationId).toList());
+            responses.forEach(r -> {
+                var s = reviewSummaries.get(r.getApplicationId());
+                r.setReviewCount(s == null ? 0 : (Integer) s.get("reviewCount"));
+                r.setReviewAverage(s == null ? null : (Double) s.get("averageScore"));
+            });
+        }
         // "Show anonymised to jury": judges get startup codes instead of names
         if (anonymizer.appliesToJudgesOfEvent()) {
             responses.forEach(anonymizer::anonymize);

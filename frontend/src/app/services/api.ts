@@ -1043,6 +1043,29 @@ export const api = {
         return await response.json();
     },
 
+    /** Admin: every expert grade + average. Invited expert: their own grade and whether grading is open. */
+    async getApplicationReviews(applicationId: string): Promise<any> {
+        const response = await this.authFetch(`/applications/${applicationId}/reviews`);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(getApiErrorMessage(errorData, 'Failed to load the grades'));
+        }
+        return await response.json();
+    },
+
+    async submitMyApplicationReview(applicationId: string, review: { score: number; recommendation: 'ACCEPT' | 'REJECT'; comment?: string }): Promise<any> {
+        const response = await this.authFetch(`/applications/${applicationId}/reviews/mine`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(review),
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(getApiErrorMessage(errorData, 'Failed to save your grade'));
+        }
+        return await response.json();
+    },
+
     async getStartupRatings(applicationId: string): Promise<any[]> {
         const response = await this.authFetch(`/applications/${applicationId}/ratings`);
         if (!response.ok) throw new Error('Failed to fetch ratings');

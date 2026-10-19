@@ -6,6 +6,7 @@ import { Button } from '../../common/Button';
 import { DateTimePicker } from '../../ui/datetime-picker';
 import { toast } from 'sonner';
 import { StatusBadge } from './shared';
+import { ApplicationGradesSummary } from '../../pitch/ApplicationGrades';
 
 export function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () => void }) {
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
@@ -351,6 +352,7 @@ export function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose
                                         <p className="text-[10px] text-muted-foreground text-center">Founder has been notified of the pitch date.</p>
                                     )}
                                 </div>
+                                <ApplicationGradesSummary applicationId={String(applicant.id)} />
                             </div>
 
                             {applicant.status !== 'Accepted' && applicant.status !== 'ACCEPTED' && applicant.status !== 'Rejected' && applicant.status !== 'REJECTED' && (

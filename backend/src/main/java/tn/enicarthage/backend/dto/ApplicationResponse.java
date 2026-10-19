@@ -35,4 +35,8 @@ public class ApplicationResponse {
     private String followupStatus;
     private String followupQuestionsJson;
     private String followupAnswersJson;
+
+    // Expert grades (/20): filled for the admin only, experts judge without seeing the others
+    private Double reviewAverage;
+    private Integer reviewCount;
 }

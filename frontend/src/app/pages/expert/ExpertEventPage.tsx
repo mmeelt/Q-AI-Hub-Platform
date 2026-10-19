@@ -14,6 +14,7 @@ import { api } from '../../services/api';
 import { toast } from 'sonner';
 import { PitchJudgingPanel } from '../../components/pitch/PitchJudgingPanel';
 import { PitchVideo } from '../../components/common/PitchVideo';
+import { MyApplicationGrade } from '../../components/pitch/ApplicationGrades';
 
 // Backend statuses are upper-case (PENDING, ACCEPTED...); the UI shows them as 'Accepted', 'Under Review'...
 const displayStatus = (raw?: string) => {
@@ -49,7 +50,7 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 z-50 flex w-[620px] max-w-full flex-col border-l border-border bg-background/98 backdrop-blur-2xl shadow-2xl"
+            className="fixed inset-y-0 right-0 z-50 flex w-[620px] max-w-full flex-col border-l border-border bg-white dark:bg-card shadow-2xl"
         >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
@@ -71,6 +72,9 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* The expert's own grade of this application (/20) */}
+                <MyApplicationGrade applicationId={applicant.applicationId} />
+
                 {/* Event info */}
                 <section className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                     <div className="flex items-center gap-2 text-sm text-primary font-medium mb-1">

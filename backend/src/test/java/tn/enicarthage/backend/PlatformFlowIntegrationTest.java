@@ -268,6 +268,53 @@ class PlatformFlowIntegrationTest {
                 .content("{\"projectName\":\"NotAllowed\"}"), session).andExpect(status().isForbidden());
     }
 
+    // ── Several experts grade an application, the admin decides on the average ─
+
+    @Test
+    void expertsGradeAnApplication_theAdminSeesEveryGradeAndTheAverage_thenDecides() throws Exception {
+        String admin = adminToken();
+        String expert1 = judgeToken(unique("grader1") + "@test.com");
+        String expert2 = judgeToken(unique("grader2") + "@test.com");
+        String outsider = judgeToken(unique("notinvited") + "@test.com");
+        String eventId = createIncubationEvent(admin, List.of(emailOf(expert1), emailOf(expert2)));
+
+        String student = registerAndVerify(unique("graded") + "@test.com");
+        String startupId = body(perform(post("/api/startups").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"projectName\":\"GradedCo\"}"), student).andExpect(status().isOk())).path("startupId").asText();
+        String applicationId = body(perform(post("/api/applications/submit").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("targetEventId", eventId, "linkedStartupId", startupId,
+                        "initialApplicationAnswers", "{\"rawDescription\":\"Graded\"}"))), student)
+                .andExpect(status().isOk())).path("applicationId").asText();
+        String reviews = "/api/applications/" + applicationId + "/reviews";
+
+        grade(reviews, expert1, 16, "ACCEPT").andExpect(status().isOk());
+        grade(reviews, expert2, 11, "REJECT").andExpect(status().isOk());
+        grade(reviews, expert2, 13, "ACCEPT").andExpect(status().isOk()); // re-grading replaces the first grade
+        grade(reviews, outsider, 20, "ACCEPT").andExpect(status().isForbidden());
+        grade(reviews, admin, 20, "ACCEPT").andExpect(status().isForbidden()); // the admin decides, does not grade
+        grade(reviews, expert1, 25, "ACCEPT").andExpect(status().isBadRequest()); // above 20
+
+        JsonNode forAdmin = body(perform(get(reviews), admin).andExpect(status().isOk()));
+        assertEquals(2, forAdmin.path("reviews").size());
+        assertEquals(14.5, forAdmin.path("averageScore").asDouble());
+        assertEquals(2, forAdmin.path("acceptVotes").asInt());
+        JsonNode inList = body(perform(get("/api/applications/event/" + eventId), admin).andExpect(status().isOk())).get(0);
+        assertEquals(14.5, inList.path("reviewAverage").asDouble());
+
+        JsonNode forExpert = body(perform(get(reviews), expert1).andExpect(status().isOk()));
+        assertTrue(forExpert.path("reviews").isMissingNode(), "an expert must not see the other grades");
+        assertEquals(16.0, forExpert.path("myReview").path("score").asDouble());
+
+        perform(put("/api/applications/" + applicationId + "/accept"), admin).andExpect(status().isOk());
+        grade(reviews, expert1, 18, "ACCEPT").andExpect(status().isConflict()); // decided: grades are closed
+    }
+
+    private ResultActions grade(String url, String token, double score, String recommendation) throws Exception {
+        return perform(put(url + "/mine").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("score", score, "recommendation", recommendation,
+                        "comment", "ok"))), token);
+    }
+
     // ── TC-11 / SYS-02 / NF-02 : description improved by Gemini ───
 
     @Test
