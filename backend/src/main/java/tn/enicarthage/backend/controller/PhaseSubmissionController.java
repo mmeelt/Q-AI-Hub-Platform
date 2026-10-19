@@ -29,6 +29,7 @@ public class PhaseSubmissionController {
 
     // POST /api/submissions
     // Ownership and phase eligibility are enforced in PhaseSubmissionService.
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<PhaseSubmission> submitAnswers(@RequestBody SubmitRequest request) {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();

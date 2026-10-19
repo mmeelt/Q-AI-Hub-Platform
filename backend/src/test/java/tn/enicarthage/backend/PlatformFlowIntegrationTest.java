@@ -236,6 +236,26 @@ class PlatformFlowIntegrationTest {
         assertEquals("PASSED", summary.path("finalDecision").asText()); // 18 >= 60% of 25
     }
 
+    // ── An expert is a limited admin: evaluates, never participates ─
+
+    @Test
+    void expert_cannotCreateAStartup_applyOrRegisterAsAParticipant() throws Exception {
+        String admin = adminToken();
+        String judge = expertToken(unique("expert") + "@test.com");
+        String eventId = createIncubationEvent(admin, List.of(emailOf(judge)));
+
+        perform(post("/api/startups").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"projectName\":\"JudgeCo\"}"), judge).andExpect(status().isForbidden());
+        perform(post("/api/applications/submit").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("targetEventId", eventId,
+                        "initialApplicationAnswers", "{\"rawDescription\":\"x\"}"))), judge)
+                .andExpect(status().isForbidden());
+        perform(post("/api/registrations/event/" + eventId).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("participantName", "Judge",
+                        "participantEmail", emailOf(judge)))), judge)
+                .andExpect(status().isForbidden());
+    }
+
     // ── TC-11 / SYS-02 / NF-02 : description improved by Gemini ───
 
     @Test
@@ -298,6 +318,15 @@ class PlatformFlowIntegrationTest {
                 .accountCreatedAt(new Date()).userStatus(User.UserStatus.ACTIVE)
                 .failedLoginAttempts(0).accountLocked(false).build());
         return jwtUtil.generateToken(id, email, "USER");
+    }
+
+    // An account created from an expert invitation: its token carries the expert role, not USER
+    private String expertToken(String email) {
+        String id = UUID.randomUUID().toString();
+        userRepository.save(User.builder().userId(id).emailAddress(email).fullName("Expert").passwordHash("x")
+                .expertRole(User.ExpertRole.JUDGE).accountCreatedAt(new Date()).userStatus(User.UserStatus.ACTIVE)
+                .failedLoginAttempts(0).accountLocked(false).build());
+        return jwtUtil.generateToken(id, email, "JUDGE");
     }
 
     private String emailOf(String token) {

@@ -9,6 +9,7 @@ import { ParticleBackground } from '../../components/effects/ParticleBackground'
 import { FadeInSection } from '../../components/effects/FadeInSection';
 import { Button } from '../../components/common/Button';
 import { AuthInterceptModal } from '../../components/auth/AuthInterceptModal';
+import { isExpertAccount } from '../../utils/localStorage';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
 
@@ -46,6 +47,8 @@ export function EventsPage() {
     const [reloadKey, setReloadKey] = useState(0);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const isAdmin = (localStorage.getItem('userRole') || '').toUpperCase() === 'ADMIN';
+    // Experts (judge, mentor...) evaluate events, they never apply to them
+    const isExpert = isExpertAccount();
     const [myEventMetadata, setMyEventMetadata] = useState<Record<string, { status: string, appId?: string }>>({});
 
 
@@ -116,6 +119,10 @@ export function EventsPage() {
             navigate('/admin/events');
             return;
         }
+        if (isExpert) {
+            navigate('/dashboard?tab=expert');
+            return;
+        }
         try {
             const eventId = String(event.id ?? event.eventId ?? '');
             const eventType = (event.eventType || event.event_type || 'SIMPLE').toUpperCase();
@@ -180,7 +187,7 @@ export function EventsPage() {
     const [notifyFor, setNotifyFor] = useState<any | null>(null);
     const [notifyEmail, setNotifyEmail] = useState('');
     const [notifyBusy, setNotifyBusy] = useState(false);
-    const isUser = isLoggedIn && !isAdmin;
+    const isUser = isLoggedIn && !isAdmin && !isExpert;
 
     useEffect(() => {
         if (isUser) {
@@ -391,7 +398,7 @@ export function EventsPage() {
                                                                 }} 
                                                                 className="relative z-10 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-all cursor-pointer shadow-sm hover:shadow-primary/5 active:scale-[0.98]"
                                                             >
-                                                                {isAdmin ? 'Manage Event' : 'Apply Now'} <ArrowRight size={16} />
+                                                                {isAdmin ? 'Manage Event' : isExpert ? 'Expert space' : 'Apply Now'} <ArrowRight size={16} />
                                                             </button>
                                                         ) : event.status === 'Coming Soon' ? (
                                                             subscribed.has(event.id) ? (

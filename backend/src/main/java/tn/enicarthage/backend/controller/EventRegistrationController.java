@@ -28,10 +28,15 @@ public class EventRegistrationController {
     public ResponseEntity<EventRegistration> register(
             @PathVariable String eventId,
             @RequestBody RegisterRequest request) {
-        // Public endpoint, but an authenticated admin must not register as a participant
+        // Public endpoint (guests welcome), but a logged-in admin or expert must not register as a participant
         var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             throw new org.springframework.security.access.AccessDeniedException("Administrators cannot register to events as participants");
+        }
+        boolean loggedIn = auth != null && auth.isAuthenticated()
+                && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken);
+        if (loggedIn && auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
+            throw new org.springframework.security.access.AccessDeniedException("Experts cannot register to events as participants");
         }
         EventRegistration registration = registrationService.register(
                 eventId,

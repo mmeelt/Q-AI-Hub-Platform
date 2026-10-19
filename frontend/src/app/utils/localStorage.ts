@@ -47,6 +47,12 @@ export const saveSession = (user: { email?: string; role?: string; fullName?: st
   if (user.userId) localStorage.setItem(localStorageKeys.userId, user.userId);
 };
 
+// Experts (judge, mentor, evaluator...) are a limited admin: they evaluate, they never apply or create startups
+export const isExpertAccount = (): boolean => {
+  const role = (localStorage.getItem(localStorageKeys.userRole) || '').toUpperCase();
+  return role !== '' && role !== 'USER' && role !== 'ADMIN';
+};
+
 export const clearAuth = (): void => {
   [...Object.values(localStorageKeys), ...LEGACY_TOKEN_KEYS].forEach(key => localStorage.removeItem(key));
   sessionStorage.removeItem('hasExpertRoles');

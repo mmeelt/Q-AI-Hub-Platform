@@ -59,7 +59,7 @@ export function InviteTeammatePage() {
     };
 
     return (
-        <div className="min-h-screen relative bg-brand-navy text-foreground">
+        <div className="min-h-screen relative bg-background text-foreground">
             <ParticleBackground />
             <DashboardHeader activeTab="my-startups" profileName={profileName} />
 
@@ -156,7 +156,7 @@ export function InviteTeammatePage() {
                                             onClick={() => handleChange('role', r.value)}
                                             className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left group ${
                                                 form.role === r.value
-                                                    ? 'bg-purple-500/20 border-purple-500/40 text-white'
+                                                    ? 'bg-purple-500/20 border-purple-500/40 text-foreground'
                                                     : 'bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/10'
                                             }`}
                                         >

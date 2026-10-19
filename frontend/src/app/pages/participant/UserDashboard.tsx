@@ -6,7 +6,7 @@ import { ParticleBackground } from '../../components/effects/ParticleBackground'
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
-import { getUserName, isLoggedIn } from '../../utils/localStorage';
+import { getUserName, isLoggedIn, isExpertAccount } from '../../utils/localStorage';
 import { dedupeNotifications } from './dashboard/shared';
 import { OverviewTab } from './dashboard/OverviewTab';
 import { StartupTab } from './dashboard/StartupTab';
@@ -27,12 +27,18 @@ const navItems = [
   { id: 'settings', icon: Settings, label: 'Settings' },
 ];
 
+// An expert account only evaluates: no startup, applications, events to join or team invitations
+export const EXPERT_TABS = ['expert', 'notifications', 'settings'];
+
 /** Founder / participant dashboard: loads the user's data once, each tab renders its own part. */
 export function UserDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   // The URL (?tab=...) is the source of truth for the active tab
-  const activeTab = searchParams.get('tab') || 'overview';
+  const isExpert = isExpertAccount();
+  const requestedTab = searchParams.get('tab') || (isExpert ? 'expert' : 'overview');
+  const activeTab = isExpert && !EXPERT_TABS.includes(requestedTab) ? 'expert' : requestedTab;
+  const visibleNavItems = isExpert ? navItems.filter(item => EXPERT_TABS.includes(item.id)) : navItems;
   const focusedEventId = searchParams.get('eventId');
 
   const [applications, setApplications] = useState<any[]>([]);
@@ -195,7 +201,7 @@ export function UserDashboard() {
           <Breadcrumbs />
           {/* Mobile nav pills */}
           <nav className="md:hidden px-4 pt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleTabChange(item.id)}

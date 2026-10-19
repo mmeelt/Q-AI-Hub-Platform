@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 interface RequireAuthProps {
   children: ReactNode;
   allowedRoles?: string[];
-  // Roles that must not use this route (e.g. ADMIN on participant-only pages)
+  // Roles that must not use this route (e.g. ADMIN on admin-free pages); participant-only pages use allowedRoles={['USER']}
   deniedRoles?: string[];
 }
 
@@ -17,7 +17,8 @@ export function RequireAuth({ children, allowedRoles, deniedRoles }: RequireAuth
   const userRole = localStorage.getItem('userRole')?.replace(/^ROLE_/i, '').toUpperCase();
   const normalizedAllowedRoles = allowedRoles?.map((r) => r.replace(/^ROLE_/i, '').toUpperCase());
   const isDenied = !!userRole && !!deniedRoles?.some((r) => r.replace(/^ROLE_/i, '').toUpperCase() === userRole);
-  const homePath = userRole === 'ADMIN' ? '/admin' : '/dashboard';
+  // Experts (judge, mentor...) only evaluate: their home is the expert tab
+  const homePath = userRole === 'ADMIN' ? '/admin' : userRole && userRole !== 'USER' ? '/dashboard?tab=expert' : '/dashboard';
 
   useEffect(() => {
     if (!isLoggedIn) {

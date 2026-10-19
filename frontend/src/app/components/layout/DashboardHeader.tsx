@@ -6,7 +6,7 @@ import { Avatar } from '../common/Avatar';
 import { Button } from '../common/Button';
 import { ThemeToggle } from '../theme/ThemeToggle';
 import { api } from '../../services/api';
-import { clearAuth } from '../../utils/localStorage';
+import { clearAuth, isExpertAccount } from '../../utils/localStorage';
 import { LanguageToggle } from '../../i18n/LanguageToggle';
 import { useI18n } from '../../i18n/I18nProvider';
 
@@ -23,6 +23,7 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
     const [unreadCount, setUnreadCount] = useState(0);
     // The "Expert Roles" tab is only useful to people invited as experts (cached for the session)
     const [isExpert, setIsExpert] = useState(() => sessionStorage.getItem('hasExpertRoles') === 'true');
+    const expertAccount = isExpertAccount();
 
     useEffect(() => {
         if (sessionStorage.getItem('hasExpertRoles') !== null) return;
@@ -59,7 +60,10 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
         { id: 'expert', icon: Shield, label: t('dash.expert') },
         { id: 'invitations', icon: UserPlus, label: t('dash.invitations') },
         { id: 'settings', icon: Settings, label: t('dash.settings') },
-    ].filter(item => item.id !== 'expert' || isExpert || activeTab === 'expert');
+    ].filter(item => expertAccount
+        // An expert account only evaluates: it never applies, joins events or creates startups
+        ? ['expert', 'settings'].includes(item.id)
+        : item.id !== 'expert' || isExpert || activeTab === 'expert');
 
 
     const handleTabClick = (tabId: string) => {

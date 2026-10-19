@@ -52,7 +52,7 @@ export function InvitationsPage() {
     };
 
     return (
-        <div className="min-h-screen relative bg-brand-navy">
+        <div className="min-h-screen relative bg-background">
             <ParticleBackground />
             <DashboardHeader activeTab="notifications" profileName={profileName} />
 
@@ -152,11 +152,11 @@ export function InvitationsPage() {
                                                     <div className="grid grid-cols-2 gap-6 text-sm">
                                                         <div>
                                                             <p className="text-muted-foreground mb-1 uppercase tracking-tighter font-bold text-[10px]">Invited By</p>
-                                                            <p className="text-white font-medium">Founder ID: {inv.inviterUserId?.slice(0, 8)}</p>
+                                                            <p className="text-foreground font-medium">Founder ID: {inv.inviterUserId?.slice(0, 8)}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-muted-foreground mb-1 uppercase tracking-tighter font-bold text-[10px]">Startup</p>
-                                                            <p className="text-white font-medium">Startup Workspace #{inv.startupId?.slice(0, 8)}</p>
+                                                            <p className="text-foreground font-medium">Startup Workspace #{inv.startupId?.slice(0, 8)}</p>
                                                         </div>
                                                     </div>
                                                 </div>

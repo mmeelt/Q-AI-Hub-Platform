@@ -96,7 +96,7 @@ function StartupDetailPanel({ startup: initialStartup, onClose }: { startup: any
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 520, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed inset-y-0 right-0 z-50 flex w-[520px] flex-col border-l border-border bg-card backdrop-blur-xl shadow-2xl"
+            className="fixed inset-y-0 right-0 z-50 flex w-[520px] flex-col border-l border-border bg-white dark:bg-card shadow-2xl"
         >
             <div className="flex items-center justify-between border-b border-border px-6 py-4">
                 <h3 className="text-base font-bold text-foreground">Startup Details</h3>

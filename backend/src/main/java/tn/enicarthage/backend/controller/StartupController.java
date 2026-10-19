@@ -49,6 +49,8 @@ public class StartupController {
         return ResponseEntity.ok(myStartups);
     }
 
+    // Only participants own startups: admins and experts (judge, mentor...) cannot create one
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<Startup> createStartup(@RequestBody CreateStartupRequest dto) {
         String userId = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();

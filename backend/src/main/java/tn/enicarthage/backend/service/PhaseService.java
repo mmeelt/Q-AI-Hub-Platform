@@ -26,6 +26,7 @@ public class PhaseService {
     private final ApplicationRepository applicationRepository;
     private final NotificationService notificationService;
     private final tn.enicarthage.backend.repository.PhaseSubmissionRepository phaseSubmissionRepository;
+    private final tn.enicarthage.backend.repository.PitchRoundRepository pitchRoundRepository;
 
     // ── CREATE ────────────────────────────────────────────────────
 
@@ -207,6 +208,19 @@ public class PhaseService {
     @Transactional
     public void deletePhase(String id) {
         Phase phase = getPhaseById(id);
+        // Deleting would cascade to the students' work or break the pitch rounds: refuse with a clear reason
+        if (Boolean.TRUE.equals(phase.getPhaseActive())) {
+            throw new IllegalStateException("This phase is open: deactivate it before deleting it");
+        }
+        if (Boolean.TRUE.equals(phase.getPhaseLocked())) {
+            throw new IllegalStateException("This phase is finished and keeps its results: it cannot be deleted");
+        }
+        if (!phaseSubmissionRepository.findByPhaseId(id).isEmpty()) {
+            throw new IllegalStateException("Startups have already submitted to this phase: it cannot be deleted");
+        }
+        if (!pitchRoundRepository.findByPhaseIdOrderByRoundNumberAsc(id).isEmpty()) {
+            throw new IllegalStateException("This phase has pitch rounds: delete them before deleting the phase");
+        }
         phaseRepository.delete(phase);
     }
 

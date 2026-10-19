@@ -617,6 +617,14 @@ export const api = {
         return await response.json();
     },
 
+    async deletePhase(phaseId: string | number): Promise<void> {
+        const response = await this.authFetch(`/phases/${phaseId}`, { method: 'DELETE' });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(getApiErrorMessage(err, 'Failed to delete phase'));
+        }
+    },
+
     // ── Pitch Rounds ──────────────────────────────────────────────────
 
     async getPitchRoundsByPhase(phaseId: string | number): Promise<any[]> {

@@ -221,7 +221,7 @@ export function StartupDetailPage() {
                                     <Calendar size={16} />
                                     Pitch Scheduled
                                 </div>
-                                <div className="text-2xl font-bold text-white tracking-tight">
+                                <div className="text-2xl font-bold text-foreground tracking-tight">
                                     {new Date(application.pitchDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })} at {new Date(application.pitchDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Prepare your presentation deck</p>
@@ -239,7 +239,7 @@ export function StartupDetailPage() {
                                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                         <TrendingUp size={80} className="text-brand-amber" />
                                     </div>
-                                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-white">
+                                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-foreground">
                                         <Sparkles size={22} className="text-brand-amber" />
                                         Progression: Idea to Pre-Seed
                                     </h2>
@@ -261,11 +261,11 @@ export function StartupDetailPage() {
                                                     return qs;
                                                 })().map((q: string, i: number) => (
                                                     <div key={i} className="space-y-3">
-                                                        <label className="text-sm font-bold text-white flex gap-2">
+                                                        <label className="text-sm font-bold text-foreground flex gap-2">
                                                             <span className="text-brand-amber">Q{i+1}:</span> {q}
                                                         </label>
                                                         <textarea 
-                                                            className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white min-h-[100px] outline-none focus:border-brand-amber/40 transition-all placeholder:text-muted-foreground/30 shadow-inner"
+                                                            className="w-full bg-foreground/5 border border-border rounded-xl p-4 text-sm text-foreground min-h-[100px] outline-none focus:border-brand-amber/40 transition-all placeholder:text-muted-foreground/30 shadow-inner"
                                                             placeholder="Type your response here..."
                                                             id={`answer-${i}`}
                                                         />
@@ -300,7 +300,7 @@ export function StartupDetailPage() {
                                             <div className="p-3 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                                                 <CheckCircle2 size={32} className="text-emerald-400" />
                                             </div>
-                                            <p className="text-lg font-bold text-white tracking-tight">Review in Progress</p>
+                                            <p className="text-lg font-bold text-foreground tracking-tight">Review in Progress</p>
                                             <p className="text-sm text-muted-foreground max-w-sm mx-auto">Your answers have been submitted. The jury is now reviewing your project for Pre-Seed promotion.</p>
                                         </div>
                                     )}

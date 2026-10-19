@@ -110,6 +110,15 @@ export function RegisterPage() {
 
 
 
+  const passwordRules = [
+    { key: 'register.pwd.length', ok: (p: string) => p.length >= 8 },
+    { key: 'register.pwd.space', ok: (p: string) => !/\s/.test(p) },
+    { key: 'register.pwd.upper', ok: (p: string) => /[A-Z]/.test(p) },
+    { key: 'register.pwd.lower', ok: (p: string) => /[a-z]/.test(p) },
+    { key: 'register.pwd.digit', ok: (p: string) => /[0-9]/.test(p) },
+    { key: 'register.pwd.special', ok: (p: string) => /[^A-Za-z0-9]/.test(p) },
+  ] as const;
+
   const handleSubmit = async (e: React.FormEvent) => {
 
     e.preventDefault();
@@ -125,6 +134,10 @@ export function RegisterPage() {
     if (!formData.email) newErrors.email = t('common.emailRequired');
 
     if (!formData.password) newErrors.password = t('common.passwordRequired');
+
+    // Same rules as the backend PasswordValidator, so the exact problem shows before sending
+    const missingRule = passwordRules.find(r => !r.ok(formData.password));
+    if (formData.password && missingRule) newErrors.password = t(missingRule.key);
 
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t('register.passwordsMismatch');
 
@@ -399,6 +412,16 @@ export function RegisterPage() {
                     </div>
 
                     <p className="text-xs" style={{ color: strengthColor[passwordStrength] }}>{strengthLabel[passwordStrength]}</p>
+                    <ul className="mt-2 space-y-0.5">
+                      {passwordRules.map(r => {
+                        const ok = r.ok(formData.password);
+                        return (
+                          <li key={r.key} className="text-xs" style={{ color: ok ? '#3FA37C' : '#C8545E' }}>
+                            {ok ? '✓' : '✗'} {t(r.key)}
+                          </li>
+                        );
+                      })}
+                    </ul>
 
                   </div>
 

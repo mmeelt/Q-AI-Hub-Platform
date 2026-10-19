@@ -63,7 +63,8 @@ public class ApplicationController {
     private NotificationService notificationService;
 
     // POST /api/applications/submit — participants only (admins manage applications, they don't apply)
-    @PreAuthorize("isAuthenticated() and !hasRole('ADMIN')")
+    // Only participants apply: admins and experts (judge, mentor...) cannot
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/submit")
     // Only the fields a founder may set are bound; id, status, tracking code etc. are server-side.
     public ResponseEntity<Application> submitApplication(@RequestBody SubmitApplicationRequest request) {

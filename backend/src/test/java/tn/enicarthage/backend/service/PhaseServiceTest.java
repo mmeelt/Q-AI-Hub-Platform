@@ -13,6 +13,7 @@ import tn.enicarthage.backend.repository.ApplicationRepository;
 import tn.enicarthage.backend.repository.EventRepository;
 import tn.enicarthage.backend.repository.PhaseRepository;
 import tn.enicarthage.backend.repository.PhaseSubmissionRepository;
+import tn.enicarthage.backend.repository.PitchRoundRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,6 +32,7 @@ class PhaseServiceTest {
     @Mock private ApplicationRepository applicationRepository;
     @Mock private NotificationService notificationService;
     @Mock private PhaseSubmissionRepository phaseSubmissionRepository;
+    @Mock private PitchRoundRepository pitchRoundRepository;
 
     @InjectMocks
     private PhaseService service;
@@ -148,5 +150,37 @@ class PhaseServiceTest {
         input.setPhaseName("Bootcamp");
 
         assertThrows(EntityNotFoundException.class, () -> service.createPhase("missing", input));
+    }
+
+    @Test
+    void deletePhase_closedPhaseWithoutWork_isDeleted() {
+        Phase phase = existing(3, false, false);
+        when(phaseRepository.findById("p3")).thenReturn(Optional.of(phase));
+        when(phaseSubmissionRepository.findByPhaseId("p3")).thenReturn(List.of());
+        when(pitchRoundRepository.findByPhaseIdOrderByRoundNumberAsc("p3")).thenReturn(List.of());
+
+        service.deletePhase("p3");
+
+        verify(phaseRepository).delete(phase);
+    }
+
+    @Test
+    void deletePhase_openOrFinishedPhase_isRefused() {
+        when(phaseRepository.findById("p1")).thenReturn(Optional.of(existing(1, true, false)));
+        when(phaseRepository.findById("p2")).thenReturn(Optional.of(existing(2, false, true)));
+
+        assertThrows(IllegalStateException.class, () -> service.deletePhase("p1"));
+        assertThrows(IllegalStateException.class, () -> service.deletePhase("p2"));
+        verify(phaseRepository, never()).delete(any());
+    }
+
+    @Test
+    void deletePhase_withSubmissions_isRefused() {
+        when(phaseRepository.findById("p3")).thenReturn(Optional.of(existing(3, false, false)));
+        when(phaseSubmissionRepository.findByPhaseId("p3"))
+                .thenReturn(List.of(new tn.enicarthage.backend.entity.PhaseSubmission()));
+
+        assertThrows(IllegalStateException.class, () -> service.deletePhase("p3"));
+        verify(phaseRepository, never()).delete(any());
     }
 }

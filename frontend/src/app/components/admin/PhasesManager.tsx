@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X } from 'lucide-react';
+import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X, Trash2 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
@@ -32,6 +32,7 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
     const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
     const [managingPitchPhase, setManagingPitchPhase] = useState<Phase | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const { t } = useI18n();
 
     useEffect(() => {
@@ -78,6 +79,21 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
             toast.error(error.message || t('phases.activateFailed'));
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const deletePhase = async (phaseId: string) => {
+        setIsUpdating(true);
+        try {
+            await api.deletePhase(phaseId);
+            toast.success(t('phases.deleted'));
+            loadPhases();
+        } catch (error: any) {
+            // The backend explains why (open phase, submissions, pitch rounds...)
+            toast.error(error.message || t('phases.deleteFailed'));
+        } finally {
+            setIsUpdating(false);
+            setConfirmDeleteId(null);
         }
     };
 
@@ -253,6 +269,36 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                                                 </div>
                                             </div>
                                         </div>
+                                        {confirmDeleteId === phase.phaseId ? (
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <span className="text-xs text-muted-foreground">{t('phases.deleteConfirm')}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => deletePhase(phase.phaseId)}
+                                                    disabled={isUpdating}
+                                                    className="text-xs px-3 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                                                >
+                                                    {t('phases.deleteYes')}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setConfirmDeleteId(null)}
+                                                    className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground"
+                                                >
+                                                    {t('common.cancel')}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setConfirmDeleteId(phase.phaseId)}
+                                                title={t('phases.delete')}
+                                                aria-label={t('phases.delete')}
+                                                className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     {phases.length > 1 && (

@@ -83,7 +83,7 @@ function App() {
           <Route
             path="/events/:id/apply"
             element={
-              <RequireAuth deniedRoles={['ADMIN']}>
+              <RequireAuth allowedRoles={['USER']}>
                 <EventApplicationPage />
               </RequireAuth>
             }
@@ -91,7 +91,7 @@ function App() {
           <Route
             path="/programs/:id/apply"
             element={
-              <RequireAuth deniedRoles={['ADMIN']}>
+              <RequireAuth allowedRoles={['USER']}>
                 <ProgramApplicationPage />
               </RequireAuth>
             }
@@ -115,7 +115,7 @@ function App() {
           <Route
             path="/apply/:type/:id/questions"
             element={
-              <RequireAuth deniedRoles={['ADMIN']}>
+              <RequireAuth allowedRoles={['USER']}>
                 <QuestionnairePage />
               </RequireAuth>
             }
@@ -131,7 +131,7 @@ function App() {
           <Route
             path="/startup/:id/invite"
             element={
-              <RequireAuth>
+              <RequireAuth allowedRoles={['USER']}>
                 <InviteTeammatePage />
               </RequireAuth>
             }
@@ -139,7 +139,7 @@ function App() {
           <Route
             path="/my-startups"
             element={
-              <RequireAuth>
+              <RequireAuth allowedRoles={['USER']}>
                 <MyStartupsPage />
               </RequireAuth>
             }
@@ -147,7 +147,7 @@ function App() {
           <Route
             path="/my-startups/:id"
             element={
-              <RequireAuth>
+              <RequireAuth allowedRoles={['USER']}>
                 <ManageStartupPage />
               </RequireAuth>
             }
@@ -155,7 +155,7 @@ function App() {
           <Route
             path="/invitations"
             element={
-              <RequireAuth>
+              <RequireAuth allowedRoles={['USER']}>
                 <InvitationsPage />
               </RequireAuth>
             }
@@ -163,7 +163,7 @@ function App() {
           <Route
             path="/startup/create"
             element={
-              <RequireAuth>
+              <RequireAuth allowedRoles={['USER']}>
                 <CreateStartupProfilePage />
               </RequireAuth>
             }
