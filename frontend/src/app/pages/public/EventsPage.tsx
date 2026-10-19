@@ -61,7 +61,8 @@ export function EventsPage() {
             setIsLoading(true);
             setLoadError(false);
             try {
-                const data = await api.getEvents();
+                // An expert only sees the events they are invited to
+                const data = isExpert ? await api.getExpertEvents() : await api.getEvents();
                 setEventsList(data.map((e: any) => ({
                     ...e,
                     id: String(e.eventId ?? e.id ?? ''), // Normalize ID
@@ -120,7 +121,8 @@ export function EventsPage() {
             return;
         }
         if (isExpert) {
-            navigate('/dashboard?tab=expert');
+            // Experts open the event's expert view (candidatures, submissions, pitch)
+            navigate(`/expert/event/${event.id ?? event.eventId}`);
             return;
         }
         try {
@@ -365,7 +367,18 @@ export function EventsPage() {
                                                         </div>
                                                     </div>
                                                     <div className="mt-auto">
-                                                        {myEventMetadata[String(event.id)] ? (
+                                                        {isExpert ? (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleApply(event);
+                                                                }}
+                                                                className="relative z-10 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+                                                            >
+                                                                Expert space <ArrowRight size={16} />
+                                                            </button>
+                                                        ) : myEventMetadata[String(event.id)] ? (
                                                             (() => {
                                                                 const meta = myEventMetadata[String(event.id)];
                                                                 const status = meta.status || 'Registered';
@@ -398,7 +411,7 @@ export function EventsPage() {
                                                                 }} 
                                                                 className="relative z-10 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-all cursor-pointer shadow-sm hover:shadow-primary/5 active:scale-[0.98]"
                                                             >
-                                                                {isAdmin ? 'Manage Event' : isExpert ? 'Expert space' : 'Apply Now'} <ArrowRight size={16} />
+                                                                {isAdmin ? 'Manage Event' : 'Apply Now'} <ArrowRight size={16} />
                                                             </button>
                                                         ) : event.status === 'Coming Soon' ? (
                                                             subscribed.has(event.id) ? (
