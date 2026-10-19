@@ -256,6 +256,18 @@ class PlatformFlowIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void participantInvitedAsAnExpert_logsInAsAnExpert_andCannotCreateAStartup() throws Exception {
+        String email = unique("invited") + "@test.com";
+        createIncubationEvent(adminToken(), List.of(email));
+
+        String session = registerAndVerify(email);
+
+        assertEquals("JUDGE", jwtUtil.extractRole(session));
+        perform(post("/api/startups").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"projectName\":\"NotAllowed\"}"), session).andExpect(status().isForbidden());
+    }
+
     // ── TC-11 / SYS-02 / NF-02 : description improved by Gemini ───
 
     @Test

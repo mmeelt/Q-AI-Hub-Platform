@@ -288,7 +288,7 @@ public class AuthService {
         var userOpt = userRepository.findById(rt.getUserId());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            String role = user.getExpertRole() != null ? user.getExpertRole().name() : "USER";
+            String role = sessionRole(user);
             String newAccessToken = jwtUtil.generateToken(user.getUserId(), user.getEmailAddress(), role);
             return new AuthResponse(newAccessToken, rt.getToken(), accessTokenTtlMs / 1000, user.getUserId(),
                     user.getEmailAddress(), role, user.getFullName());
@@ -307,8 +307,33 @@ public class AuthService {
         throw new tn.enicarthage.backend.exception.TokenRevokedException("This account no longer exists");
     }
 
+    // An account invited as an expert to any event is an expert (a limited admin), even if it first signed up
+    // as a participant: the invitation's role is saved on the account so it can no longer apply or create startups.
+    private String sessionRole(User user) {
+        if (user.getExpertRole() == null && user.getEmailAddress() != null) {
+            eventRepository.findByExpertEmail(user.getEmailAddress()).stream()
+                    .flatMap(event -> event.getExpertInvitations().stream())
+                    .filter(invite -> user.getEmailAddress().equalsIgnoreCase(invite.getEmail()))
+                    .map(invite -> {
+                        try {
+                            return User.ExpertRole.fromLabel(invite.getRole());
+                        } catch (IllegalArgumentException e) {
+                            return null;
+                        }
+                    })
+                    .filter(java.util.Objects::nonNull)
+                    .findFirst()
+                    .ifPresent(expertRole -> {
+                        user.setExpertRole(expertRole);
+                        userRepository.save(user);
+                        log.info("User {} invited as an expert: account role set to {}", user.getEmailAddress(), expertRole);
+                    });
+        }
+        return user.getExpertRole() != null ? user.getExpertRole().name() : "USER";
+    }
+
     private AuthResponse issueUserSession(User user) {
-        String role = user.getExpertRole() != null ? user.getExpertRole().name() : "USER";
+        String role = sessionRole(user);
         String token = jwtUtil.generateToken(user.getUserId(), user.getEmailAddress(), role);
         RefreshToken rt = refreshTokenService.createRefreshToken(user.getUserId());
         return new AuthResponse(token, rt.getToken(), accessTokenTtlMs / 1000, user.getUserId(),
