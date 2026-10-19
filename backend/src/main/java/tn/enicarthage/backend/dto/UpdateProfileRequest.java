@@ -14,4 +14,10 @@ public class UpdateProfileRequest {
     private String avatarUrl;
     private String primaryInterest;
     private List<String> availability;
+    private String studentId;
+    // Invited experts' professional details
+    private String organization;
+    private String jobTitle;
+    private String expertiseArea;
+    private String linkedinUrl;
 }

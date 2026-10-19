@@ -42,6 +42,21 @@ public class StartupServiceTest {
     }
 
     @Test
+    void createStartup_theFounderIsTheAccountCreatingIt() {
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(
+                tn.enicarthage.backend.entity.User.builder().userId("user-1").fullName("Meriem").build()));
+        when(startupRepository.save(any(Startup.class))).thenAnswer(a -> a.getArgument(0));
+        tn.enicarthage.backend.dto.CreateStartupRequest dto = new tn.enicarthage.backend.dto.CreateStartupRequest();
+        dto.setProjectName("QAI");
+        dto.setBusinessSector("AI/ML");
+
+        Startup created = startupService.createStartup(dto, "user-1");
+
+        assertEquals("Meriem", created.getPrimaryFounderName());
+        assertEquals("AI/ML", created.getBusinessSector());
+    }
+
+    @Test
     void updateStartupStatus_shouldUpdate() {
         when(startupRepository.findById("startup-1")).thenReturn(Optional.of(startup));
         startupService.updateStartupStatus("startup-1", Startup.StartupStatus.ACTIVE, "user-1");

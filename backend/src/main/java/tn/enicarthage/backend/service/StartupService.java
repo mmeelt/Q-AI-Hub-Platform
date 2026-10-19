@@ -29,7 +29,10 @@ public class StartupService {
                 .founderUserId(userId)
 
                 .projectName(dto.getProjectName())
-                .primaryFounderName(dto.getPrimaryFounderName())
+                // The founder is the account creating the startup, unless the form named someone
+                .primaryFounderName(dto.getPrimaryFounderName() != null && !dto.getPrimaryFounderName().isBlank()
+                        ? dto.getPrimaryFounderName()
+                        : userRepository.findById(userId).map(tn.enicarthage.backend.entity.User::getFullName).orElse(null))
                 .businessSector(dto.getBusinessSector())
                 .specificIndustry(dto.getSpecificIndustry())
                 .companyTagline(dto.getCompanyTagline())

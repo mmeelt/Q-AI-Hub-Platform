@@ -75,10 +75,17 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                             { question: 'Project Tagline', answer: parsedAnswers.companyTagline || data.tagline || 'N/A', type: 'text' },
                             { question: 'Sector', answer: parsedAnswers.businessSector || data.sector || 'N/A', type: 'text' },
                             { question: 'Pitch', answer: parsedAnswers.rawDescription || parsedAnswers.pitch || data.pitchOriginal || data.description || 'N/A', type: 'text' },
-                            { question: 'GitHub', answer: parsedAnswers.githubUrl || data.githubUrl || 'N/2', type: 'url' },
+                            { question: 'GitHub', answer: parsedAnswers.githubUrl || data.githubUrl || 'N/A', type: 'url' },
                             { question: 'Website', answer: parsedAnswers.companyWebsiteUrl || parsedAnswers.website || 'N/A', type: 'url' },
                             { question: 'Team Size', answer: parsedAnswers.currentTeamSize || parsedAnswers.teamSize || 'N/A', type: 'text' },
                             { question: 'Tech Stack', answer: Array.isArray(parsedAnswers.techStack) ? parsedAnswers.techStack.join(', ') : (parsedAnswers.techStack || 'N/A'), type: 'text' },
+                            { question: 'Founder Role', answer: parsedAnswers.userRole || 'N/A', type: 'text' },
+                            { question: 'Teammates', answer: Array.isArray(parsedAnswers.teammates) && parsedAnswers.teammates.length > 0
+                                ? parsedAnswers.teammates.map((tm: any) => `${tm.email}${tm.role ? ` (${tm.role})` : ''}`).join(', ') : 'N/A', type: 'text' },
+                            { question: 'Pitch Deck', answer: parsedAnswers.pitchDeckLink || 'N/A', type: 'url' },
+                            // The organizer's own questions, keyed by question text
+                            ...Object.entries(parsedAnswers.eventAnswers || {}).map(([question, answer]) => (
+                                { question, answer: String(answer || 'N/A'), type: 'text' })),
                         ],
                         questionnaireAnswers: data.questionnaireAnswers,
                         milestones: data.milestones || [],
@@ -254,13 +261,22 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                         <div className="overflow-hidden rounded-xl border border-border">
                             <table className="w-full">
                                 <thead><tr className="border-b border-border bg-muted">
-                                    {['Name', 'Email', 'Registered', 'Actions'].map(h => <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">{h}</th>)}
+                                    {['Name', 'Email', 'Answers', 'Registered', 'Actions'].map(h => <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">{h}</th>)}
                                 </tr></thead>
                                 <tbody>
                                     {simpleRegistrations.map((r: any, i: number) => (
                                         <tr key={r.id || i} className="border-b border-border hover:bg-muted transition-colors">
                                             <td className="px-4 py-3 text-sm text-foreground">{r.participantName || 'N/A'}</td>
                                             <td className="px-4 py-3 text-sm text-muted-foreground">{r.participantEmail || 'N/A'}</td>
+                                            <td className="px-4 py-3 text-xs text-muted-foreground max-w-xs">
+                                                {(() => {
+                                                    let entries: [string, any][] = [];
+                                                    try { entries = Object.entries(JSON.parse(r.answersJson || '{}')); } catch { /* unreadable answers */ }
+                                                    return entries.length === 0 ? '—' : entries.map(([q, a]) => (
+                                                        <p key={q}><span className="font-medium text-foreground">{q}:</span> {String(a || '—')}</p>
+                                                    ));
+                                                })()}
+                                            </td>
                                             <td className="px-4 py-3 text-sm text-muted-foreground">{r.registeredAt ? new Date(r.registeredAt).toLocaleDateString() : 'Recent'}</td>
                                             <td className="px-4 py-3">
                                                 <button

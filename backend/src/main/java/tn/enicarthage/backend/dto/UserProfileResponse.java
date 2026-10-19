@@ -17,4 +17,9 @@ public class UserProfileResponse {
     private String userBio;
     private String primaryInterest;
     private List<String> availability;
+    // Invited experts' professional details
+    private String organization;
+    private String jobTitle;
+    private String expertiseArea;
+    private String linkedinUrl;
 }

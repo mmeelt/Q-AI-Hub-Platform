@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, Lock, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../../services/api';
-import { clearAuth } from '../../../utils/localStorage';
+import { clearAuth, isExpertAccount } from '../../../utils/localStorage';
 import { Avatar } from '../../../components/common/Avatar';
 import { Button } from '../../../components/common/Button';
 import { PasswordChangeForm } from './PasswordChangeForm';
@@ -30,6 +30,14 @@ export function SettingsTab({ profile, profileName, onProfileNameChange }: Setti
   const [primaryInterest, setPrimaryInterest] = useState('');
   const [availability, setAvailability] = useState<string[]>([]);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>(parsePrefs(null));
+  // Students give their school details, invited experts their professional ones
+  const isExpert = isExpertAccount();
+  const [details, setDetails] = useState({
+    phoneNumber: '', studentId: '', universityName: '',
+    organization: '', jobTitle: '', expertiseArea: '', linkedinUrl: '',
+  });
+  const setDetail = (field: keyof typeof details) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setDetails(prev => ({ ...prev, [field]: e.target.value }));
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -38,6 +46,15 @@ export function SettingsTab({ profile, profileName, onProfileNameChange }: Setti
     setUserBio(profile.userBio || '');
     setPrimaryInterest(profile.primaryInterest || '');
     setAvailability(profile.availability || []);
+    setDetails({
+      phoneNumber: profile.phoneNumber || '',
+      studentId: profile.studentId || '',
+      universityName: profile.universityName || '',
+      organization: profile.organization || '',
+      jobTitle: profile.jobTitle || '',
+      expertiseArea: profile.expertiseArea || '',
+      linkedinUrl: profile.linkedinUrl || '',
+    });
     setNotificationPrefs(parsePrefs(profile.notificationPrefs));
   }, [profile]);
 
@@ -129,14 +146,32 @@ export function SettingsTab({ profile, profileName, onProfileNameChange }: Setti
                   placeholder="your@email.com"
                 />
               </div>
-              {/* Role + Institution */}
+              {/* School or professional details, as entered at sign-up */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1.5">Institution</label>
-                  <div className="w-full rounded-xl bg-input border border-border px-3.5 py-2.5 text-sm text-foreground/60">
-                    ENICarthage
+                {(isExpert
+                  ? [
+                    { field: 'organization', label: 'Company / Organization' },
+                    { field: 'jobTitle', label: 'Job title' },
+                    { field: 'expertiseArea', label: 'Area of expertise' },
+                    { field: 'linkedinUrl', label: 'LinkedIn profile' },
+                    { field: 'phoneNumber', label: 'Phone' },
+                  ]
+                  : [
+                    { field: 'universityName', label: 'University / Institution' },
+                    { field: 'studentId', label: 'Student ID' },
+                    { field: 'phoneNumber', label: 'Phone' },
+                  ]
+                ).map(({ field, label }) => (
+                  <div key={field}>
+                    <label className="block text-xs text-muted-foreground mb-1.5">{label}</label>
+                    <input
+                      type="text"
+                      value={details[field as keyof typeof details]}
+                      onChange={setDetail(field as keyof typeof details)}
+                      className="w-full rounded-xl bg-input border border-border px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/15 transition-all"
+                    />
                   </div>
-                </div>
+                ))}
               </div>
               {/* Bio */}
               <div>
@@ -155,6 +190,10 @@ export function SettingsTab({ profile, profileName, onProfileNameChange }: Setti
                     await api.updateProfile({ 
                       fullName: profileName,
                       userBio,
+                      phoneNumber: details.phoneNumber,
+                      ...(isExpert
+                        ? { organization: details.organization, jobTitle: details.jobTitle, expertiseArea: details.expertiseArea, linkedinUrl: details.linkedinUrl }
+                        : { studentId: details.studentId, universityName: details.universityName }),
                       primaryInterest,
                       availability
                     });

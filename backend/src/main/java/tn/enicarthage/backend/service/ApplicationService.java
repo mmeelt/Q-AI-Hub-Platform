@@ -82,6 +82,10 @@ public class ApplicationService {
             if (newApplication.getInitialApplicationAnswers() != null) {
                 java.util.Map<String, Object> answers = objectMapper.readValue(newApplication.getInitialApplicationAnswers(), java.util.Map.class);
                 validateField(answers, "rawDescription", "Pitch/Description");
+                // The organizer's own questions (sent under "eventAnswers", keyed by question text)
+                Object eventAnswers = answers.get("eventAnswers");
+                EventRegistrationService.checkRequiredAnswers(targetEvent.getFormFieldsJson(),
+                        eventAnswers == null ? null : objectMapper.writeValueAsString(eventAnswers));
                 // Make logo and video optional to avoid blocking submissions if they aren't provided
                 // but still ensure the pitch is there.
                 // validateField(answers, "companyLogoUrl", "Logo URL");

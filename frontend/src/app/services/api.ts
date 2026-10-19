@@ -801,6 +801,7 @@ export const api = {
         fullName?: string; userBio?: string; phoneNumber?: string;
         universityName?: string; studyField?: string; userSkills?: string[]; avatarUrl?: string;
         primaryInterest?: string; availability?: string[];
+        studentId?: string; organization?: string; jobTitle?: string; expertiseArea?: string; linkedinUrl?: string;
     }): Promise<void> {
         const response = await this.authFetch('/users/profile', {
             method: 'PUT',

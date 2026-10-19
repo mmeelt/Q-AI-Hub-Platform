@@ -67,6 +67,30 @@ public class UserServiceTest {
     }
 
     @Test
+    void updateProfile_savesSchoolAndExpertDetails_andReturnsThem() {
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        UpdateProfileRequest dto = new UpdateProfileRequest();
+        dto.setStudentId("2024-ENIC-0042");
+        dto.setUniversityName("ENICarthage");
+        dto.setPhoneNumber("+216 20 000 000");
+        dto.setOrganization("Orange");
+        dto.setJobTitle("CTO");
+        dto.setExpertiseArea("AI");
+        dto.setLinkedinUrl("https://linkedin.com/in/x");
+
+        userService.updateProfile("user-1", dto);
+        tn.enicarthage.backend.dto.UserProfileResponse profile = userService.getUserProfile("user-1");
+
+        assertEquals("2024-ENIC-0042", profile.getStudentId());
+        assertEquals("ENICarthage", profile.getUniversityName());
+        assertEquals("+216 20 000 000", profile.getPhoneNumber());
+        assertEquals("Orange", profile.getOrganization());
+        assertEquals("CTO", profile.getJobTitle());
+        assertEquals("AI", profile.getExpertiseArea());
+        assertEquals("https://linkedin.com/in/x", profile.getLinkedinUrl());
+    }
+
+    @Test
     void manageMyStartup_withoutStartup_returnsEmptyList() {
         when(startupRepository.findByFounderUserId("user-1")).thenReturn(java.util.Collections.emptyList());
         assertTrue(userService.manageMyStartup("user-1").isEmpty());

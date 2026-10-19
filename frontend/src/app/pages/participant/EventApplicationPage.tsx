@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { IMAGE_ACCEPT } from '../../components/common/ImageUpload';
 import { api } from '../../services/api';
 import { PitchVideo } from '../../components/common/PitchVideo';
+import { EventQuestionsFields, parseEventQuestions, firstUnansweredRequired, answersByQuestion } from '../../components/common/EventQuestions';
 
 const MAX_VIDEO_MB = 200;
 const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm', 'm4v'];
@@ -59,6 +60,10 @@ export function EventApplicationPage() {
     pitchVideoUrl: '',
     acceptTerms: false,
   });
+
+  // The organizer's own questions for this event
+  const eventQuestions = parseEventQuestions(event?.formFieldsJson);
+  const [eventAnswers, setEventAnswers] = useState<Record<string, string>>({});
 
   const [aiPitch, setAiPitch] = useState({
     problem: '',
@@ -202,6 +207,11 @@ export function EventApplicationPage() {
       toast.error('Please accept the terms to submit');
       return;
     }
+    const unanswered = firstUnansweredRequired(eventQuestions, eventAnswers);
+    if (unanswered) {
+      toast.error(`Please answer the question: ${unanswered.question}`);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -247,8 +257,10 @@ export function EventApplicationPage() {
       const answers = {
         ...startupData,
         githubUrl: formData.githubUrl,
-        userRole: formData.userRole,
-        teammates: formData.teammates,
+        userRole: formData.userRole === 'Other' ? formData.userRoleOther || 'Other' : formData.userRole,
+        eventAnswers: answersByQuestion(eventQuestions, eventAnswers),
+        // The typed role replaces "Other"
+        teammates: formData.teammates.map(tm => ({ email: tm.email, role: tm.role === 'Other' ? tm.roleOther || 'Other' : tm.role })),
         techStack: formData.techStack,
       };
 
@@ -777,6 +789,18 @@ export function EventApplicationPage() {
                           </label>
                         </div>
                       </div>
+
+                      {eventQuestions.length > 0 && (
+                        <div className="border border-border rounded-xl p-6">
+                          <h3 className="text-lg mb-1">Questions from the organizer</h3>
+                          <p className="text-xs text-muted-foreground mb-5">Questions marked * are required.</p>
+                          <EventQuestionsFields
+                            questions={eventQuestions}
+                            answers={eventAnswers}
+                            onChange={(qid, value) => setEventAnswers(prev => ({ ...prev, [qid]: value }))}
+                          />
+                        </div>
+                      )}
 
                       <div className="bg-card/50 border border-border rounded-xl p-6">
                         <p className="text-xs text-muted-foreground mb-3">Application Summary</p>

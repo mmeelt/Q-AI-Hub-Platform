@@ -88,6 +88,22 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void submit_mustAnswerTheEventsRequiredQuestions_andKeepsTheAnswers() {
+        eventRepository.findById("e1").orElseThrow().setFormFieldsJson(
+                "[{\"id\":\"q1\",\"question\":\"Why this program?\",\"type\":\"textarea\",\"required\":true}]");
+
+        Application unanswered = newApplication();
+        assertThrows(IllegalArgumentException.class, () -> service.submitApplication(unanswered, "user-1"));
+        verify(applicationRepository, never()).save(any());
+
+        Application answered = Application.builder().targetEventId("e1").linkedStartupId("s1")
+                .initialApplicationAnswers("{\"rawDescription\":\"An AI tutor\",\"eventAnswers\":{\"Why this program?\":\"To scale\"}}")
+                .build();
+        Application saved = service.submitApplication(answered, "user-1");
+        assertTrue(saved.getInitialApplicationAnswers().contains("To scale"));
+    }
+
+    @Test
     void accept_setsAccepted_emailsTheApplicant_notifies_andActivatesTheStartup() {
         Application app = Application.builder().applicationId("a1").applicantUserId("user-1").targetEventId("e1")
                 .linkedStartupId("s1").trackingCode("APP-ABC123").applicationStatus("PENDING").build();

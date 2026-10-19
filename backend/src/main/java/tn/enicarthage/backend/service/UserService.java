@@ -30,6 +30,11 @@ public class UserService {
         if (dto.getAvatarUrl() != null) user.setAvatarUrl(dto.getAvatarUrl());
         if (dto.getPrimaryInterest() != null) user.setPrimaryInterest(dto.getPrimaryInterest());
         if (dto.getAvailability() != null) user.setAvailability(dto.getAvailability());
+        if (dto.getStudentId() != null) user.setStudentId(dto.getStudentId());
+        if (dto.getOrganization() != null) user.setOrganization(dto.getOrganization());
+        if (dto.getJobTitle() != null) user.setJobTitle(dto.getJobTitle());
+        if (dto.getExpertiseArea() != null) user.setExpertiseArea(dto.getExpertiseArea());
+        if (dto.getLinkedinUrl() != null) user.setLinkedinUrl(dto.getLinkedinUrl());
 
         userRepository.save(user);
     }
@@ -51,6 +56,10 @@ public class UserService {
         res.setUserBio(user.getUserBio());
         res.setPrimaryInterest(user.getPrimaryInterest());
         res.setAvailability(user.getAvailability());
+        res.setOrganization(user.getOrganization());
+        res.setJobTitle(user.getJobTitle());
+        res.setExpertiseArea(user.getExpertiseArea());
+        res.setLinkedinUrl(user.getLinkedinUrl());
         return res;
     }
 

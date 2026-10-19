@@ -43,7 +43,9 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
     try { answers = JSON.parse(applicant.initialApplicationAnswers || '{}'); } catch {}
 
     // The video is shown as a player below, not as a raw path
-    const answerEntries = Object.entries(answers).filter(([k]) => !['teammates', 'pitchVideoLink'].includes(k));
+    const answerEntries = Object.entries(answers).filter(([k]) => !['teammates', 'pitchVideoLink', 'eventAnswers'].includes(k));
+    // The organizer's own questions, keyed by question text
+    const eventAnswerEntries = Object.entries((answers.eventAnswers as Record<string, any>) || {});
 
     return (
         <motion.div
@@ -92,6 +94,20 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
                     <section>
                         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Pitch Video</h4>
                         <PitchVideo url={String(answers.pitchVideoLink)} />
+                    </section>
+                )}
+
+                {eventAnswerEntries.length > 0 && (
+                    <section>
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Organizer's questions</h4>
+                        <div className="space-y-3">
+                            {eventAnswerEntries.map(([question, answer]) => (
+                                <div key={question} className="p-3 rounded-xl bg-muted/40 border border-border/50">
+                                    <p className="text-xs font-semibold text-muted-foreground mb-1">{question}</p>
+                                    <p className="text-sm text-foreground leading-relaxed">{String(answer || '—')}</p>
+                                </div>
+                            ))}
+                        </div>
                     </section>
                 )}
 
