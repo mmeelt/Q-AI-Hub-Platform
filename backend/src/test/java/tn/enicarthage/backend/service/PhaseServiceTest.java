@@ -7,8 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tn.enicarthage.backend.entity.Application;
 import tn.enicarthage.backend.entity.Event;
 import tn.enicarthage.backend.entity.Phase;
+import tn.enicarthage.backend.entity.PhaseSubmission;
 import tn.enicarthage.backend.repository.ApplicationRepository;
 import tn.enicarthage.backend.repository.EventRepository;
 import tn.enicarthage.backend.repository.PhaseRepository;
@@ -17,6 +19,7 @@ import tn.enicarthage.backend.repository.PitchRoundRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -182,5 +185,64 @@ class PhaseServiceTest {
 
         assertThrows(IllegalStateException.class, () -> service.deletePhase("p3"));
         verify(phaseRepository, never()).delete(any());
+    }
+
+    private Application accepted(String id, String userId) {
+        return Application.builder().applicationId(id).applicantUserId(userId).targetEventId("event-1")
+                .applicationStatus("ACCEPTED").build();
+    }
+
+    @Test
+    void reopenPhase_aClosedPhaseOpensAgain_laterPhasesGoBackToNotStarted_andLateParticipantsAreNotified() {
+        Phase phase1 = existing(1, false, true);
+        Phase phase2 = existing(2, true, false);
+        when(phaseRepository.findById("p1")).thenReturn(Optional.of(phase1));
+        when(phaseRepository.findByEventIdOrderByPhaseOrderAsc("event-1")).thenReturn(List.of(phase1, phase2));
+        when(applicationRepository.findByTargetEventId("event-1"))
+                .thenReturn(List.of(accepted("a-late", "user-late"), accepted("a-done", "user-done")));
+        when(phaseSubmissionRepository.findByPhaseIdAndSourceApplicationId("p1", "a-late")).thenReturn(Optional.empty());
+        when(phaseSubmissionRepository.findByPhaseIdAndSourceApplicationId("p1", "a-done")).thenReturn(Optional.of(
+                PhaseSubmission.builder().status(PhaseSubmission.SubmissionStatus.SUBMITTED).build()));
+
+        Phase reopened = service.reopenPhase("p1");
+
+        assertTrue(reopened.getPhaseActive());
+        assertFalse(reopened.getPhaseLocked());
+        assertFalse(phase2.getPhaseActive());
+        assertFalse(phase2.getPhaseLocked());
+        verify(notificationService).createNotification(eq("user-late"), anyString(), anyString(), eq("PHASE_ACTIVATED"), anyString());
+        verify(notificationService, never()).createNotification(eq("user-done"), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void reopenPhase_anOpenOrNotStartedPhase_isRefused() {
+        when(phaseRepository.findById("p1")).thenReturn(Optional.of(existing(1, true, false)));
+        when(phaseRepository.findById("p2")).thenReturn(Optional.of(existing(2, false, false)));
+        when(phaseRepository.findByEventIdOrderByPhaseOrderAsc("event-1")).thenReturn(List.of());
+
+        assertThrows(IllegalStateException.class, () -> service.reopenPhase("p1"));
+        assertThrows(IllegalStateException.class, () -> service.reopenPhase("p2"));
+    }
+
+    @Test
+    void activationCheck_countsWhoWouldBeLeftBehindInThePhaseThatCloses() {
+        Phase phase1 = existing(1, true, false);
+        Phase phase2 = existing(2, false, false);
+        when(phaseRepository.findById("p2")).thenReturn(Optional.of(phase2));
+        when(phaseRepository.findByEventIdOrderByPhaseOrderAsc("event-1")).thenReturn(List.of(phase1, phase2));
+        when(applicationRepository.findByTargetEventId("event-1")).thenReturn(List.of(
+                accepted("a-late", "u1"), accepted("a-waiting", "u2"), accepted("a-decided", "u3")));
+        when(phaseSubmissionRepository.findByPhaseIdAndSourceApplicationId("p1", "a-late")).thenReturn(Optional.empty());
+        when(phaseSubmissionRepository.findByPhaseIdAndSourceApplicationId("p1", "a-waiting")).thenReturn(Optional.of(
+                PhaseSubmission.builder().status(PhaseSubmission.SubmissionStatus.SUBMITTED).build()));
+        when(phaseSubmissionRepository.findByPhaseIdAndSourceApplicationId("p1", "a-decided")).thenReturn(Optional.of(
+                PhaseSubmission.builder().status(PhaseSubmission.SubmissionStatus.GRADED)
+                        .decisionStatus(PhaseSubmission.DecisionStatus.ACCEPTED).build()));
+
+        Map<String, Object> check = service.getActivationCheck("p2");
+
+        assertEquals("Phase 1", check.get("closingPhaseName"));
+        assertEquals(1L, check.get("notSubmitted"));
+        assertEquals(1L, check.get("awaitingDecision"));
     }
 }

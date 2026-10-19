@@ -77,6 +77,20 @@ public class PhaseController {
         return ResponseEntity.ok(phaseService.activatePhase(id));
     }
 
+    // GET /api/phases/{id}/activation-check — what opening this phase would leave unfinished
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}/activation-check")
+    public ResponseEntity<Map<String, Object>> getActivationCheck(@PathVariable String id) {
+        return ResponseEntity.ok(phaseService.getActivationCheck(id));
+    }
+
+    // PUT /api/phases/{id}/reopen — a finished phase opens again, later phases go back to "not started"
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/reopen")
+    public ResponseEntity<Phase> reopenPhase(@PathVariable String id) {
+        return ResponseEntity.ok(phaseService.reopenPhase(id));
+    }
+
     // PUT /api/phases/{id}/deactivate
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/deactivate")

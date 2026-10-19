@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tn.enicarthage.backend.entity.Application;
 import tn.enicarthage.backend.entity.Event;
 import tn.enicarthage.backend.entity.Phase;
 import tn.enicarthage.backend.entity.PhaseSubmission;
@@ -14,6 +15,7 @@ import tn.enicarthage.backend.repository.PhaseRepository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -159,18 +161,9 @@ public class PhaseService {
         phase.activatePhase();
         Phase saved = phaseRepository.save(phase);
 
-        // Opening a phase grants no acceptance. Notify only those who may take part:
-        // Phase 1 → accepted applications; Phase N → participants accepted in Phase N-1.
+        // Opening a phase grants no acceptance. Notify only those who may take part.
         try {
-            Phase previous = phase.getPhaseOrder() != null && phase.getPhaseOrder() > 1
-                    ? allPhases.stream().filter(p -> p.getPhaseOrder() == phase.getPhaseOrder() - 1).findFirst().orElse(null)
-                    : null;
-            applicationRepository.findByTargetEventId(eventId).stream()
-                .filter(app -> "ACCEPTED".equalsIgnoreCase(app.getApplicationStatus()))
-                .filter(app -> previous == null || phaseSubmissionRepository
-                        .findByPhaseIdAndSourceApplicationId(previous.getPhaseId(), app.getApplicationId())
-                        .map(s -> s.getOutcome() == PhaseSubmission.DecisionStatus.ACCEPTED)
-                        .orElse(false))
+            participantsOf(phase, allPhases)
                 .forEach(app -> notificationService.createNotification(
                     app.getApplicantUserId(),
                     phase.getPhaseName() + " is now open",
@@ -184,6 +177,100 @@ public class PhaseService {
             log.error("Failed to notify applicants on phase activation: {}", e.getMessage());
         }
 
+        return saved;
+    }
+
+    /**
+     * Who may take part in a phase: Phase 1 → the accepted applications;
+     * Phase N → the participants accepted in Phase N-1.
+     */
+    private List<Application> participantsOf(Phase phase, List<Phase> allPhases) {
+        Phase previous = phase.getPhaseOrder() != null && phase.getPhaseOrder() > 1
+                ? allPhases.stream().filter(p -> p.getPhaseOrder() == phase.getPhaseOrder() - 1).findFirst().orElse(null)
+                : null;
+        return applicationRepository.findByTargetEventId(phase.getEventId()).stream()
+                .filter(app -> "ACCEPTED".equalsIgnoreCase(app.getApplicationStatus()))
+                .filter(app -> previous == null || phaseSubmissionRepository
+                        .findByPhaseIdAndSourceApplicationId(previous.getPhaseId(), app.getApplicationId())
+                        .map(s -> s.getOutcome() == PhaseSubmission.DecisionStatus.ACCEPTED)
+                        .orElse(false))
+                .toList();
+    }
+
+    private boolean hasSubmitted(Phase phase, Application app) {
+        return phaseSubmissionRepository.findByPhaseIdAndSourceApplicationId(phase.getPhaseId(), app.getApplicationId())
+                .map(s -> s.getStatus() != PhaseSubmission.SubmissionStatus.DRAFT)
+                .orElse(false);
+    }
+
+    /**
+     * What opening this phase would leave behind in the questionnaire phase open now (it closes for good):
+     * participants who never submitted, and submissions still waiting for a decision. The admin is warned first.
+     */
+    public Map<String, Object> getActivationCheck(String phaseId) {
+        Phase phase = getPhaseById(phaseId);
+        List<Phase> allPhases = reconcilePhaseProgress(phase.getEventId());
+        Optional<Phase> closing = allPhases.stream()
+                .filter(p -> Boolean.TRUE.equals(p.getPhaseActive()) && p.getPhaseOrder() < phase.getPhaseOrder()
+                        && p.getPhaseType() != Phase.PhaseType.PITCH)
+                .findFirst();
+        if (closing.isEmpty()) {
+            return Map.of("closingPhaseName", "", "notSubmitted", 0L, "awaitingDecision", 0L);
+        }
+        List<Application> participants = participantsOf(closing.get(), allPhases);
+        long notSubmitted = participants.stream().filter(app -> !hasSubmitted(closing.get(), app)).count();
+        long awaitingDecision = participants.stream()
+                .map(app -> phaseSubmissionRepository.findByPhaseIdAndSourceApplicationId(closing.get().getPhaseId(), app.getApplicationId()))
+                .flatMap(Optional::stream)
+                .filter(s -> s.getStatus() != PhaseSubmission.SubmissionStatus.DRAFT
+                        && s.getOutcome() == PhaseSubmission.DecisionStatus.PENDING)
+                .count();
+        return Map.of("closingPhaseName", closing.get().getPhaseName(),
+                "notSubmitted", notSubmitted, "awaitingDecision", awaitingDecision);
+    }
+
+    /**
+     * Opens a finished phase again (e.g. the next phase was opened too early and some participants never answered).
+     * The later phases go back to "not started"; their submissions and results are kept.
+     */
+    @Transactional
+    public Phase reopenPhase(String phaseId) {
+        Phase phase = getPhaseById(phaseId);
+        List<Phase> allPhases = reconcilePhaseProgress(phase.getEventId());
+        if (Boolean.TRUE.equals(phase.getPhaseActive())) {
+            throw new IllegalStateException("This phase is already open");
+        }
+        if (!Boolean.TRUE.equals(phase.getPhaseLocked())) {
+            throw new IllegalStateException("This phase has not started yet: use Activate");
+        }
+
+        allPhases.forEach(p -> {
+            if (p.getPhaseOrder() > phase.getPhaseOrder()) {
+                p.setPhaseActive(false);
+                p.setPhaseLocked(false);
+            }
+        });
+        phaseRepository.saveAll(allPhases);
+        phase.setPhaseLocked(false);
+        phase.activatePhase();
+        Phase saved = phaseRepository.save(phase);
+
+        // Tell the participants who have not answered yet that they can now do it
+        try {
+            participantsOf(phase, allPhases).stream()
+                .filter(app -> phase.getPhaseType() == Phase.PhaseType.PITCH || !hasSubmitted(phase, app))
+                .forEach(app -> notificationService.createNotification(
+                    app.getApplicantUserId(),
+                    phase.getPhaseName() + " is open again",
+                    phase.getPhaseType() == Phase.PhaseType.PITCH
+                        ? "Phase " + phase.getPhaseOrder() + " (" + phase.getPhaseName() + ") has been reopened."
+                        : "Phase " + phase.getPhaseOrder() + " has been reopened. You can submit your answers.",
+                    "PHASE_ACTIVATED",
+                    "/dashboard?tab=applications"
+                ));
+        } catch (Exception e) {
+            log.error("Failed to notify applicants on phase reopening: {}", e.getMessage());
+        }
         return saved;
     }
 

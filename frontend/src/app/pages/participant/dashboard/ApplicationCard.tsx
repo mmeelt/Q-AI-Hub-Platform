@@ -37,18 +37,16 @@ export function ApplicationCard({ app, focusedEventId, phaseSubmissions, eventPh
     }
   });
 
-  // Phase 2 is unlocked only by an explicit admin acceptance of Phase 1
-  const phase2Unlocked = isAccepted && (phase1Accepted || !phase1Config);
-  const phase2Sub = appSubs.find((s: any) => s.phaseOrder === 2);
-  const phase2Config = eventPhasesForApp.find((p: any) => p.phaseOrder === 2);
-  
-  // Phase 2 banner: active if config exists and is active, and user hasn't graded yet
-  const isActivePhase2 = phase2Config && phase2Config.phaseActive === true;
-  const isLockedPhase2 = phase2Config && phase2Config.phaseLocked === true;
-  // A result is shown only once the admin has decided (a grade alone is an internal step)
-  const phase2Graded = !!phase2Sub && (phase2Sub.decisionStatus === 'ACCEPTED' || phase2Sub.decisionStatus === 'REJECTED');
-  const phase2Passed = !!phase2Sub && phase2Sub.decisionStatus === 'ACCEPTED';
-  const hasSubmittedPhase2 = phase2Sub && phase2Sub.status === 'SUBMITTED';
+  // Questionnaire phases after Phase 1 (2, 3, ...): each one is unlocked by an admin acceptance of the one before
+  const laterPhases = eventPhasesForApp
+    .filter((p: any) => p.phaseOrder > 1 && p.phaseType !== 'PITCH')
+    .sort((a: any, b: any) => a.phaseOrder - b.phaseOrder);
+  const isUnlocked = (phase: any) => {
+    if (!isAccepted) return false;
+    const previous = eventPhasesForApp.find((p: any) => p.phaseOrder === phase.phaseOrder - 1);
+    if (!previous || previous.phaseType === 'PITCH') return true;
+    return appSubs.some((s: any) => s.phaseOrder === previous.phaseOrder && s.decisionStatus === 'ACCEPTED');
+  };
   // Phase 3 (Pitch): averaged results, visible once the admin has sent them
   const roundResults = applicationPitchResults[app.applicationId] || [];
 
@@ -109,7 +107,10 @@ export function ApplicationCard({ app, focusedEventId, phaseSubmissions, eventPh
         ) : isLockedPhase1 ? (
           <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
             <Clock size={18} className="text-red-400 flex-shrink-0" />
-            <p className="text-sm font-semibold text-red-400">Phase 1 is closed — no answers were submitted</p>
+            <div>
+              <p className="text-sm font-semibold text-red-400">Phase 1 is closed — no answers were submitted</p>
+              <p className="text-xs text-muted-foreground">Contact the organizer if you still need to take part.</p>
+            </div>
           </div>
         ) : (
           <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
@@ -151,86 +152,20 @@ export function ApplicationCard({ app, focusedEventId, phaseSubmissions, eventPh
         </div>
       )}
 
-      {/* Phase 2 — submitted, answers are final */}
-      {phase2Unlocked && phase2Config && hasSubmittedPhase2 && !phase2Graded && (
-        <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-          <Clock size={18} className="text-amber-400 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-amber-400">Your Phase 2 submission is awaiting review</p>
-            <p className="text-xs text-muted-foreground">Your answers have been submitted and can no longer be modified.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Phase 2 Active Banner */}
-      {phase2Unlocked && phase2Config && isActivePhase2 && !phase2Graded && !hasSubmittedPhase2 && (
-        <div className="mb-4 flex items-center justify-between p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-          <div className="flex items-center gap-3">
-            <Rocket size={20} className="text-emerald-400 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-emerald-400">Phase 2 is now open</p>
-              <p className="text-xs text-muted-foreground">Submit your answers before the deadline. Once submitted, they can no longer be modified.</p>
-            </div>
-          </div>
-          <Button
-            onClick={() => navigate(`/apply/event/${app.targetEventId}/questions`, {
-              state: {
-                applicationId: app.applicationId,
-                phaseId: phase2Config.phaseId || phase2Config.id,
-                phaseOrder: 2,
-              }
-            })}
-            className="text-xs gap-2 flex-shrink-0"
-          >
-            <Send size={14} />
-            Submit Answers
-          </Button>
-        </div>
-      )}
-
-      {/* Phase 2 enrolled but not yet active — waiting banner */}
-      {phase2Unlocked && phase2Config && !isActivePhase2 && !isLockedPhase2 && !phase2Graded && (
-        <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-          <Clock size={18} className="text-amber-400 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-amber-400">You've been accepted to Phase 2</p>
-            <p className="text-xs text-muted-foreground">Phase 2 will open soon. You'll be notified when you can submit.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Phase 2 locked banner */}
-      {phase2Unlocked && isLockedPhase2 && !phase2Graded && (
-        <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
-          <Clock size={18} className="text-red-400 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-red-400">Phase 2 is closed and locked</p>
-            <p className="text-xs text-muted-foreground">You can no longer update or submit answers for this phase.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Phase 2 Graded Result */}
-      {phase2Graded && (
-        <div className={`mb-4 p-4 rounded-xl border ${phase2Passed ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-destructive/10 border-destructive/30'}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <Star size={16} className={phase2Passed ? 'text-emerald-400' : 'text-destructive'} />
-            <p className={`text-sm font-semibold ${phase2Passed ? 'text-emerald-400' : 'text-destructive'}`}>
-              {phase2Passed ? 'Phase 2 passed' : 'Phase 2: not selected'}
-            </p>
-            {phase2Sub.evaluationScore != null && (
-              <span className="ml-auto text-sm font-bold text-foreground">
-                {phase2Sub.evaluationScore}/100
-              </span>
-            )}
-          </div>
-          {phase2Sub.evaluatorFeedback && (
-            <p className="text-xs text-muted-foreground leading-relaxed pl-6">
-              {phase2Sub.evaluatorFeedback}
-            </p>
-          )}
-        </div>
-      )}
+      {laterPhases.filter(isUnlocked).map((phase: any) => (
+        <LaterPhaseStatus
+          key={phase.phaseId || phase.phaseOrder}
+          phase={phase}
+          submission={appSubs.find((s: any) => s.phaseOrder === phase.phaseOrder)}
+          onOpen={() => navigate(`/apply/event/${app.targetEventId}/questions`, {
+            state: {
+              applicationId: app.applicationId,
+              phaseId: phase.phaseId || phase.id,
+              phaseOrder: phase.phaseOrder,
+            }
+          })}
+        />
+      ))}
 
       {/* Phase 3 Pitch Round Results */}
       {roundResults.length > 0 && (
@@ -297,6 +232,92 @@ export function ApplicationCard({ app, focusedEventId, phaseSubmissions, eventPh
         >
           {isAccepted ? 'Manage Startup →' : 'Track Application →'}
         </button>
+      </div>
+    </div>
+  );
+}
+
+interface LaterPhaseStatusProps {
+  phase: any;
+  submission?: any;
+  onOpen: () => void;
+}
+
+/** Where the participant stands in a questionnaire phase after Phase 1 (they passed the phase before it). */
+function LaterPhaseStatus({ phase, submission, onOpen }: LaterPhaseStatusProps) {
+  const label = `Phase ${phase.phaseOrder}`;
+  const submitted = !!submission && submission.status !== 'DRAFT';
+  // A result is shown only once the admin has decided (a grade alone is an internal step)
+  const decided = !!submission && (submission.decisionStatus === 'ACCEPTED' || submission.decisionStatus === 'REJECTED');
+
+  if (decided) {
+    const passed = submission.decisionStatus === 'ACCEPTED';
+    return (
+      <div className={`mb-4 p-4 rounded-xl border ${passed ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-destructive/10 border-destructive/30'}`}>
+        <div className="flex items-center gap-2 mb-2">
+          <Star size={16} className={passed ? 'text-emerald-400' : 'text-destructive'} />
+          <p className={`text-sm font-semibold ${passed ? 'text-emerald-400' : 'text-destructive'}`}>
+            {passed ? `${label} passed` : `${label}: not selected`}
+          </p>
+          {submission.evaluationScore != null && (
+            <span className="ml-auto text-sm font-bold text-foreground">{submission.evaluationScore}/100</span>
+          )}
+        </div>
+        {submission.evaluatorFeedback && (
+          <p className="text-xs text-muted-foreground leading-relaxed pl-6">{submission.evaluatorFeedback}</p>
+        )}
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+        <Clock size={18} className="text-amber-400 flex-shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-amber-400">Your {label} submission is awaiting review</p>
+          <p className="text-xs text-muted-foreground">Your answers have been submitted and can no longer be modified.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase.phaseActive) {
+    return (
+      <div className="mb-4 flex items-center justify-between gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+        <div className="flex items-center gap-3">
+          <Rocket size={20} className="text-emerald-400 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-emerald-400">{label} is now open</p>
+            <p className="text-xs text-muted-foreground">Submit your answers before the deadline. Once submitted, they can no longer be modified.</p>
+          </div>
+        </div>
+        <Button onClick={onOpen} className="text-xs gap-2 flex-shrink-0">
+          <Send size={14} />
+          Submit Answers
+        </Button>
+      </div>
+    );
+  }
+
+  if (phase.phaseLocked) {
+    return (
+      <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+        <Clock size={18} className="text-red-400 flex-shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-red-400">{label} is closed — no answers were submitted</p>
+          <p className="text-xs text-muted-foreground">Contact the organizer if you still need to take part.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+      <Clock size={18} className="text-amber-400 flex-shrink-0" />
+      <div>
+        <p className="text-sm font-semibold text-amber-400">You've been accepted to {label}</p>
+        <p className="text-xs text-muted-foreground">{label} will open soon. You'll be notified when you can submit.</p>
       </div>
     </div>
   );

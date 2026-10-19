@@ -17,6 +17,19 @@ export function OverviewTab({ profileName, applications, eventsCount, unreadCoun
     { label: 'Events Available', value: eventsCount, color: 'from-brand-sky to-brand-blue', icon: Calendar, bg: 'bg-brand-sky/10' },
     { label: 'Notifications', value: unreadCount, color: 'from-brand-purple to-brand-blue', icon: BellRing, bg: 'bg-brand-purple/10' },
   ];
+  // The questionnaire phase open now that this application can still answer (it passed the phase before)
+  const phaseToAnswer = (app: any) => {
+    const phases: any[] = eventPhases[app.targetEventId] || [];
+    const subs: any[] = phaseSubmissions[app.applicationId] || [];
+    const open = phases.find((p: any) => p.phaseActive && p.phaseType !== 'PITCH');
+    if (!open) return null;
+    if (subs.some((s: any) => s.phaseOrder === open.phaseOrder && s.status !== 'DRAFT')) return null;
+    const previous = phases.find((p: any) => p.phaseOrder === open.phaseOrder - 1);
+    const reachable = !previous || previous.phaseType === 'PITCH'
+      || subs.some((s: any) => s.phaseOrder === previous.phaseOrder && s.decisionStatus === 'ACCEPTED');
+    return reachable ? open : null;
+  };
+
   return (
     <TabPanel>
       <h1 className="text-4xl mb-2 text-foreground">Welcome back, {profileName}</h1>
@@ -92,11 +105,8 @@ export function OverviewTab({ profileName, applications, eventsCount, unreadCoun
                       <button
                         onClick={() => {
                           const isAccepted = app.status?.toLowerCase() === 'accepted' || app.applicationStatus?.toLowerCase() === 'accepted';
-                          const phases = eventPhases[app.targetEventId] || [];
-                          const p2Active = phases.find((p: any) => p.phaseOrder === 2)?.phaseActive;
-                          const p1Accepted = (phaseSubmissions[app.applicationId] || []).some((s: any) => s.phaseOrder === 1 && s.decisionStatus === 'ACCEPTED');
 
-                          if (isAccepted && p1Accepted && p2Active) {
+                          if (isAccepted && phaseToAnswer(app)) {
                             navigate(`/dashboard?tab=applications&eventId=${app.targetEventId}`);
                           } else if (isAccepted) {
                             navigate(`/startup/${app.applicationId}`);
@@ -108,11 +118,9 @@ export function OverviewTab({ profileName, applications, eventsCount, unreadCoun
                       >
                         {(() => {
                           const isAccepted = app.status?.toLowerCase() === 'accepted' || app.applicationStatus?.toLowerCase() === 'accepted';
-                          const phases = eventPhases[app.targetEventId] || [];
-                          const p2Active = phases.find((p: any) => p.phaseOrder === 2)?.phaseActive;
-                          const p1Accepted = (phaseSubmissions[app.applicationId] || []).some((s: any) => s.phaseOrder === 1 && s.decisionStatus === 'ACCEPTED');
+                          const open = isAccepted ? phaseToAnswer(app) : null;
 
-                          if (isAccepted && p1Accepted && p2Active) return <span className="inline-flex items-center gap-1"><Rocket size={14} /> Phase 2</span>;
+                          if (open) return <span className="inline-flex items-center gap-1"><Rocket size={14} /> Phase {open.phaseOrder}</span>;
                           if (isAccepted) return 'Manage Startup →';
                           return 'Track Status →';
                         })()}

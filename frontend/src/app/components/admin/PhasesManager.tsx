@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X, Trash2 } from 'lucide-react';
+import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '../common/Button';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
@@ -34,6 +34,9 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
     const [managingPitchPhase, setManagingPitchPhase] = useState<Phase | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [confirmReopenId, setConfirmReopenId] = useState<string | null>(null);
+    // Shown before opening a phase that would leave participants behind in the phase that closes
+    const [activationWarning, setActivationWarning] = useState<{ phaseId: string; closingPhaseName: string; notSubmitted: number; awaitingDecision: number } | null>(null);
     const { t } = useI18n();
     const navigate = useNavigate();
 
@@ -71,9 +74,18 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
         }
     };
 
-    const activatePhase = async (phaseId: string) => {
+    const activatePhase = async (phaseId: string, confirmed = false) => {
         setIsUpdating(true);
         try {
+            if (!confirmed) {
+                // Opening a phase closes the current one for good: warn if someone would be left behind
+                const check = await api.getPhaseActivationCheck(phaseId).catch(() => null);
+                if (check && (check.notSubmitted > 0 || check.awaitingDecision > 0)) {
+                    setActivationWarning({ phaseId, ...check });
+                    return;
+                }
+            }
+            setActivationWarning(null);
             await api.activatePhase(phaseId as any);
             toast.success(t('phases.activated'));
             loadPhases();
@@ -81,6 +93,20 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
             toast.error(error.message || t('phases.activateFailed'));
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const reopenPhase = async (phaseId: string) => {
+        setIsUpdating(true);
+        try {
+            await api.reopenPhase(phaseId);
+            toast.success(t('phases.reopened'));
+            loadPhases();
+        } catch (error: any) {
+            toast.error(error.message || t('phases.reopenFailed'));
+        } finally {
+            setIsUpdating(false);
+            setConfirmReopenId(null);
         }
     };
 
@@ -269,7 +295,54 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                                                             {t('phases.lockedForever')}
                                                         </span>
                                                     )}
+                                                    {status === 'LOCKED' && confirmReopenId !== phase.phaseId && (
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => setConfirmReopenId(phase.phaseId)}
+                                                            disabled={isUpdating}
+                                                            className="text-xs gap-2 px-3 py-1.5 h-8"
+                                                        >
+                                                            <RotateCcw size={14} />
+                                                            {t('phases.reopen')}
+                                                        </Button>
+                                                    )}
                                                 </div>
+
+                                                {confirmReopenId === phase.phaseId && (
+                                                    <div className="mt-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-foreground">
+                                                        <p className="mb-2">{t('phases.reopenConfirm')}</p>
+                                                        <div className="flex gap-2">
+                                                            <Button variant="primary" onClick={() => reopenPhase(phase.phaseId)} disabled={isUpdating}
+                                                                className="text-xs px-3 py-1.5 h-8">
+                                                                {t('phases.reopenYes')}
+                                                            </Button>
+                                                            <Button variant="ghost" onClick={() => setConfirmReopenId(null)} className="text-xs px-3 py-1.5 h-8">
+                                                                {t('common.cancel')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {activationWarning?.phaseId === phase.phaseId && (
+                                                    <div className="mt-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-foreground space-y-1">
+                                                        <p className="font-semibold">{t('phases.activateWarning', { phase: activationWarning.closingPhaseName })}</p>
+                                                        {activationWarning.notSubmitted > 0 && (
+                                                            <p>• {t('phases.activateNotSubmitted', { count: activationWarning.notSubmitted })}</p>
+                                                        )}
+                                                        {activationWarning.awaitingDecision > 0 && (
+                                                            <p>• {t('phases.activateAwaiting', { count: activationWarning.awaitingDecision })}</p>
+                                                        )}
+                                                        <div className="flex gap-2 pt-2">
+                                                            <Button variant="primary" onClick={() => activatePhase(phase.phaseId, true)} disabled={isUpdating}
+                                                                className="text-xs px-3 py-1.5 h-8">
+                                                                {t('phases.activateAnyway')}
+                                                            </Button>
+                                                            <Button variant="ghost" onClick={() => setActivationWarning(null)} className="text-xs px-3 py-1.5 h-8">
+                                                                {t('common.cancel')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         {confirmDeleteId === phase.phaseId ? (

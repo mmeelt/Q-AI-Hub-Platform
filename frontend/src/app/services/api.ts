@@ -627,6 +627,22 @@ export const api = {
         return await response.json();
     },
 
+    /** What opening this phase would leave unfinished in the phase that closes. */
+    async getPhaseActivationCheck(phaseId: string): Promise<{ closingPhaseName: string; notSubmitted: number; awaitingDecision: number }> {
+        const response = await this.authFetch(`/phases/${phaseId}/activation-check`);
+        if (!response.ok) throw new Error('Failed to check the phase');
+        return await response.json();
+    },
+
+    async reopenPhase(phaseId: string): Promise<any> {
+        const response = await this.authFetch(`/phases/${phaseId}/reopen`, { method: 'PUT' });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(getApiErrorMessage(err, 'Failed to reopen the phase'));
+        }
+        return await response.json();
+    },
+
     async deletePhase(phaseId: string | number): Promise<void> {
         const response = await this.authFetch(`/phases/${phaseId}`, { method: 'DELETE' });
         if (!response.ok) {
