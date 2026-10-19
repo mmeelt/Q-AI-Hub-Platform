@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X, Trash2 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { api } from '../../services/api';
@@ -34,6 +35,7 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
     const [isCreating, setIsCreating] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const { t } = useI18n();
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (eventType === 'INCUBATION') {
@@ -221,7 +223,8 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <Button
                                                         variant="ghost"
-                                                        onClick={() => window.location.href = `/admin/phases/${phase.phaseId}/submissions`}
+                                                        // A pitch phase has no form answers: its submissions are the pitches, scored by the judges
+                                                        onClick={() => isPitchPhase ? setManagingPitchPhase(phase) : navigate(`/admin/phases/${phase.phaseId}/submissions`)}
                                                         className="text-xs gap-2 px-3 py-1.5 h-8"
                                                     >
                                                         <Users size={14} />
@@ -239,7 +242,7 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                                                         </Button>
                                                     )}
 
-                                                    {isPitchPhase && phase.phaseOrder === 3 && (
+                                                    {isPitchPhase && (
                                                         <Button
                                                             variant="outline"
                                                             onClick={() => setManagingPitchPhase(phase)}
@@ -345,7 +348,7 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                         onClick={() => setManagingPitchPhase(null)}>
                         <div className="w-full max-w-5xl my-8 bg-background border border-border rounded-2xl shadow-2xl p-6"
                             onClick={e => e.stopPropagation()}>
-                            <PitchJudgingPanel eventId={String(eventId)} mode="admin" onBack={() => setManagingPitchPhase(null)} />
+                            <PitchJudgingPanel eventId={String(eventId)} phaseId={managingPitchPhase.phaseId} mode="admin" onBack={() => setManagingPitchPhase(null)} />
                         </div>
                     </div>
                 )}

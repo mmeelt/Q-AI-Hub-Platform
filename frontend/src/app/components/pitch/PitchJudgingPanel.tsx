@@ -70,7 +70,7 @@ function DecisionBadge({ decision }: { decision?: string }) {
     );
 }
 
-export function PitchJudgingPanel({ eventId, mode, onBack }: { eventId: string; mode: Mode; onBack?: () => void }) {
+export function PitchJudgingPanel({ eventId, mode, onBack, phaseId }: { eventId: string; mode: Mode; onBack?: () => void; phaseId?: string }) {
     const isAdmin = mode === 'admin';
     const [isLoading, setIsLoading] = useState(true);
     const [pitchPhase, setPitchPhase] = useState<any>(null);
@@ -82,8 +82,11 @@ export function PitchJudgingPanel({ eventId, mode, onBack }: { eventId: string; 
         setIsLoading(true);
         try {
             const phases = await api.getPhasesByEvent(String(eventId));
-            const phase = (phases || []).find((p: any) =>
-                (p.phaseName || '').toLowerCase().includes('pitch') || p.phaseOrder === 3);
+            // The phase asked for, else the event's pitch phase (older events only have a name or order to go by)
+            const list0 = phases || [];
+            const phase = (phaseId && list0.find((p: any) => String(p.phaseId) === String(phaseId)))
+                || list0.find((p: any) => p.phaseType === 'PITCH')
+                || list0.find((p: any) => (p.phaseName || '').toLowerCase().includes('pitch') || p.phaseOrder === 3);
             setPitchPhase(phase || null);
             if (phase) {
                 const list = await api.getPitchRoundsByPhase(phase.phaseId);
@@ -96,7 +99,7 @@ export function PitchJudgingPanel({ eventId, mode, onBack }: { eventId: string; 
         }
     };
 
-    useEffect(() => { loadRounds(); }, [eventId]);
+    useEffect(() => { loadRounds(); }, [eventId, phaseId]);
 
     const createRound = async () => {
         if (!pitchPhase) return;
