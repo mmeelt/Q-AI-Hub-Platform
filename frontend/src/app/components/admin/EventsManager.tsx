@@ -28,8 +28,9 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
                     location: e.location || 'Online',
                     category: e.category || e.eventCategory || 'Workshop',
                     applicants: e.participantCount ?? e.currentRegisteredCount ?? 0, // applications (incubation) or registrations (simple)
-                    maxCapacity: e.maxParticipants || 50,
+                    maxCapacity: e.maxParticipants || null, // null: no limit
                     status: e.status === 'ACTIVE' ? 'Open' : e.status === 'DRAFT' ? 'Upcoming' : 'Closed',
+                    full: Boolean(e.full),
                     image: e.coverImageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
                     description: e.description || 'No description provided',
                     eventType: e.eventType,
@@ -143,7 +144,7 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
                             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
                             <div className="absolute left-3 top-3"><span className="rounded-lg bg-foreground/15 px-2.5 py-1 text-[11px] font-semibold text-foreground backdrop-blur-md">{event.category}</span></div>
                             <div className="absolute right-3 top-3">
-                                <span className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md ${event.status === 'Open' ? 'bg-brand-teal/80 text-background' : event.status === 'Upcoming' ? 'bg-brand-cyan/80 text-background' : 'bg-foreground/30 text-foreground/80'}`}>{event.status}</span>
+                                <span className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md ${event.status === 'Open' && event.full ? 'bg-amber-500/90 text-background' : event.status === 'Open' ? 'bg-brand-teal/80 text-background' : event.status === 'Upcoming' ? 'bg-brand-cyan/80 text-background' : 'bg-foreground/30 text-foreground/80'}`}>{event.status === 'Open' && event.full ? 'Full' : event.status}</span>
                             </div>
                             <div className="absolute bottom-3 left-3 right-3">
                                 <h3 className="text-base font-bold leading-tight text-foreground drop-shadow-lg">{event.title}</h3>
@@ -155,9 +156,9 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="h-3.5 w-3.5 text-cyan-600 dark:text-brand-cyan/50" />{event.location}</div>
                             </div>
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-cyan-600 dark:text-brand-cyan" /><span className="text-xs font-semibold text-foreground">{event.applicants}</span><span className="text-xs text-muted-foreground">/ {event.maxCapacity}</span></div>
+                                <div className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-cyan-600 dark:text-brand-cyan" /><span className="text-xs font-semibold text-foreground">{event.applicants}</span><span className="text-xs text-muted-foreground">{event.maxCapacity ? `/ ${event.maxCapacity}` : '· no limit'}</span></div>
                                 <div className="h-1.5 w-20 overflow-hidden rounded-full bg-foreground/5">
-                                    <div className="h-full rounded-full bg-gradient-to-r from-brand-cyan to-brand-teal transition-all" style={{ width: `${Math.min((event.applicants / event.maxCapacity) * 100, 100)}%` }} />
+                                    <div className="h-full rounded-full bg-gradient-to-r from-brand-cyan to-brand-teal transition-all" style={{ width: `${event.maxCapacity ? Math.min((event.applicants / event.maxCapacity) * 100, 100) : 0}%` }} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">

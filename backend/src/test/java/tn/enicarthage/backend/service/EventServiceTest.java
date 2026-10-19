@@ -81,6 +81,24 @@ class EventServiceTest {
     }
 
     @Test
+    void anEventIsFull_whenItsParticipantsReachTheMaximum_registrationsForSimple_applicationsForIncubation() {
+        Event workshop = Event.builder().eventId("w").eventType(Event.EventType.SIMPLE).maxParticipants(2).currentRegisteredCount(2).build();
+        Event incubator = Event.builder().eventId("i").eventType(Event.EventType.INCUBATION).maxParticipants(2).currentRegisteredCount(0).build();
+        Event unlimited = Event.builder().eventId("u").eventType(Event.EventType.INCUBATION).currentRegisteredCount(0).build();
+        when(applicationRepository.findAll()).thenReturn(List.of(
+                tn.enicarthage.backend.entity.Application.builder().targetEventId("i").build(),
+                tn.enicarthage.backend.entity.Application.builder().targetEventId("i").build(),
+                tn.enicarthage.backend.entity.Application.builder().targetEventId("u").build()));
+
+        service.withParticipantCounts(List.of(workshop, incubator, unlimited));
+
+        assertTrue(workshop.isFull());
+        assertEquals(2L, incubator.getParticipantCount());
+        assertTrue(incubator.isFull());
+        assertFalse(unlimited.isFull()); // no maximum: never full
+    }
+
+    @Test
     void activate_onlyWorksOnADraftEvent() {
         Event active = Event.builder().eventId("e1").status(Event.EventStatus.ACTIVE).build();
         when(eventRepository.findById("e1")).thenReturn(Optional.of(active));

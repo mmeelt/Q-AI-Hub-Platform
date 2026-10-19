@@ -145,24 +145,9 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                                 <CheckCircle2 className="h-4 w-4" /> Activate
                             </Button>
                         )}
+                        {/* Phases are opened from the phase list below (Activate), which warns about who is left behind */}
                         {event.status === 'Open' && (
                             <>
-                                <Button
-                                    variant="outline"
-                                    disabled={isActing}
-                                    onClick={async () => {
-                                        setIsActing(true);
-                                        try {
-                                            await api.advanceEventPhase(String(event.id));
-                                            toast.success('Phase advanced!');
-                                            onBack();
-                                        } catch (e: any) { toast.error(e.message || 'Failed'); }
-                                        setIsActing(false);
-                                    }}
-                                    className="!px-4 !py-2 !text-sm border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
-                                >
-                                    <TrendingUp className="h-4 w-4" /> Advance Phase
-                                </Button>
                                 <Button
                                     variant="outline"
                                     disabled={isActing}
@@ -219,7 +204,7 @@ export function EventDetail({ event, onBack, navigate, onStartPitch }: { event: 
                 <h3 className="mb-3 text-lg font-bold text-foreground">About this Event</h3>
                 <p className="leading-relaxed text-foreground/70">{event.description}</p>
                 <div className="mt-4 grid grid-cols-3 gap-4">
-                    {[{ l: 'Category', v: event.category, c: '#3B9BB0' }, { l: 'Capacity', v: `${event.maxCapacity} spots`, c: '#3AA18F' }, { l: 'Status', v: event.status, c: '#4A9CB5' }].map(s => (
+                    {[{ l: 'Category', v: event.category, c: '#3B9BB0' }, { l: 'Capacity', v: event.maxCapacity ? `${event.maxCapacity} spots` : 'Unlimited', c: '#3AA18F' }, { l: 'Status', v: event.status === 'Open' && event.full ? 'Open · Full' : event.status, c: '#4A9CB5' }].map(s => (
                         <div key={s.l} className="rounded-xl bg-muted p-4 border border-border"><p className="text-xs text-muted-foreground">{s.l}</p><p className="mt-1 text-sm font-semibold" style={{ color: s.c }}>{s.v}</p></div>
                     ))}
                 </div>

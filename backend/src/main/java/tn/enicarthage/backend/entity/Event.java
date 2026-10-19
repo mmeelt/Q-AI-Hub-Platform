@@ -104,9 +104,16 @@ public class Event {
         return !LocalDate.now().isAfter(applicationDeadline); // the deadline day itself is still open
     }
 
+    /**
+     * Full once the participants reach the maximum: registrations for a simple event, applications received
+     * for an incubation event (participantCount, filled when the event is read; registrations otherwise).
+     * Sent to the pages as "full".
+     */
     public boolean isFull() {
-        if (maxParticipants == null) return false;
-        return currentRegisteredCount != null && currentRegisteredCount >= maxParticipants;
+        if (maxParticipants == null || maxParticipants <= 0) return false;
+        long count = participantCount != null ? participantCount
+                : (currentRegisteredCount == null ? 0 : currentRegisteredCount);
+        return count >= maxParticipants;
     }
 
     public void incrementRegistered() {

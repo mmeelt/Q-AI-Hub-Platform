@@ -27,6 +27,7 @@ const typeColors: Record<string, { bg: string; text: string; border: string }> =
 
 const statusConfig: Record<string, { label: string; color: string; glow: string }> = {
     Open: { label: 'Open', color: 'bg-brand-mint/20 text-emerald-600 dark:text-brand-mint border-brand-mint/30', glow: 'shadow-[0_0_12px_rgba(63,163,124,0.15)]' },
+    Full: { label: 'Full', color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30', glow: '' },
     'Coming Soon': { label: 'Coming Soon', color: 'bg-brand-purple/15 text-purple-600 dark:text-brand-purple border-brand-purple/30', glow: 'shadow-[0_0_12px_rgba(117,89,184,0.15)]' },
     Closed: { label: 'Closed', color: 'bg-foreground/5 text-muted-foreground border-border', glow: '' },
 };
@@ -69,7 +70,8 @@ export function EventsPage() {
                     eventType: e.eventType || e.event_type || 'SIMPLE', // Normalize eventType
                     type: e.category || e.eventCategory || e.type || 'Other', // Map category to type safely
                     date: e.startDate ? new Date(e.startDate).toLocaleDateString() : 'TBD',
-                    status: e.status === 'ACTIVE' ? 'Open' : (e.status === 'DRAFT' ? 'Coming Soon' : 'Closed')
+                    // An open event that reached its maximum number of participants is shown as full
+                    status: e.status === 'ACTIVE' ? (e.full ? 'Full' : 'Open') : (e.status === 'DRAFT' ? 'Coming Soon' : 'Closed')
                 })));
 
                 // Fetch user registrations to show "Registered" state
@@ -410,7 +412,11 @@ export function EventsPage() {
                                                                     </button>
                                                                 );
                                                             })()
-                                                        ) : event.status === 'Open' ? (
+                                                        ) : event.status === 'Full' && !isAdmin ? (
+                                                            <div className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-sm font-semibold">
+                                                                This event is full
+                                                            </div>
+                                                        ) : event.status === 'Open' || event.status === 'Full' ? (
                                                             <button 
                                                                 onClick={(e) => {
                                                                     e.preventDefault();

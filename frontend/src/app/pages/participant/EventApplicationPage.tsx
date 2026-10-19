@@ -368,7 +368,15 @@ export function EventApplicationPage() {
         {/* Form Steps */}
         <div className="max-w-3xl mx-auto">
           <AnimatePresence mode="wait">
-            {!isSubmitted ? (
+            {event?.full && !isSubmitted ? (
+              // The event reached its maximum number of participants: no new application
+              <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="bg-background/95 backdrop-blur-xl border border-amber-500/30 rounded-3xl p-10 text-center">
+                <h2 className="text-2xl mb-3">This event is full</h2>
+                <p className="text-muted-foreground mb-6">It has reached its maximum number of participants, so it no longer accepts applications.</p>
+                <Button variant="primary" onClick={() => navigate('/events')}>See other events</Button>
+              </motion.div>
+            ) : !isSubmitted ? (
               <>
                 {currentStep === 1 && (
                   <motion.div

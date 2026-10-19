@@ -560,12 +560,6 @@ export const api = {
         return await response.json();
     },
 
-    async advanceEventPhase(id: string | number): Promise<any> {
-        const response = await this.authFetch(`/events/${id}/advance-phase`, { method: 'PUT' });
-        if (!response.ok) throw new Error('Failed to advance phase');
-        return await response.json();
-    },
-
     // ── SIMPLE event registrations ────────────────────────────────────
 
     async registerForSimpleEvent(eventId: string | number, participantName: string, participantEmail: string, answersJson: string = '{}'): Promise<any> {

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -115,28 +116,50 @@ public class EventService {
     // ── READ ──────────────────────────────────────────────────────
 
     public Event getEventById(String eventId) {
-        return eventRepository.findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+        withParticipantCounts(List.of(event));
+        return event;
     }
 
     public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+        return withParticipantCounts(eventRepository.findAll());
     }
 
     public List<Event> getEventsByStatus(Event.EventStatus status) {
-        return eventRepository.findByStatus(status);
+        return withParticipantCounts(eventRepository.findByStatus(status));
     }
 
     public List<Event> getEventsByCategory(String category) {
-        return eventRepository.findByCategory(category);
+        return withParticipantCounts(eventRepository.findByCategory(category));
     }
 
     public List<Event> getEventsByType(Event.EventType eventType) {
-        return eventRepository.findByEventType(eventType);
+        return withParticipantCounts(eventRepository.findByEventType(eventType));
     }
 
     public List<Event> getOpenAndAvailableEvents() {
-        return eventRepository.findOpenAndAvailableEvents();
+        return withParticipantCounts(eventRepository.findOpenAndAvailableEvents()).stream()
+                .filter(e -> !e.isFull())
+                .toList();
+    }
+
+    /**
+     * Fills each event's participant count: registrations for a simple event, applications received
+     * for an incubation event. The event is full (isFull) once that count reaches its maximum.
+     */
+    public List<Event> withParticipantCounts(List<Event> events) {
+        if (events.stream().anyMatch(e -> e.getEventType() != Event.EventType.SIMPLE)) {
+            Map<String, Long> applications = applicationRepository.findAll().stream()
+                    .filter(a -> a.getTargetEventId() != null)
+                    .collect(Collectors.groupingBy(Application::getTargetEventId, Collectors.counting()));
+            events.forEach(e -> e.setParticipantCount(e.getEventType() == Event.EventType.SIMPLE
+                    ? (long) (e.getCurrentRegisteredCount() == null ? 0 : e.getCurrentRegisteredCount())
+                    : applications.getOrDefault(e.getEventId(), 0L)));
+        } else {
+            events.forEach(e -> e.setParticipantCount((long) (e.getCurrentRegisteredCount() == null ? 0 : e.getCurrentRegisteredCount())));
+        }
+        return events;
     }
 
     // ── UPDATE ────────────────────────────────────────────────────
