@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, Calendar, MapPin, Users, Clock, FileText, Tag, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Clock, FileText, Tag, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
+import { ImageUpload } from '../../components/common/ImageUpload';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Logo } from '../../components/common/Logo';
 import { DatePicker } from '../../components/ui/date-picker';
@@ -125,7 +126,7 @@ export function EditEventPage() {
                 applicationDeadline: form.deadline || undefined,
                 maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : undefined,
                 tags: form.tags ? form.tags.split(',').map(t => t.trim()) : [],
-                coverImageUrl: form.imageUrl || undefined,
+                coverImageUrl: form.imageUrl,  // '' removes the cover image
                 status: statusMap[form.status] || 'DRAFT',
                 formFieldsJson: generateFormFieldsJson() || undefined
             });
@@ -341,14 +342,13 @@ export function EditEventPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm text-muted-foreground mb-2 flex items-center gap-1">
-                                        <Users size={13} /> Cover Image URL
+                                        <ImageIcon size={13} /> Cover Image
                                     </label>
-                                    <input
-                                        type="url"
+                                    <ImageUpload
                                         value={form.imageUrl}
-                                        onChange={e => handleChange('imageUrl', e.target.value)}
-                                        placeholder="https://..."
-                                        className="w-full px-4 py-3 bg-card rounded-xl border border-border text-foreground outline-none focus:border-white/30 transition-colors placeholder:text-muted-foreground/40"
+                                        onChange={url => handleChange('imageUrl', url)}
+                                        folder="event-covers"
+                                        label="Choose a cover image"
                                     />
                                 </div>
 

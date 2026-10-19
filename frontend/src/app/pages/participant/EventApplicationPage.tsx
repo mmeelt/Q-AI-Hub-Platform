@@ -7,6 +7,7 @@ import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { toast } from 'sonner';
+import { IMAGE_ACCEPT } from '../../components/common/ImageUpload';
 import { api } from '../../services/api';
 import { PitchVideo } from '../../components/common/PitchVideo';
 
@@ -547,7 +548,7 @@ export function EventApplicationPage() {
                         <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-brand-mint transition-colors cursor-pointer">
                           <input
                             type="file"
-                            accept="image/*"
+                            accept={IMAGE_ACCEPT}
                             onChange={handleLogoUpload}
                             className="hidden"
                             id="logo-upload"

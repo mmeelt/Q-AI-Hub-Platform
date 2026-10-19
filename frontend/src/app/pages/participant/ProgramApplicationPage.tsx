@@ -5,6 +5,7 @@ import { GradientButton } from '../../components/common/GradientButton';
 import { GlassCard } from '../../components/common/GlassCard';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { toast } from 'sonner';
+import { IMAGE_ACCEPT } from '../../components/common/ImageUpload';
 import { api } from '../../services/api';
 
 export function ProgramApplicationPage() {
@@ -313,7 +314,7 @@ export function ProgramApplicationPage() {
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-brand-sky/50 transition-colors cursor-pointer">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept={IMAGE_ACCEPT}
                       onChange={(e) => handleFileUpload(e, 'logo')}
                       className="hidden"
                       id="program-logo-upload"

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, MapPin, Users, Clock, FileText, Tag, Image, HelpCircle, Plus, Trash2, AlignLeft, List, Type, GripVertical } from 'lucide-react';
+import { ImageUpload } from '../../components/common/ImageUpload';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Logo } from '../../components/common/Logo';
 import { DatePicker } from '../../components/ui/date-picker';
@@ -373,14 +374,13 @@ export function CreateEventPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm text-muted-foreground mb-2 flex items-center gap-1">
-                                        <Image size={13} /> Cover Image URL
+                                        <Image size={13} /> Cover Image
                                     </label>
-                                    <input
-                                        type="url"
+                                    <ImageUpload
                                         value={form.imageUrl}
-                                        onChange={e => handleChange('imageUrl', e.target.value)}
-                                        placeholder="https://..."
-                                        className="w-full px-4 py-3 bg-card rounded-xl border border-border text-foreground outline-none focus:border-white/30 transition-colors placeholder:text-muted-foreground/40"
+                                        onChange={url => handleChange('imageUrl', url)}
+                                        folder="event-covers"
+                                        label="Choose a cover image"
                                     />
                                 </div>
 

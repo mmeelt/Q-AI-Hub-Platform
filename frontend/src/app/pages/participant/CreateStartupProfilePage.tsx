@@ -5,6 +5,7 @@ import { ArrowLeft, Rocket, Globe, Upload, X, Check, Save, Building2, Target, Sp
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { Button } from '../../components/common/Button';
+import { IMAGE_ACCEPT, imageFileProblem } from '../../components/common/ImageUpload';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
 
@@ -76,6 +77,8 @@ export function CreateStartupProfilePage() {
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            const problem = imageFileProblem(file);
+            if (problem) { toast.error(problem); e.target.value = ''; return; }
             setLogoFile(file);
             const reader = new FileReader();
             reader.onloadend = () => setLogoPreview(reader.result as string);
@@ -86,6 +89,11 @@ export function CreateStartupProfilePage() {
     const handlePitchDeckChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!/\.pdf$/i.test(file.name) || file.size > 10 * 1024 * 1024) {
+                toast.error('The pitch deck must be a PDF of 10 MB or less');
+                e.target.value = '';
+                return;
+            }
             setPitchDeckFile(file);
         }
     };
@@ -95,8 +103,13 @@ export function CreateStartupProfilePage() {
         setIsLoading(true);
 
         try {
+            // Files chosen on the device are uploaded first; the startup keeps their URLs
+            const companyLogoUrl = logoFile ? await api.uploadFile(logoFile, 'logos') : undefined;
+            const pitchDeckLink = pitchDeckFile ? await api.uploadFile(pitchDeckFile, 'pitch-decks') : undefined;
             const payload = {
                 projectName: formData.projectName,
+                ...(companyLogoUrl ? { companyLogoUrl } : {}),
+                ...(pitchDeckLink ? { pitchDeckLink } : {}),
                 businessSector: formData.businessSector,
                 companyTagline: formData.companyTagline,
                 companyWebsiteUrl: formData.website,
@@ -194,7 +207,7 @@ export function CreateStartupProfilePage() {
                                         <input
                                             type="file"
                                             id="logo"
-                                            accept="image/*"
+                                            accept={IMAGE_ACCEPT}
                                             onChange={handleLogoChange}
                                             className="hidden"
                                         />
@@ -283,7 +296,7 @@ export function CreateStartupProfilePage() {
                                     <input
                                         type="file"
                                         id="pitchDeck"
-                                        accept=".pdf,.ppt,.pptx"
+                                        accept=".pdf,application/pdf"
                                         onChange={handlePitchDeckChange}
                                         className="hidden"
                                     />
@@ -295,7 +308,7 @@ export function CreateStartupProfilePage() {
                                         {pitchDeckFile ? pitchDeckFile.name : 'Upload Pitch Deck'}
                                     </label>
                                     <p className="text-xs text-muted-foreground">
-                                        PDF, PPT, or PPTX (max 10MB)
+                                        PDF (max 10MB)
                                     </p>
                                 </div>
                             </div>
