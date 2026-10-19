@@ -225,6 +225,27 @@ class PhaseServiceTest {
     }
 
     @Test
+    void closePhase_theFinalOpenPhaseIsClosed_andCanBeReopenedLater() {
+        Phase pitch = existing(3, true, false);
+        when(phaseRepository.findById("p3")).thenReturn(Optional.of(pitch));
+        when(phaseRepository.findByEventIdOrderByPhaseOrderAsc("event-1")).thenReturn(List.of(pitch));
+
+        Phase closed = service.closePhase("p3");
+        assertFalse(closed.getPhaseActive());
+        assertTrue(closed.getPhaseLocked());
+
+        assertTrue(service.reopenPhase("p3").getPhaseActive());
+    }
+
+    @Test
+    void closePhase_aPhaseThatIsNotOpen_isRefused() {
+        when(phaseRepository.findById("p2")).thenReturn(Optional.of(existing(2, false, false)));
+
+        assertThrows(IllegalStateException.class, () -> service.closePhase("p2"));
+        verify(phaseRepository, never()).save(any());
+    }
+
+    @Test
     void activationCheck_countsWhoWouldBeLeftBehindInThePhaseThatCloses() {
         Phase phase1 = existing(1, true, false);
         Phase phase2 = existing(2, false, false);

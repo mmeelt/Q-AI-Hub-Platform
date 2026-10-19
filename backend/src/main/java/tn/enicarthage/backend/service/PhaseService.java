@@ -290,6 +290,20 @@ public class PhaseService {
         return phaseRepository.save(phase);
     }
 
+    /**
+     * Ends the open phase (e.g. the final pitch: no next phase will close it). It no longer accepts
+     * anything; its submissions and results are kept and it can still be reopened.
+     */
+    @Transactional
+    public Phase closePhase(String id) {
+        Phase phase = getPhaseById(id);
+        if (!Boolean.TRUE.equals(phase.getPhaseActive())) {
+            throw new IllegalStateException("Only an open phase can be closed");
+        }
+        phase.lockPhase();
+        return phaseRepository.save(phase);
+    }
+
     // ── DELETE ────────────────────────────────────────────────────
 
     @Transactional

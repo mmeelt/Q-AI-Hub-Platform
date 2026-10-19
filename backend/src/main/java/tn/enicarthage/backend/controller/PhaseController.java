@@ -91,6 +91,13 @@ public class PhaseController {
         return ResponseEntity.ok(phaseService.reopenPhase(id));
     }
 
+    // PUT /api/phases/{id}/close — ends the open phase (e.g. the final pitch), results are kept
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/close")
+    public ResponseEntity<Phase> closePhase(@PathVariable String id) {
+        return ResponseEntity.ok(phaseService.closePhase(id));
+    }
+
     // PUT /api/phases/{id}/deactivate
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/deactivate")

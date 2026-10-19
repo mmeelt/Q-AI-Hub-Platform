@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X, Trash2, RotateCcw } from 'lucide-react';
+import { Play, Users, FileText, Trophy, Clock, AlertCircle, Pencil, Plus, X, Trash2, RotateCcw, Lock } from 'lucide-react';
 import { Button } from '../common/Button';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
@@ -35,6 +35,7 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
     const [isCreating, setIsCreating] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [confirmReopenId, setConfirmReopenId] = useState<string | null>(null);
+    const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
     // Shown before opening a phase that would leave participants behind in the phase that closes
     const [activationWarning, setActivationWarning] = useState<{ phaseId: string; closingPhaseName: string; notSubmitted: number; awaitingDecision: number } | null>(null);
     const { t } = useI18n();
@@ -93,6 +94,20 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
             toast.error(error.message || t('phases.activateFailed'));
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const closePhase = async (phaseId: string) => {
+        setIsUpdating(true);
+        try {
+            await api.closePhase(phaseId);
+            toast.success(t('phases.closed'));
+            loadPhases();
+        } catch (error: any) {
+            toast.error(error.message || t('phases.closeFailed'));
+        } finally {
+            setIsUpdating(false);
+            setConfirmCloseId(null);
         }
     };
 
@@ -295,6 +310,18 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                                                             {t('phases.lockedForever')}
                                                         </span>
                                                     )}
+                                                    {/* The open phase can be ended by hand: needed for the last one (e.g. the final pitch) */}
+                                                    {status === 'ACTIVE' && confirmCloseId !== phase.phaseId && (
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => setConfirmCloseId(phase.phaseId)}
+                                                            disabled={isUpdating}
+                                                            className="text-xs gap-2 px-3 py-1.5 h-8 border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                                        >
+                                                            <Lock size={14} />
+                                                            {t('phases.close')}
+                                                        </Button>
+                                                    )}
                                                     {status === 'LOCKED' && confirmReopenId !== phase.phaseId && (
                                                         <Button
                                                             variant="outline"
@@ -307,6 +334,21 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                                                         </Button>
                                                     )}
                                                 </div>
+
+                                                {confirmCloseId === phase.phaseId && (
+                                                    <div className="mt-3 p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-foreground">
+                                                        <p className="mb-2">{t('phases.closeConfirm')}</p>
+                                                        <div className="flex gap-2">
+                                                            <Button variant="primary" onClick={() => closePhase(phase.phaseId)} disabled={isUpdating}
+                                                                className="text-xs px-3 py-1.5 h-8">
+                                                                {t('phases.close')}
+                                                            </Button>
+                                                            <Button variant="ghost" onClick={() => setConfirmCloseId(null)} className="text-xs px-3 py-1.5 h-8">
+                                                                {t('common.cancel')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
 
                                                 {confirmReopenId === phase.phaseId && (
                                                     <div className="mt-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-foreground">
