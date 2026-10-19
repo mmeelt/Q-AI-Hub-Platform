@@ -89,6 +89,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(dto.getPassword()))
                 .fullName(inputSanitizer.sanitize(dto.getFullName()))
                 .universityName(inputSanitizer.sanitize(dto.getUniversityName()))
+                .studentId(inputSanitizer.sanitize(dto.getStudentId()))
                 .accountCreatedAt(new Date())
                 .userStatus(User.UserStatus.ACTIVE)
                 .failedLoginAttempts(0)

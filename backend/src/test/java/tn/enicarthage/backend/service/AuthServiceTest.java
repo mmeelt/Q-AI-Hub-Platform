@@ -160,6 +160,28 @@ class AuthServiceTest {
     }
 
     @Test
+    void register_savesTheStudentId() {
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("student@test.com");
+        req.setPassword("ValidPass1!");
+        req.setFullName("Student");
+        req.setUniversityName("ENICarthage");
+        req.setStudentId("2024-ENIC-0042");
+
+        when(platformSettings.publicRegistrationsAllowed()).thenReturn(true);
+        when(inputSanitizer.sanitizeEmail(any())).thenAnswer(a -> a.getArgument(0));
+        when(inputSanitizer.sanitize(any())).thenAnswer(a -> a.getArgument(0));
+        when(userRepository.findByEmailAddress("student@test.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any())).thenReturn("hashed-pass");
+        when(otpService.generateAndSendOtp(any(), eq("student@test.com"), any())).thenReturn("otp-session");
+
+        authService.register(req);
+
+        verify(userRepository).save(argThat(u -> "2024-ENIC-0042".equals(u.getStudentId())
+                && "ENICarthage".equals(u.getUniversityName())));
+    }
+
+    @Test
     void describeInvitation_tellsAnExpertLinkFromAParticipantLink() {
         InvitationLog expert = InvitationLog.builder().invitationId("e1").email("judge@test.com")
                 .expertRole("JUDGE").eventId("ev1").invitedAt(new Date()).build();
