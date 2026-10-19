@@ -144,18 +144,24 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
         { label: 'Pitches Evaluated', value: statsData?.metricPitchesEvaluated?.toString() || '0', change: '', icon: Zap, gradient: 'from-brand-purple to-brand-blue', glow: 'rgba(117,89,184,0.15)' },
     ];
 
-    const recentActivity = statsData?.feedRecentActivity?.map((a: any) => ({
-        action: `Application ${a.status}`,
-        detail: `ID: ${a.applicationId} - Score: ${a.score || 'Pending'}`,
-        time: new Date(a.submittedAt).toLocaleDateString(),
-        dotColor: a.status === 'ACCEPTED' ? 'bg-brand-teal' : 'bg-brand-purple',
-        glowColor: a.status === 'ACCEPTED' ? 'shadow-[0_0_6px_rgba(58,161,143,0.5)]' : 'shadow-[0_0_6px_rgba(117,89,184,0.5)]'
-    })) || [];
+    // The latest phase submissions: which startup, which phase, and where the review stands
+    const recentActivity = statsData?.feedRecentActivity?.map((a: any) => {
+        const decided = a.decision === 'ACCEPTED' || a.decision === 'REJECTED';
+        const state = decided ? (a.decision === 'ACCEPTED' ? 'accepted' : 'not accepted')
+            : a.score != null ? `graded ${a.score}/100` : 'awaiting review';
+        return {
+            action: `${a.startupName || 'A startup'} submitted ${a.phaseName || 'a phase'}`,
+            detail: state.charAt(0).toUpperCase() + state.slice(1),
+            time: a.submittedAt ? new Date(a.submittedAt).toLocaleDateString() : '',
+            dotColor: a.decision === 'ACCEPTED' ? 'bg-brand-teal' : 'bg-brand-purple',
+            glowColor: a.decision === 'ACCEPTED' ? 'shadow-[0_0_6px_rgba(58,161,143,0.5)]' : 'shadow-[0_0_6px_rgba(117,89,184,0.5)]'
+        };
+    }) || [];
 
     const fundingStats = [
         { label: 'Total Funding Raised', value: formatMoney(statsData?.metricTotalFunding), icon: DollarSign, gradient: 'from-brand-teal to-brand-cyan', glow: 'rgba(58,161,143,0.12)' },
         { label: 'Total Applications', value: statsData?.totalApplications?.toString() || '0', icon: TrendingUp, gradient: 'from-brand-purple to-brand-cyan', glow: 'rgba(117,89,184,0.12)' },
-        { label: 'Investment Rounds', value: '0', icon: Layers, gradient: 'from-brand-cyan to-brand-blue', glow: 'rgba(59,155,176,0.12)' },
+        { label: 'Accepted Applications', value: statsData?.acceptedApplications?.toString() || '0', icon: Layers, gradient: 'from-brand-cyan to-brand-blue', glow: 'rgba(59,155,176,0.12)' },
     ];
 
     const sectorData = statsData?.chartSectorFocusData ? 
@@ -165,10 +171,11 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
             color: ['#3B9BB0', '#7559B8', '#3AA18F', '#3563B8', '#4A9CB5'][idx % 5]
         })) : [];
 
-    const growthData = statsData?.chartGrowthByYear ? 
-        Object.values(statsData.chartGrowthByYear).map(v => Number(v)) : [0];
-    const growthYears = statsData?.chartGrowthByYear ? 
-        Object.keys(statsData.chartGrowthByYear) : ['2026'];
+    // Real monthly series (last 6 months) from the API, labelled by month
+    const chartMonths: string[] = statsData?.chartMonths || [];
+    const monthLabels = chartMonths.map(m => new Date(m + '-01T00:00:00').toLocaleDateString(undefined, { month: 'short' }));
+    const series = (key: string): number[] => (statsData?.[key] || []).map((v: any) => Number(v));
+    const sumOf = (values: number[]) => values.reduce((a, b) => a + b, 0);
 
     const handleExport = async (format: 'json' | 'csv' = 'csv') => {
         try {
@@ -239,10 +246,10 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
             {/* ─── Growth Charts ─── */}
             <motion.div variants={item} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 {[
-                    { title: 'Event Growth', data: growthData, color: '#3B9BB0', latest: statsData?.metricTotalEvents?.toString() || '0', change: '' },
-                    { title: 'Total Startups', data: [statsData?.metricActiveStartups || 0], color: '#3AA18F', latest: statsData?.metricActiveStartups?.toString() || '0', change: '' },
-                    { title: 'Total Applications', data: [statsData?.totalApplications || 0], color: '#7559B8', latest: statsData?.totalApplications?.toString() || '0', change: '' },
-                ].map((chart, ci) => (
+                    { title: 'Events by month', data: series('chartEventsByMonth'), color: '#3B9BB0' },
+                    { title: 'New users by month', data: series('chartUsersByMonth'), color: '#3AA18F' },
+                    { title: 'Applications by month', data: series('chartApplicationsByMonth'), color: '#7559B8' },
+                ].map(c => ({ ...c, latest: String(sumOf(c.data)), change: 'last 6 months' })).map((chart, ci) => (
                     <motion.div key={chart.title}
                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + ci * 0.1 }}
                         whileHover={{ y: -3, borderColor: 'var(--color-border)' }}
@@ -255,7 +262,7 @@ export function DashboardHome({ onNavigate }: DashboardHomeProps) {
                         <p className="text-2xl font-bold mb-3" style={{ color: chart.color }}>{chart.latest}</p>
                         <MiniLineChart data={chart.data} color={chart.color} height={80} />
                         <div className="flex justify-between mt-2">
-                            {growthYears.map(y => <span key={y} className="text-[9px] text-muted-foreground/60">{y}</span>)}
+                            {monthLabels.map((m, i) => <span key={chartMonths[i]} className="text-[9px] text-muted-foreground/60">{m}</span>)}
                         </div>
                     </motion.div>
                 ))}

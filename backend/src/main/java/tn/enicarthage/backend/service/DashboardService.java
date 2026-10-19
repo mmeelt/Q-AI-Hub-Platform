@@ -14,10 +14,17 @@ import tn.enicarthage.backend.repository.StartupRepository;
 import tn.enicarthage.backend.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import tn.enicarthage.backend.entity.Application;
+import tn.enicarthage.backend.entity.User;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 
@@ -68,23 +75,44 @@ public class DashboardService {
                 .collect(Collectors.groupingBy(Startup::getBusinessSector, Collectors.counting()));
         stats.put("chartSectorFocusData", sectorFocus);
 
-        // chartGrowthByYear — events grouped by start year
+        stats.put("acceptedApplications", applicationRepository.findAll().stream()
+                .filter(a -> "ACCEPTED".equalsIgnoreCase(a.getApplicationStatus())).count());
+
+        // chartGrowthByYear — events grouped by start year (oldest first)
         Map<String, Long> growthByYear = eventRepository.findAll().stream()
                 .filter(e -> e.getStartDate() != null)
                 .collect(Collectors.groupingBy(
                         e -> String.valueOf(e.getStartDate().getYear()),
+                        TreeMap::new,
                         Collectors.counting()
                 ));
         stats.put("chartGrowthByYear", growthByYear);
 
-        // feedRecentActivity — last 5 submissions (optimized query)
+        // Real monthly series for the growth charts: the last 6 months, oldest first
+        List<YearMonth> months = lastMonths(6);
+        stats.put("chartMonths", months.stream().map(YearMonth::toString).collect(Collectors.toList()));
+        stats.put("chartEventsByMonth", countByMonth(months, eventRepository.findAll().stream()
+                .map(Event::getStartDate).filter(Objects::nonNull).map(YearMonth::from)));
+        stats.put("chartUsersByMonth", countByMonth(months, userRepository.findAll().stream()
+                .map(User::getAccountCreatedAt).filter(Objects::nonNull).map(DashboardService::monthOf)));
+        stats.put("chartApplicationsByMonth", countByMonth(months, applicationRepository.findAll().stream()
+                .map(Application::getApplicationSubmittedAt).filter(Objects::nonNull).map(DashboardService::monthOf)));
+
+        // feedRecentActivity — last 5 submissions, with the startup and the phase they belong to
         List<Map<String, Object>> recentActivity = submissionRepository.findTop5ByOrderBySubmittedAtDesc().stream()
                 .map(s -> {
                     Map<String, Object> item = new HashMap<>();
                     item.put("applicationId", s.getSourceApplicationId());
                     item.put("status", s.getStatus());
+                    item.put("decision", s.getOutcome());
                     item.put("score", s.getEvaluationScore());
                     item.put("submittedAt", s.getSubmittedAt());
+                    item.put("phaseName", s.getPhase() != null ? s.getPhase().getPhaseName() : null);
+                    item.put("startupName", s.getSourceApplicationId() == null ? null
+                            : applicationRepository.findById(s.getSourceApplicationId())
+                                .map(Application::getLinkedStartupId).filter(Objects::nonNull)
+                                .flatMap(startupRepository::findById)
+                                .map(Startup::getProjectName).orElse(null));
                     return item;
                 })
                 .collect(Collectors.toList());
@@ -95,6 +123,23 @@ public class DashboardService {
         stats.put("dataLastRefreshedAt", LocalDateTime.now());
 
         return stats;
+    }
+
+    private static List<YearMonth> lastMonths(int count) {
+        YearMonth now = YearMonth.now();
+        List<YearMonth> months = new ArrayList<>();
+        for (int i = count - 1; i >= 0; i--) months.add(now.minusMonths(i));
+        return months;
+    }
+
+    /** How many dates fall in each of the given months (0 for a month without any). */
+    private static List<Long> countByMonth(List<YearMonth> months, java.util.stream.Stream<YearMonth> dates) {
+        Map<YearMonth, Long> counts = dates.collect(Collectors.groupingBy(m -> m, Collectors.counting()));
+        return months.stream().map(m -> counts.getOrDefault(m, 0L)).collect(Collectors.toList());
+    }
+
+    private static YearMonth monthOf(java.util.Date date) {
+        return YearMonth.from(date.toInstant().atZone(ZoneId.systemDefault()));
     }
 
     // ── GET EVENT METRICS ─────────────────────────────────────────

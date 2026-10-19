@@ -26,9 +26,57 @@ interface PhasesManagerProps {
     eventType: string;
 }
 
+/** What the phase card shows, from the real data (never a fixed placeholder). */
+type PhaseStats =
+    | { kind: 'questionnaire'; participants: number; submitted: number; reviewed: number }
+    | { kind: 'pitch'; rounds: number; startups: number; scored: number };
+
+const isDecided = (s: any) => s.decisionStatus === 'ACCEPTED' || s.decisionStatus === 'REJECTED'
+    || s.outcome === 'ACCEPTED' || s.outcome === 'REJECTED';
+const isPassed = (s: any) => (s.outcome || s.decisionStatus) === 'ACCEPTED';
+
+/**
+ * Questionnaire phase: who may take part (Phase 1: accepted applications; Phase N: accepted in Phase N-1),
+ * how many submitted, how many were reviewed. Pitch phase: its rounds, the startups that can pitch, how many were scored.
+ */
+async function loadPhaseStats(eventId: string, phases: Phase[]): Promise<Record<string, PhaseStats>> {
+    const ordered = [...phases].sort((a, b) => a.phaseOrder - b.phaseOrder);
+    const applications: any[] = await api.getApplicationsByEvent(eventId).catch(() => []);
+    const accepted = applications.filter(a => String(a.applicationStatus || a.status).toUpperCase() === 'ACCEPTED').length;
+
+    const submissionsByPhase: Record<string, any[]> = {};
+    await Promise.all(ordered.filter(p => p.phaseType !== 'PITCH').map(async p => {
+        submissionsByPhase[p.phaseId] = await api.getSubmissionsByPhase(p.phaseId).catch(() => []);
+    }));
+
+    const entries = await Promise.all(ordered.map(async (phase): Promise<[string, PhaseStats]> => {
+        if (phase.phaseType === 'PITCH') {
+            const rounds: any[] = await api.getPitchRoundsByPhase(phase.phaseId).catch(() => []);
+            const first = [...rounds].sort((a, b) => a.roundNumber - b.roundNumber)[0];
+            const startups = first
+                ? (await api.getRoundCandidates(first.id).catch(() => [])).length
+                : (await api.getEligiblePitchApplicants(phase.phaseId).catch(() => [])).length;
+            const scored = new Set<string>();
+            await Promise.all(rounds.map(async r =>
+                (await api.getPitchRoundResults(r.id).catch(() => [])).forEach((res: any) => scored.add(String(res.applicationId)))));
+            return [phase.phaseId, { kind: 'pitch', rounds: rounds.length, startups, scored: scored.size }];
+        }
+        const submissions = submissionsByPhase[phase.phaseId] || [];
+        const previous = ordered.filter(p => p.phaseOrder < phase.phaseOrder && p.phaseType !== 'PITCH').pop();
+        const participants = previous ? (submissionsByPhase[previous.phaseId] || []).filter(isPassed).length : accepted;
+        return [phase.phaseId, {
+            kind: 'questionnaire',
+            participants,
+            submitted: submissions.length,
+            reviewed: submissions.filter(isDecided).length,
+        }];
+    }));
+    return Object.fromEntries(entries);
+}
+
 export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
     const [phases, setPhases] = useState<Phase[]>([]);
-    const [phaseStats, setPhaseStats] = useState<Record<string, { enrolled: number; submitted: number }>>({});
+    const [phaseStats, setPhaseStats] = useState<Record<string, PhaseStats>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     // Open windows live in the URL so the back arrow closes them instead of leaving the event
@@ -55,25 +103,9 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
 
     const loadPhases = async () => {
         try {
-            const data = await api.getPhasesByEvent(String(eventId));
+            const data: Phase[] = await api.getPhasesByEvent(String(eventId));
             setPhases(data);
-            const statsEntries = await Promise.all(
-                data.map(async (phase: Phase) => {
-                    try {
-                        const [submissions, draftCount] = await Promise.all([
-                            api.getSubmissionsByPhase(phase.phaseId),
-                            api.getDraftSubmissionCountByPhase(phase.phaseId),
-                        ]);
-                        return [phase.phaseId, {
-                            enrolled: submissions.length + draftCount,
-                            submitted: submissions.length,
-                        }] as const;
-                    } catch (_) {
-                        return [phase.phaseId, { enrolled: 0, submitted: 0 }] as const;
-                    }
-                })
-            );
-            setPhaseStats(Object.fromEntries(statsEntries));
+            setPhaseStats(await loadPhaseStats(String(eventId), data));
         } catch (error) {
             toast.error(t('phases.loadFailed'));
         } finally {
@@ -263,9 +295,19 @@ export function PhasesManager({ eventId, eventType }: PhasesManagerProps) {
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-muted-foreground mb-3">{t('phases.phaseN', { order: phase.phaseOrder })}</p>
-                                                <p className="text-xs text-muted-foreground mb-3">
-                                                    {t('phases.stats', { enrolled: phaseStats[phase.phaseId]?.enrolled ?? 0, submitted: phaseStats[phase.phaseId]?.submitted ?? 0 })}
-                                                </p>
+                                                {(() => {
+                                                    const stats = phaseStats[phase.phaseId];
+                                                    if (!stats) return null;
+                                                    return (
+                                                        <p className="text-xs text-muted-foreground mb-3">
+                                                            {stats.kind === 'pitch'
+                                                                ? (stats.rounds === 0
+                                                                    ? t('phases.statsPitchNoRound', { startups: stats.startups })
+                                                                    : t('phases.statsPitch', { rounds: stats.rounds, startups: stats.startups, scored: stats.scored }))
+                                                                : t('phases.statsQuestionnaire', { participants: stats.participants, submitted: stats.submitted, reviewed: stats.reviewed })}
+                                                        </p>
+                                                    );
+                                                })()}
 
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <Button

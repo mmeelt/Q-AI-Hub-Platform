@@ -20,6 +20,7 @@ interface Rating {
     score: number;
     max: number;
     color: string;
+    decision?: string;
 }
 
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
@@ -79,12 +80,17 @@ export function StartupDetailPage() {
                         setTeammates([]);
                     }
                     
-                    // Load ratings from backend if available
+                    // The jury's averaged score of each pitch round, once the organizer has sent the results
                     try {
-                        const ratingsData = await api.getStartupRatings(id);
-                        setRatings(ratingsData || []);
+                        const results = await api.getPitchResultsByApplication(id);
+                        setRatings((results || []).map((r: any) => ({
+                            label: r.roundName || 'Pitch round',
+                            score: Math.round(Number(r.totalScore || 0) * 10) / 10,
+                            max: Number(r.maxScore || 0),
+                            color: r.decision === 'PASSED' ? '#3AA18F' : '#E5484D',
+                            decision: r.decision,
+                        })));
                     } catch (e) {
-                        // No ratings endpoint or empty
                         setRatings([]);
                     }
                 } else {
@@ -466,28 +472,27 @@ export function StartupDetailPage() {
                                         <Star size={22} className="text-amber-600 dark:text-brand-amber" />
                                         Performance
                                     </h2>
-                                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-brand-cyan/10 border border-brand-cyan/20">
-                                        <ShieldCheck size={14} className="text-cyan-600 dark:text-brand-cyan" />
-                                        <span className="text-[10px] font-bold text-cyan-600 dark:text-brand-cyan uppercase tracking-wider">Verified</span>
-                                    </div>
                                 </div>
 
                                 <div className="space-y-6">
                                     {ratings.length === 0 ? (
                                         <div className="text-center py-8 text-muted-foreground text-sm">
-                                            No ratings available yet
+                                            No pitch results yet. They appear once the organizer sends them.
                                         </div>
                                     ) : (
                                         ratings.map((rating, i) => (
                                             <div key={i}>
                                                 <div className="flex justify-between items-center mb-2">
                                                     <span className="text-sm text-muted-foreground">{rating.label}</span>
-                                                    <span className="text-sm font-bold text-foreground">{rating.score}/{rating.max}</span>
+                                                    <span className="text-sm font-bold text-foreground">
+                                                        {rating.max > 0 ? `${rating.score}/${rating.max}` : rating.score}
+                                                        {rating.decision && <span className="ml-2 text-xs font-medium" style={{ color: rating.color }}>{rating.decision === 'PASSED' ? 'Passed' : 'Not passed'}</span>}
+                                                    </span>
                                                 </div>
                                                 <div className="h-2 w-full bg-foreground/5 rounded-full overflow-hidden">
                                                     <motion.div
                                                         initial={{ width: 0 }}
-                                                        animate={{ width: `${(rating.score / rating.max) * 100}%` }}
+                                                        animate={{ width: `${rating.max > 0 ? Math.min(100, (rating.score / rating.max) * 100) : 0}%` }}
                                                         transition={{ duration: 1, delay: 0.5 + i * 0.1 }}
                                                         className="h-full rounded-full"
                                                         style={{ backgroundColor: rating.color, boxShadow: `0 0 10px ${rating.color}40` }}
@@ -499,18 +504,9 @@ export function StartupDetailPage() {
                                 </div>
 
                                 {ratings.length > 0 && (
-                                    <div className="mt-8 pt-8 border-t border-border">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <span className="text-sm text-muted-foreground">Overall Impact</span>
-                                            <div className="flex items-center gap-2 text-emerald-600 dark:text-brand-mint">
-                                                <TrendingUp size={16} />
-                                                <span className="font-bold text-lg">Top 15%</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground text-center">
-                                            Based on average scores from jury evaluations.
-                                        </p>
-                                    </div>
+                                    <p className="mt-8 pt-6 border-t border-border text-[10px] text-muted-foreground text-center">
+                                        Average of the jury's scores for each pitch round.
+                                    </p>
                                 )}
                             </section>
                         </div>

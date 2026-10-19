@@ -196,79 +196,8 @@ function ApplicantPanel({ applicant, onClose }: { applicant: any; onClose: () =>
                     );
                 })()}
 
-                {/* Pitch Ratings */}
-                <PitchRatingsSection applicationId={applicant.applicationId} />
             </div>
         </motion.div>
-    );
-}
-
-function PitchRatingsSection({ applicationId }: { applicationId: string }) {
-    const [ratings, setRatings] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        api.getStartupRatings(applicationId)
-            .then(setRatings)
-            .catch(() => setRatings([]))
-            .finally(() => setLoading(false));
-    }, [applicationId]);
-
-    if (loading) return (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-            <div className="animate-spin h-3 w-3 border border-primary rounded-full border-t-transparent" />
-            Loading evaluations...
-        </div>
-    );
-
-    if (!ratings.length) return (
-        <section>
-            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Star size={12} /> Pitch Evaluations
-            </h4>
-            <div className="p-4 rounded-xl bg-muted/20 border border-border/40 text-center">
-                <p className="text-sm text-muted-foreground">No evaluations yet</p>
-            </div>
-        </section>
-    );
-
-    const avgScore = ratings.reduce((sum, r) => sum + (r.totalScore || 0), 0) / ratings.length;
-
-    return (
-        <section>
-            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Star size={12} /> Pitch Evaluations
-            </h4>
-            <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Average Score</span>
-                <div className="flex items-center gap-1">
-                    <Star size={14} className="text-amber-500 fill-amber-500" />
-                    <span className="font-bold text-lg text-primary">{avgScore.toFixed(1)}</span>
-                    <span className="text-xs text-muted-foreground">/ 10</span>
-                </div>
-            </div>
-            <div className="space-y-2">
-                {ratings.map((r, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-muted/30 border border-border/50">
-                        <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {r.evaluatedBy || `Evaluator ${i + 1}`}
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <Star size={12} className="text-amber-500 fill-amber-500" />
-                                <span className="text-sm font-bold">{r.totalScore}</span>
-                            </div>
-                        </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${r.decision === 'PASSED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-red-500/15 text-red-500'}`}>
-                            {r.decision}
-                        </span>
-                        {r.feedback && (
-                            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{r.feedback}</p>
-                        )}
-                    </div>
-                ))}
-            </div>
-        </section>
     );
 }
 
