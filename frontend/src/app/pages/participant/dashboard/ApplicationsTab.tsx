@@ -33,7 +33,9 @@ export function ApplicationsTab({ applications, focusedEventId, phaseSubmissions
                 const bMatch = String(b.targetEventId ?? '') === String(focusedEventId);
                 if (aMatch && !bMatch) return -1;
                 if (!aMatch && bMatch) return 1;
-                return 0;
+                // Same event twice (own startup + a team joined): the accepted one comes first
+                const accepted = (app: any) => String(app.applicationStatus || app.status || '').toUpperCase() === 'ACCEPTED';
+                return aMatch && bMatch ? Number(accepted(b)) - Number(accepted(a)) : 0;
               })
               .map((app, index) => (
                 <ApplicationCard

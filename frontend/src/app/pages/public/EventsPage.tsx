@@ -80,12 +80,15 @@ export function EventsPage() {
                             api.getMyRegistrations().catch(() => [])
                         ]);
                         const metadata: Record<string, { status: string, appId?: string }> = {};
+                        // One user can have several applications to an event (their own startup and a
+                        // team they joined): show the best one, an acceptance beats a pending or rejected one
+                        const rank = (status: string) => ({ ACCEPTED: 3, PENDING: 2 } as Record<string, number>)[status.toUpperCase()] ?? 1;
                         apps.forEach((a: any) => {
-                            if (a.targetEventId != null) {
-                                metadata[String(a.targetEventId)] = { 
-                                    status: a.applicationStatus || a.status || 'Pending',
-                                    appId: a.applicationId 
-                                };
+                            if (a.targetEventId == null) return;
+                            const status = a.applicationStatus || a.status || 'Pending';
+                            const current = metadata[String(a.targetEventId)];
+                            if (!current || rank(status) > rank(current.status)) {
+                                metadata[String(a.targetEventId)] = { status, appId: a.applicationId };
                             }
                         });
                         regs.forEach((r: any) => { 
