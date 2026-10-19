@@ -9,6 +9,9 @@ import { toast } from 'sonner';
 import { api } from '../../services/api';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../components/ui/input-otp';
 import { CodeExpiryClock, DEFAULT_CODE_SECONDS, useCodeExpiry } from '../../components/common/CodeExpiryClock';
+import { useI18n } from '../../i18n/I18nProvider';
+import { LanguageToggle } from '../../i18n/LanguageToggle';
+import type { TranslationKey } from '../../i18n/translations';
 
 type Step = 'email' | 'reset' | 'done';
 
@@ -16,22 +19,23 @@ const inputClass =
   'w-full pl-11 pr-4 py-3.5 bg-muted/30 rounded-xl border border-border text-foreground text-sm outline-none transition-all placeholder:text-muted-foreground/40 focus:border-primary/50';
 const labelClass = 'block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-widest';
 
-// Same rules as the server (PasswordValidator)
-function passwordProblem(pwd: string): string | null {
-  if (pwd.length < 8) return 'At least 8 characters';
-  if (pwd.length > 128) return 'At most 128 characters';
-  if (/\s/.test(pwd)) return 'No spaces';
-  if (pwd.toLowerCase().includes('password')) return 'Must not contain the word "password"';
-  if (!/[A-Z]/.test(pwd)) return 'At least one uppercase letter';
-  if (!/[a-z]/.test(pwd)) return 'At least one lowercase letter';
-  if (!/\d/.test(pwd)) return 'At least one digit';
-  if (!/[^A-Za-z0-9]/.test(pwd)) return 'At least one special character';
+// Same rules as the server (PasswordValidator); returns the translation key of the first broken rule
+function passwordProblem(pwd: string): TranslationKey | null {
+  if (pwd.length < 8) return 'password.min';
+  if (pwd.length > 128) return 'password.max';
+  if (/\s/.test(pwd)) return 'password.noSpaces';
+  if (pwd.toLowerCase().includes('password')) return 'password.noWord';
+  if (!/[A-Z]/.test(pwd)) return 'password.upper';
+  if (!/[a-z]/.test(pwd)) return 'password.lower';
+  if (!/\d/.test(pwd)) return 'password.digit';
+  if (!/[^A-Za-z0-9]/.test(pwd)) return 'password.special';
   return null;
 }
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useI18n();
   const [step, setStep] = useState<Step>('email');
   // ?email= comes from the "you are now an administrator" email link
   const [email, setEmail] = useState<string>(
@@ -51,7 +55,7 @@ export function ForgotPasswordPage() {
   const sendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      toast.error('Please enter a valid email address');
+      toast.error(t('forgot.invalidEmail'));
       return;
     }
     setBusy(true);
@@ -61,9 +65,9 @@ export function ForgotPasswordPage() {
       setSessionId(res.resetSessionId);
       setCode('');
       setStep('reset');
-      toast.success('If an account exists for this email, a code has been sent.');
+      toast.success(t('forgot.codeSent'));
     } catch (err: any) {
-      toast.error(err.message || 'Could not send the code');
+      toast.error(err.message || t('forgot.sendFailed'));
     } finally {
       setBusy(false);
     }
@@ -79,9 +83,9 @@ export function ForgotPasswordPage() {
       if (res.expiresIn) setExpirySeconds(res.expiresIn);
       setSessionId(res.resetSessionId); // new session = the clock restarts
       setCode('');
-      toast.success('A new code has been sent. Use the most recent email only.');
+      toast.success(t('common.newCodeSent'));
     } catch (err: any) {
-      toast.error(err.message || 'Could not send the code');
+      toast.error(err.message || t('forgot.sendFailed'));
     } finally {
       setResending(false);
     }
@@ -90,20 +94,20 @@ export function ForgotPasswordPage() {
   const resetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\d{6}$/.test(code)) {
-      toast.error('Enter the 6-digit code from the email');
+      toast.error(t('forgot.enterCode'));
       return;
     }
     if (expired) {
-      toast.error('This code has expired. Click "Resend code" to get a new one.');
+      toast.error(t('common.codeExpiredToast'));
       return;
     }
     const problem = passwordProblem(password);
     if (problem) {
-      toast.error(`Password: ${problem.toLowerCase()}`);
+      toast.error(t('forgot.passwordProblem', { problem: t(problem).toLowerCase() }));
       return;
     }
     if (password !== confirm) {
-      toast.error('The two passwords do not match');
+      toast.error(t('forgot.mismatch'));
       return;
     }
     setBusy(true);
@@ -111,7 +115,7 @@ export function ForgotPasswordPage() {
       await api.resetPassword(sessionId, code, password);
       setStep('done');
     } catch (err: any) {
-      toast.error(err.message || 'Invalid or expired code');
+      toast.error(err.message || t('forgot.invalidCode'));
     } finally {
       setBusy(false);
     }
@@ -122,6 +126,7 @@ export function ForgotPasswordPage() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-6 text-foreground">
       <ParticleBackground />
+      <div className="absolute top-4 right-4 z-20"><LanguageToggle /></div>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -137,19 +142,19 @@ export function ForgotPasswordPage() {
             {step === 'email' && (
               <>
                 <div className="text-center mb-8">
-                  <h1 className="text-3xl font-bold mb-2">Forgot password?</h1>
-                  <p className="text-muted-foreground text-sm">Enter your email and we'll send you a code to choose a new password.</p>
+                  <h1 className="text-3xl font-bold mb-2">{t('forgot.title')}</h1>
+                  <p className="text-muted-foreground text-sm">{t('forgot.subtitle')}</p>
                 </div>
                 <form onSubmit={sendCode} className="space-y-5">
                   <div>
-                    <label htmlFor="fp-email" className={labelClass}>Email</label>
+                    <label htmlFor="fp-email" className={labelClass}>{t('common.email')}</label>
                     <div className="relative">
                       <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <input id="fp-email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)}
                         placeholder="your@email.com" className={inputClass} autoFocus />
                     </div>
                   </div>
-                  <Button type="submit" fullWidth disabled={busy}>{busy ? 'Sending…' : 'Send the code'}</Button>
+                  <Button type="submit" fullWidth disabled={busy}>{busy ? t('forgot.sending') : t('forgot.send')}</Button>
                 </form>
               </>
             )}
@@ -157,14 +162,14 @@ export function ForgotPasswordPage() {
             {step === 'reset' && (
               <>
                 <div className="text-center mb-8">
-                  <h1 className="text-3xl font-bold mb-2">Choose a new password</h1>
+                  <h1 className="text-3xl font-bold mb-2">{t('forgot.newTitle')}</h1>
                   <p className="text-muted-foreground text-sm">
-                    If <span className="text-foreground font-medium">{email}</span> has an account, a 6-digit code was sent to it.
+                    {t('forgot.sentBefore')} <span className="text-foreground font-medium">{email}</span> {t('forgot.sentAfter')}
                   </p>
                 </div>
                 <form onSubmit={resetPassword} className="space-y-5">
                   <div>
-                    <label htmlFor="fp-code" className={labelClass}>Code from the email</label>
+                    <label htmlFor="fp-code" className={labelClass}>{t('forgot.code')}</label>
                     <div className="flex justify-center">
                       <InputOTP id="fp-code" maxLength={6} value={code} autoFocus
                         onChange={(val) => setCode(val.replace(/\D/g, ''))}>
@@ -181,33 +186,33 @@ export function ForgotPasswordPage() {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="fp-password" className={labelClass}>New password</label>
+                    <label htmlFor="fp-password" className={labelClass}>{t('forgot.newPassword')}</label>
                     <div className="relative">
                       <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <input id="fp-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password}
                         onChange={e => setPassword(e.target.value)} placeholder="••••••••" className={`${inputClass} pr-12`} />
                       <button type="button" onClick={() => setShowPassword(v => !v)}
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
                     <p className={`mt-1.5 text-xs ${problem ? 'text-amber-600 dark:text-amber-400' : password ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
-                      {problem ? problem : password ? 'Strong password' : '8+ characters with upper and lower case, a digit and a symbol'}
+                      {problem ? t(problem) : password ? t('forgot.strong') : t('forgot.rules')}
                     </p>
                   </div>
                   <div>
-                    <label htmlFor="fp-confirm" className={labelClass}>Confirm the new password</label>
+                    <label htmlFor="fp-confirm" className={labelClass}>{t('forgot.confirm')}</label>
                     <div className="relative">
                       <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <input id="fp-confirm" type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={confirm}
                         onChange={e => setConfirm(e.target.value)} placeholder="••••••••" className={inputClass} />
                     </div>
-                    {confirm && confirm !== password && <p className="mt-1.5 text-xs text-destructive">The passwords do not match</p>}
+                    {confirm && confirm !== password && <p className="mt-1.5 text-xs text-destructive">{t('forgot.mismatch')}</p>}
                   </div>
-                  <Button type="submit" fullWidth disabled={busy || expired}>{busy ? 'Saving…' : 'Change my password'}</Button>
+                  <Button type="submit" fullWidth disabled={busy || expired}>{busy ? t('forgot.saving') : t('forgot.change')}</Button>
                   <div className="pt-4 border-t border-border/50 text-center">
-                    <p className="text-sm text-muted-foreground mb-2">Didn't receive the code? Check your spam folder, then:</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t('common.noCodeReceived')}</p>
                     <button type="button" onClick={resendCode} disabled={busy || resending}
                       className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
                         busy || resending
@@ -215,9 +220,9 @@ export function ForgotPasswordPage() {
                           : 'text-primary hover:text-primary/80 cursor-pointer'
                       }`}>
                       {resending ? (
-                        <><RefreshCw size={14} className="animate-spin" /> Sending a new code…</>
+                        <><RefreshCw size={14} className="animate-spin" /> {t('common.sendingNewCode')}</>
                       ) : (
-                        <><RefreshCw size={14} /> Resend code</>
+                        <><RefreshCw size={14} /> {t('common.resendCode')}</>
                       )}
                     </button>
                   </div>
@@ -230,18 +235,18 @@ export function ForgotPasswordPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 mb-6">
                   <CheckCircle className="text-emerald-500" size={32} />
                 </div>
-                <h1 className="text-2xl font-bold mb-2">Password changed</h1>
+                <h1 className="text-2xl font-bold mb-2">{t('forgot.doneTitle')}</h1>
                 <p className="text-muted-foreground text-sm mb-6">
-                  You were signed out on all your devices. Log in with your new password.
+                  {t('forgot.doneText')}
                 </p>
-                <Button fullWidth onClick={() => navigate('/login', { state: { email } })}>Go to login</Button>
+                <Button fullWidth onClick={() => navigate('/login', { state: { email } })}>{t('forgot.goToLogin')}</Button>
               </div>
             )}
 
             {step !== 'done' && (
               <div className="mt-6 text-center">
                 <Link to="/login" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <ArrowLeft size={14} /> Back to login
+                  <ArrowLeft size={14} /> {t('common.backToLogin')}
                 </Link>
               </div>
             )}

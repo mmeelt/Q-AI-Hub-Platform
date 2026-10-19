@@ -1,7 +1,9 @@
 import { Linkedin, Github, Instagram } from 'lucide-react';
 import { Logo } from '../common/Logo';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="relative z-10 bg-background border-t border-border py-12">
       <div className="max-w-7xl mx-auto px-6">
@@ -10,7 +12,7 @@ export function Footer() {
           <div className="space-y-4">
             <Logo size="sm" />
             <p className="text-muted-foreground text-sm">
-              The Gateway to Tech Ventures
+              {t('footer.tagline')}
             </p>
             <div className="flex gap-4">
               <a
@@ -42,26 +44,26 @@ export function Footer() {
 
           {/* Center: Quick Links */}
           <div>
-            <h4 className="text-foreground mb-4">Quick Links</h4>
+            <h4 className="text-foreground mb-4">{t('footer.quickLinks')}</h4>
             <ul className="space-y-2">
               <li>
                 <a href="#vision" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-                  Vision
+                  {t('nav.vision')}
                 </a>
               </li>
               <li>
                 <a href="#programs" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-                  Programs
+                  {t('nav.programs')}
                 </a>
               </li>
               <li>
                 <a href="#events" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-                  Events
+                  {t('footer.events')}
                 </a>
               </li>
               <li>
                 <a href="#apply" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-                  Apply
+                  {t('footer.apply')}
                 </a>
               </li>
             </ul>
@@ -69,10 +71,10 @@ export function Footer() {
 
           {/* Right: Contact */}
           <div>
-            <h4 className="text-foreground mb-4">Contact</h4>
+            <h4 className="text-foreground mb-4">{t('footer.contact')}</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>ENICarthage</p>
-              <p>Technological Campus</p>
+              <p>{t('footer.campus')}</p>
               <p>contact@qai-hub.tn</p>
             </div>
           </div>
@@ -80,7 +82,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© 2026 Q-AI Hub. All rights reserved. Powered by ENICarthage</p>
+          <p>{t('footer.rights')}</p>
         </div>
       </div>
     </footer>

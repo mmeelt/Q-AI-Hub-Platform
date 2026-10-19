@@ -151,7 +151,8 @@ public class AuthService {
                 .build();
     }
 
-    @Transactional
+    // A wrong password must still save the attempt counter / lock: don't roll back on these
+    @Transactional(noRollbackFor = {InvalidCredentialsException.class, AccountLockedException.class})
     public LoginPendingResponse login(LoginRequest dto) {
         String cleanEmail = inputSanitizer.sanitizeEmail(dto.getEmail());
         log.info("Login attempt for email: {}", cleanEmail);

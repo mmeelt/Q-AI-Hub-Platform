@@ -12,11 +12,13 @@ import { FadeInSection } from '../../components/effects/FadeInSection';
 import { FloatingGlassPanel } from '../../components/common/FloatingGlassPanel';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
+import { useI18n } from '../../i18n/I18nProvider';
 
 
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { t, language } = useI18n();
   const isAdmin = (localStorage.getItem('userRole') || '').toUpperCase() === 'ADMIN';
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<{ id: number; title: string; axis: string } | null>(null);
@@ -52,9 +54,9 @@ export function LandingPage() {
       setAiOutput(data.refinedDescription);
     } catch (error) {
       console.error('Failed to generate:', error);
-      toast.error('AI Service is temporarily unavailable. Please check backend connection.');
+      toast.error(t('landing.aiUnavailable'));
       // Fallback for demo
-      setAiOutput('Could not reach Gemini. Please ensure the Spring Boot backend is running on port 8081.');
+      setAiOutput(t('landing.aiFallback'));
     } finally {
       setIsGenerating(false);
     }
@@ -111,28 +113,28 @@ export function LandingPage() {
   const PILLARS = [
     {
       icon: Rocket,
-      title: 'Entrepreneurship',
-      description: 'We empower students and innovators to transform bold ideas into scalable startups through mentorship, business modeling, and a vibrant entrepreneurial ecosystem.',
+      title: t('landing.pillar.entrepreneurship'),
+      description: t('landing.pillar.entrepreneurshipText'),
     },
     {
       icon: Brain,
-      title: 'Artificial Intelligence',
-      description: 'Advancing AI research and applications — from deep learning to quantum-enhanced algorithms — to solve complex real-world problems at scale.',
+      title: t('landing.pillar.ai'),
+      description: t('landing.pillar.aiText'),
     },
     {
       icon: Calculator,
-      title: 'Mathematics',
-      description: 'Bridging theoretical mathematics with applied sciences, cultivating the rigorous analytical foundations required to lead in quantum computing and AI.',
+      title: t('landing.pillar.math'),
+      description: t('landing.pillar.mathText'),
     },
     {
       icon: Wifi,
-      title: 'Internet of Things',
-      description: 'Connecting intelligent devices to create smart ecosystems — building the infrastructure for a data-driven future through embedded systems and edge AI.',
+      title: t('landing.pillar.iot'),
+      description: t('landing.pillar.iotText'),
     },
     {
       icon: Building2,
-      title: 'Incubation',
-      description: 'Providing startups with the resources, networks, and strategic guidance needed to grow from prototype to market — turning innovation into sustainable impact.',
+      title: t('landing.pillar.incubation'),
+      description: t('landing.pillar.incubationText'),
     },
   ];
 
@@ -158,7 +160,7 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
           >
-            The Gateway to Tech Ventures
+            {t('landing.heroTitle')}
           </motion.h1>
           <motion.p
             className="text-xl md:text-2xl text-muted-foreground mb-16 max-w-2xl mx-auto font-medium"
@@ -166,7 +168,7 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
-            Incubating the next generation of Quantum-AI startups at ENICarthage
+            {t('landing.heroSubtitle')}
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-5 justify-center"
@@ -177,7 +179,7 @@ export function LandingPage() {
             {!isAdmin && (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
               <Button variant="primary" onClick={() => setAuthModalOpen(true)}>
-                Apply Now
+                {t('landing.applyNow')}
               </Button>
             </motion.div>
             )}
@@ -186,7 +188,7 @@ export function LandingPage() {
                 variant="ghost"
                 onClick={() => document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                Discover Our Vision
+                {t('landing.discoverVision')}
               </Button>
             </motion.div>
             {!isAdmin && (
@@ -195,7 +197,7 @@ export function LandingPage() {
                 variant="outline"
                 onClick={() => navigate('/track')}
               >
-                Track Application
+                {t('landing.trackApplication')}
               </Button>
             </motion.div>
             )}
@@ -209,13 +211,13 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <FadeInSection variant="fade-up" className="text-center mb-16">
               <p className="uppercase tracking-[0.25em] text-xs text-muted-foreground mb-4 font-medium">
-                Upcoming Events
+                {t('landing.upcomingEvents')}
               </p>
               <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                Featured Events
+                {t('landing.featuredEvents')}
               </h2>
               <p className="text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">
-                Discover our latest workshops, hackathons, and incubation programs
+                {t('landing.featuredEventsSubtitle')}
               </p>
             </FadeInSection>
 
@@ -234,10 +236,10 @@ export function LandingPage() {
                       {/* Header */}
                       <div className="flex items-center justify-between mb-4">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-primary/10 text-primary border-primary/30">
-                          {event.category || 'Event'}
+                          {event.category || t('landing.eventFallbackCategory')}
                         </span>
                         <span className="px-2.5 py-1 rounded-full text-[11px] font-medium border bg-emerald-500/20 text-emerald-600 border-emerald-500/30">
-                          Open
+                          {t('landing.open')}
                         </span>
                       </div>
 
@@ -248,18 +250,18 @@ export function LandingPage() {
 
                       {/* Description */}
                       <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-grow">
-                        {event.description || 'Join us for an exciting event focused on innovation and entrepreneurship.'}
+                        {event.description || t('landing.eventFallbackDescription')}
                       </p>
 
                       {/* Meta info */}
                       <div className="space-y-2 mb-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <CalendarDays size={14} className="text-primary/70" />
-                          <span>{event.startDate ? new Date(event.startDate).toLocaleDateString() : 'Date to be announced'}</span>
+                          <span>{event.startDate ? new Date(event.startDate).toLocaleDateString(language) : t('landing.dateTba')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin size={14} className="text-primary/70" />
-                          <span>{event.location || 'Online'}</span>
+                          <span>{event.location || t('landing.online')}</span>
                         </div>
                       </div>
 
@@ -271,7 +273,7 @@ export function LandingPage() {
                           onClick={() => navigate(`/events`)}
                           className="text-sm"
                         >
-                          Learn More
+                          {t('landing.learnMore')}
                           <ArrowRight size={16} className="ml-2" />
                         </Button>
                       </div>
@@ -288,7 +290,7 @@ export function LandingPage() {
                 onClick={() => navigate('/events')}
                 className="px-8 py-3"
               >
-                View All Events
+                {t('landing.viewAllEvents')}
                 <ArrowRight size={16} className="ml-2" />
               </Button>
             </div>
@@ -301,13 +303,13 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <FadeInSection variant="fade-up" className="text-center mb-20">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-6 uppercase tracking-widest">
-              <Sparkles size={14} /> Our Strategic Axes
+              <Sparkles size={14} /> {t('landing.strategicAxes')}
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
-              Five Pillars of Innovation
+              {t('landing.pillarsTitle')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our comprehensive approach to fostering Quantum-AI entrepreneurship
+              {t('landing.pillarsSubtitle')}
             </p>
           </FadeInSection>
 
@@ -315,7 +317,7 @@ export function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {PILLARS.map((pillar, index) => (
               <motion.div
-                key={pillar.title}
+                key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
@@ -344,21 +346,21 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <FadeInSection variant="fade-up" className="text-center mb-12">
             <p className="uppercase tracking-[0.25em] text-xs text-muted-foreground mb-4 font-medium">
-              About
+              {t('landing.about')}
             </p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-10 text-foreground">
-              The Q-AI Hub
+              {t('landing.aboutTitle')}
             </h2>
           </FadeInSection>
           <div className="space-y-6 text-muted-foreground text-base md:text-lg leading-relaxed">
             <p>
-              The Q-AI Hub is a pioneering research and innovation initiative hosted at ENICarthage, University of Carthage, Tunisia, positioned at the forefront of the convergence between Quantum Computing and Artificial Intelligence.
+              {t('landing.about1')}
             </p>
             <p>
-              Our mission is to explore, design, develop, validate, and deploy hybrid Quantum-AI solutions to address critical real-world challenges in health, environment, and beyond.
+              {t('landing.about2')}
             </p>
             <p>
-              We also train and mentor students to anticipate the quantum era and launch impactful startups, fostering a new generation of tech entrepreneurs equipped to lead in tomorrow&apos;s deep-tech landscape.
+              {t('landing.about3')}
             </p>
           </div>
         </div>
@@ -370,13 +372,13 @@ export function LandingPage() {
           <FloatingGlassPanel depth="lg" className="p-12 md:p-16">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 text-center">
               {[
-                { value: stats.startups, label: 'Startups', suffix: '+' },
-                { value: stats.members, label: 'Members', suffix: '+' },
-                { value: stats.partners, label: 'Partners', suffix: '' },
-                { value: stats.axes, label: 'Axes', suffix: '' },
+                { value: stats.startups, label: t('landing.stats.startups'), suffix: '+' },
+                { value: stats.members, label: t('landing.stats.members'), suffix: '+' },
+                { value: stats.partners, label: t('landing.stats.partners'), suffix: '' },
+                { value: stats.axes, label: t('landing.stats.axes'), suffix: '' },
               ].map((stat, index) => (
                 <motion.div
-                  key={stat.label}
+                  key={index}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
@@ -399,22 +401,22 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <FadeInSection variant="fade-up" className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-6 uppercase tracking-widest">
-              <Sparkles size={14} /> AI Strategy Engine
+              <Sparkles size={14} /> {t('landing.aiBadge')}
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
-              Refine Your Startup Vision
+              {t('landing.aiTitle')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Use AI to transform your raw ideas into compelling, professional descriptions
+              {t('landing.aiSubtitle')}
             </p>
           </FadeInSection>
           <FloatingGlassPanel depth="md" className="p-8 md:p-12 overflow-hidden">
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-muted-foreground">What are you building?</label>
+                <label className="text-sm font-semibold text-muted-foreground">{t('landing.aiQuestion')}</label>
                 <textarea 
                   className="w-full h-32 bg-background/50 border border-border rounded-xl p-4 focus:ring-2 focus:ring-primary/50 transition-all outline-none text-foreground placeholder:text-muted-foreground/30"
-                  placeholder="Describe your startup in raw terms..."
+                  placeholder={t('landing.aiPlaceholder')}
                   value={rawInput}
                   onChange={(e) => setRawInput(e.target.value)}
                 />
@@ -430,12 +432,12 @@ export function LandingPage() {
                   {isGenerating ? (
                     <>
                       <Loader2 className="animate-spin" />
-                      Optimizing Pitch...
+                      {t('landing.aiGenerating')}
                     </>
                   ) : (
                     <>
                       <Wand2 size={20} />
-                      Generate Professional Description
+                      {t('landing.aiGenerate')}
                     </>
                   )}
                 </Button>
@@ -450,7 +452,7 @@ export function LandingPage() {
                   <div className="absolute top-4 right-4 text-primary/30">
                     <Sparkles size={24} />
                   </div>
-                  <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-3">AI Refined Strategy</h4>
+                  <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-3">{t('landing.aiResult')}</h4>
                   <p className="text-foreground leading-relaxed italic text-lg font-medium">
                     {aiOutput}
                   </p>
@@ -463,14 +465,14 @@ export function LandingPage() {
                       }}
                       className="flex-1 justify-center gap-2"
                     >
-                      <Check size={18} /> Replace with AI Version
+                      <Check size={18} /> {t('landing.aiReplace')}
                     </Button>
                     <Button 
                       variant="ghost"
                       onClick={() => setAiOutput('')}
                       className="flex-1 justify-center bg-background/50 hover:bg-background/80"
                     >
-                      Keep Original
+                      {t('landing.aiKeep')}
                     </Button>
                   </div>
                 </motion.div>

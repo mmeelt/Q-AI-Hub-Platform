@@ -7,6 +7,8 @@ import { Button } from '../common/Button';
 import { ThemeToggle } from '../theme/ThemeToggle';
 import { api } from '../../services/api';
 import { clearAuth } from '../../utils/localStorage';
+import { LanguageToggle } from '../../i18n/LanguageToggle';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface DashboardHeaderProps {
     activeTab?: string;
@@ -17,6 +19,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChange, unreadCount: externalUnreadCount }: DashboardHeaderProps) {
     const navigate = useNavigate();
+    const { t } = useI18n();
     const [unreadCount, setUnreadCount] = useState(0);
     // The "Expert Roles" tab is only useful to people invited as experts (cached for the session)
     const [isExpert, setIsExpert] = useState(() => sessionStorage.getItem('hasExpertRoles') === 'true');
@@ -49,13 +52,13 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
     }, [externalUnreadCount]);
 
     const navItems = [
-        { id: 'overview', icon: Home, label: 'Overview' },
-        { id: 'my-startups', icon: Rocket, label: 'My Startups' },
-        { id: 'applications', icon: FileText, label: 'My Applications' },
-        { id: 'events', icon: Calendar, label: 'Events' },
-        { id: 'expert', icon: Shield, label: 'Expert Roles' },
-        { id: 'invitations', icon: UserPlus, label: 'Invitations' },
-        { id: 'settings', icon: Settings, label: 'Settings' },
+        { id: 'overview', icon: Home, label: t('dash.overview') },
+        { id: 'my-startups', icon: Rocket, label: t('dash.myStartups') },
+        { id: 'applications', icon: FileText, label: t('dash.applications') },
+        { id: 'events', icon: Calendar, label: t('dash.events') },
+        { id: 'expert', icon: Shield, label: t('dash.expert') },
+        { id: 'invitations', icon: UserPlus, label: t('dash.invitations') },
+        { id: 'settings', icon: Settings, label: t('dash.settings') },
     ].filter(item => item.id !== 'expert' || isExpert || activeTab === 'expert');
 
 
@@ -101,7 +104,7 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
           <div className="px-4 md:px-8 py-4 grid grid-cols-2 md:grid-cols-[auto_1fr_auto] gap-4 items-center">
             {/* Left section: Logo */}
             <div className="flex justify-start shrink-0 whitespace-nowrap">
-                <Link to="/" className="flex items-center gap-2" aria-label="Q-AI Hub home">
+                <Link to="/" className="flex items-center gap-2" aria-label={t('dash.home')}>
                     <Logo size="sm" />
                 </Link>
             </div>
@@ -131,6 +134,7 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
             {/* Right section: User section */}
             <div className="flex justify-end flex-1 items-center gap-3">
                 <div className="flex items-center gap-3">
+                    <LanguageToggle />
                     <ThemeToggle />
                     
                     {/* Standalone notification bell */}
@@ -140,8 +144,8 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
                                 ? 'bg-brand-cyan/15 text-cyan-500 dark:text-brand-cyan border border-brand-cyan/30'
                                 : 'bg-foreground/5 border border-border text-muted-foreground hover:text-foreground hover:bg-foreground/10'
                             }`}
-                        title="Notifications"
-                        aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}
+                        title={t('dash.notifications')}
+                        aria-label={unreadCount > 0 ? t('dash.notificationsUnread', { count: unreadCount }) : t('dash.notifications')}
                     >
                         <Bell size={17} />
                         {unreadCount > 0 && (
@@ -164,7 +168,7 @@ export function DashboardHeader({ activeTab, profileName = 'Founder', onTabChang
                         className="flex items-center gap-2 px-3 py-2 rounded-full text-sm whitespace-nowrap justify-center h-10 w-10 sm:w-auto"
                     >
                         <LogOut size={16} className="sm:mr-2" />
-                        <span className="hidden sm:inline">Log out</span>
+                        <span className="hidden sm:inline">{t('common.logout')}</span>
                     </Button>
                 </div>
             </div>

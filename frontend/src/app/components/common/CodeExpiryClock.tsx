@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Clock } from 'lucide-react';
+import { useI18n } from '../../i18n/I18nProvider';
 
 /** Default lifetime of an emailed code (the API sends the real value as expiresIn). */
 export const DEFAULT_CODE_SECONDS = 120;
@@ -37,6 +38,7 @@ const format = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2
 
 /** "Code expires in 1:59" with a shrinking bar; turns red in the last 20 seconds. */
 export function CodeExpiryClock({ secondsLeft, total }: { secondsLeft: number; total: number }) {
+  const { t } = useI18n();
   const expired = secondsLeft <= 0;
   const urgent = !expired && secondsLeft <= 20;
   const percent = Math.max(0, Math.min(100, (secondsLeft / Math.max(total, 1)) * 100));
@@ -47,10 +49,10 @@ export function CodeExpiryClock({ secondsLeft, total }: { secondsLeft: number; t
       <div className={`flex items-center justify-center gap-2 text-sm font-medium ${tone}`}>
         <Clock size={15} />
         {expired ? (
-          <span>Code expired. Click "Resend code" to get a new one.</span>
+          <span>{t('common.codeExpired')}</span>
         ) : (
           <span>
-            Code expires in <span className="font-mono tabular-nums font-semibold">{format(secondsLeft)}</span>
+            {t('common.codeExpiresIn')} <span className="font-mono tabular-nums font-semibold">{format(secondsLeft)}</span>
           </span>
         )}
       </div>

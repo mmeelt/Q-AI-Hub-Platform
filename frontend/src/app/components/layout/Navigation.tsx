@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '../common/Logo';
 import { Button } from '../common/Button';
 import { ThemeToggle } from '../theme/ThemeToggle';
+import { LanguageToggle } from '../../i18n/LanguageToggle';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,6 +14,7 @@ export function Navigation() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
   const location = useLocation();
+  const { t } = useI18n();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,13 +38,13 @@ export function Navigation() {
   }, []);
 
   const navLinks = [
-    { name: 'Vision', href: '/#vision' },
-    { name: 'Programs', href: '/#programs' },
-    { name: 'Research', href: '/#research' },
-    { name: 'About', href: '/#about' },
-    { name: 'Partners', href: '/#stats-section' },
+    { name: t('nav.vision'), href: '/#vision' },
+    { name: t('nav.programs'), href: '/#programs' },
+    { name: t('nav.research'), href: '/#research' },
+    { name: t('nav.about'), href: '/#about' },
+    { name: t('nav.partners'), href: '/#stats-section' },
     // Tracking an application is a participant action
-    ...(userRole === 'ADMIN' ? [] : [{ name: 'Track', href: '/track' }]),
+    ...(userRole === 'ADMIN' ? [] : [{ name: t('nav.track'), href: '/track' }]),
   ];
 
   return (
@@ -66,7 +69,7 @@ export function Navigation() {
               {navLinks.map((link) =>
                 link.href.startsWith('/#') ? (
                   <a
-                    key={link.name}
+                    key={link.href}
                     href={link.href}
                     className="text-muted-foreground hover:text-foreground transition-colors duration-200 relative group"
                   >
@@ -75,7 +78,7 @@ export function Navigation() {
                   </a>
                 ) : (
                   <Link
-                    key={link.name}
+                    key={link.href}
                     to={link.href}
                     className="text-muted-foreground hover:text-foreground transition-colors duration-200 relative group"
                   >
@@ -91,18 +94,19 @@ export function Navigation() {
           <div className="flex justify-end gap-4">
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
+              <LanguageToggle />
               <ThemeToggle />
               {isLoggedIn ? (
                 <Link to={userRole === 'ADMIN' ? '/admin' : '/dashboard'}>
-                  <Button variant="primary">Dashboard</Button>
+                  <Button variant="primary">{t('nav.dashboard')}</Button>
                 </Link>
               ) : (
                 <>
                   <Link to="/login">
-                    <Button variant="ghost">Log In</Button>
+                    <Button variant="ghost">{t('nav.login')}</Button>
                   </Link>
                   <Link to="/register">
-                    <Button variant="primary">Join Us</Button>
+                    <Button variant="primary">{t('nav.joinUs')}</Button>
                   </Link>
                 </>
               )}
@@ -110,9 +114,11 @@ export function Navigation() {
 
             {/* Mobile Menu & Theme Toggle */}
             <div className="md:hidden flex items-center gap-3">
+              <LanguageToggle />
               <ThemeToggle />
               <button
                 className="text-foreground"
+                aria-label={t('nav.toggleMenu')}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -135,7 +141,7 @@ export function Navigation() {
               {navLinks.map((link) =>
                 link.href.startsWith('/#') ? (
                   <a
-                    key={link.name}
+                    key={link.href}
                     href={link.href}
                     className="block text-muted-foreground hover:text-foreground transition-colors py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -144,7 +150,7 @@ export function Navigation() {
                   </a>
                 ) : (
                   <Link
-                    key={link.name}
+                    key={link.href}
                     to={link.href}
                     className="block text-muted-foreground hover:text-foreground transition-colors py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -157,19 +163,19 @@ export function Navigation() {
                 {isLoggedIn ? (
                   <Link to={userRole === 'ADMIN' ? '/admin' : '/dashboard'}>
                     <Button variant="primary" fullWidth>
-                      Dashboard
+                      {t('nav.dashboard')}
                     </Button>
                   </Link>
                 ) : (
                   <>
                     <Link to="/login">
                       <Button variant="ghost" fullWidth>
-                        Log In
+                        {t('nav.login')}
                       </Button>
                     </Link>
                     <Link to="/register">
                       <Button variant="primary" fullWidth>
-                        Join Us
+                        {t('nav.joinUs')}
                       </Button>
                     </Link>
                   </>

@@ -8,6 +8,8 @@ import { Button } from '../../components/common/Button';
 import { toast } from 'sonner';
 import { api } from '../../services/api';
 import { saveSession } from '../../utils/localStorage';
+import { useI18n } from '../../i18n/I18nProvider';
+import { LanguageToggle } from '../../i18n/LanguageToggle';
 import { CodeExpiryClock, DEFAULT_CODE_SECONDS, useCodeExpiry } from '../../components/common/CodeExpiryClock';
 
 import {
@@ -19,11 +21,12 @@ import {
 export function OTPPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useI18n();
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
-  const email = (location.state as any)?.email || 'your email';
+  const email = (location.state as any)?.email || t('otp.yourEmail');
   const destination = (location.state as any)?.destination;
   // Each resend replaces the code and returns a new session id: keep the latest one
   const [otpSessionId, setOtpSessionId] = useState<string | undefined>((location.state as any)?.otpSessionId);
@@ -37,18 +40,18 @@ export function OTPPage() {
     e?.preventDefault();
     if (isLoading) return;
     if (code.length < 6) {
-      toast.error('Please enter the full 6-digit code');
+      toast.error(t('otp.fullCode'));
       return;
     }
     if (expired) {
-      toast.error('This code has expired. Click "Resend code" to get a new one.');
+      toast.error(t('common.codeExpiredToast'));
       return;
     }
 
     setIsLoading(true);
     try {
       if (!otpSessionId) {
-        throw new Error('Session expired. Please login again.');
+        throw new Error(t('otp.sessionExpired'));
       }
 
       // Call the unified verifyOtp endpoint
@@ -58,14 +61,14 @@ export function OTPPage() {
       saveSession(tokenData);
       const role = String(tokenData.role || 'USER').replace(/^ROLE_/i, '').toUpperCase();
 
-      toast.success('Verification successful!');
+      toast.success(t('otp.success'));
 
       const returnUrl = (location.state as any)?.returnUrl;
       const eventName = (location.state as any)?.eventName;
 
       const isSafeReturn = typeof returnUrl === 'string' && returnUrl.startsWith('/') && !returnUrl.startsWith('//');
       if (isSafeReturn && role !== 'ADMIN') {
-        if (eventName) toast.success(`Welcome back! Resuming your application for ${eventName}`);
+        if (eventName) toast.success(t('otp.resuming', { event: eventName }));
         navigate(returnUrl);
       } else {
         // Honor explicit destination if provided by the caller.
@@ -73,7 +76,7 @@ export function OTPPage() {
         navigate(targetDestination);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Invalid verification code. Please try again.');
+      toast.error(error.message || t('otp.invalid'));
       setOtp('');
     } finally {
       setIsLoading(false);
@@ -84,7 +87,7 @@ export function OTPPage() {
   const handleResend = async () => {
     if (isResending) return; // one email per click: a second one would replace this code
     if (!otpSessionId) {
-      toast.error('Session expired. Please log in again.');
+      toast.error(t('otp.sessionExpired'));
       navigate('/login');
       return;
     }
@@ -94,11 +97,11 @@ export function OTPPage() {
       if (data?.expiresIn) setExpirySeconds(data.expiresIn);
       if (data?.otpSessionId) setOtpSessionId(data.otpSessionId); // new session = the clock restarts
       setOtp('');
-      toast.success('A new code has been sent. Use the most recent email only.');
+      toast.success(t('common.newCodeSent'));
     } catch (error: any) {
-      toast.error(error.message || 'Failed to resend code');
+      toast.error(error.message || t('otp.resendFailed'));
       // The session is gone (used, or too old): the only way forward is a new login
-      if (error.status === 404) navigate('/login', { state: { email: email === 'your email' ? '' : email } });
+      if (error.status === 404) navigate('/login', { state: { email: email === t('otp.yourEmail') ? '' : email } });
     } finally {
       setIsResending(false);
     }
@@ -107,6 +110,7 @@ export function OTPPage() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-6 text-foreground">
       <ParticleBackground />
+      <div className="absolute top-4 right-4 z-20"><LanguageToggle /></div>
 
       {/* Ambient glow */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -130,9 +134,9 @@ export function OTPPage() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-4">
                 <Shield className="text-primary" size={24} />
               </div>
-              <h1 className="text-3xl font-bold mb-2">Two-Step Verification</h1>
+              <h1 className="text-3xl font-bold mb-2">{t('otp.title')}</h1>
               <p className="text-muted-foreground text-sm leading-relaxed max-w-[280px] mx-auto">
-                We've sent a 6-digit verification code to <span className="text-foreground font-medium">{email}</span>
+                {t('otp.sentTo')} <span className="text-foreground font-medium">{email}</span>
               </p>
             </div>
 
@@ -168,10 +172,10 @@ export function OTPPage() {
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                        <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4" />
-                       <span>Verifying...</span>
+                       <span>{t('otp.verifying')}</span>
                     </div>
                   ) : (
-                    "Verify & Continue"
+                    t('otp.verify')
                   )}
                 </Button>
 
@@ -181,13 +185,13 @@ export function OTPPage() {
                    className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
                 >
                   <ArrowLeft size={14} />
-                  Back to Login
+                  {t('common.backToLogin')}
                 </button>
               </div>
 
               <div className="pt-4 border-t border-border/50 text-center">
                 <p className="text-sm text-muted-foreground mb-3">
-                  Didn't receive the code? Check your spam folder, then:
+                  {t('common.noCodeReceived')}
                 </p>
                 <button
                   type="button"
@@ -202,12 +206,12 @@ export function OTPPage() {
                   {isResending ? (
                     <>
                       <RefreshCw size={14} className="animate-spin" />
-                      Sending a new code…
+                      {t('common.sendingNewCode')}
                     </>
                   ) : (
                     <>
                       <RefreshCw size={14} />
-                      Resend code
+                      {t('common.resendCode')}
                     </>
                   )}
                 </button>

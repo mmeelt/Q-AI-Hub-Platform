@@ -54,6 +54,18 @@ class GeminiServiceTest {
     }
 
     @Test
+    void timeout_isReportedAsUnavailable_insteadOfHangingOrCrashing() {
+        GeminiService gemini = service("secret-key");
+        server.getServer().expect(requestTo(URL)).andRespond(request -> {
+            throw new java.net.SocketTimeoutException("Read timed out");
+        });
+
+        assertThatThrownBy(() -> gemini.getAiFeedback("Hello"))
+                .isInstanceOf(AiUnavailableException.class)
+                .hasMessage("Gemini request failed");
+    }
+
+    @Test
     void missingKey_failsWithoutCallingGemini() {
         GeminiService gemini = service("");
         server.getServer(); // no request expected

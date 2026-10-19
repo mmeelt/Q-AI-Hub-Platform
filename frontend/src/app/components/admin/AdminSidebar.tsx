@@ -5,16 +5,19 @@ import { motion } from 'motion/react';
 import { Logo } from '../common/Logo';
 import { ThemeToggle } from '../theme/ThemeToggle';
 import { api } from '../../services/api';
+import { LanguageToggle } from '../../i18n/LanguageToggle';
+import { useI18n } from '../../i18n/I18nProvider';
+import type { TranslationKey } from '../../i18n/translations';
 
-type NavItem = { label: string; icon: React.ElementType; id: string };
+type NavItem = { label: TranslationKey; icon: React.ElementType; id: string };
 
 const navItems: NavItem[] = [
-    { label: 'Dashboard', icon: LayoutDashboard, id: 'dashboard' },
-    { label: 'Events', icon: Calendar, id: 'events' },
-    { label: 'Users', icon: Users, id: 'users' },
-    { label: 'Startups', icon: Rocket, id: 'startups' },
-    { label: 'Pitch Evaluation', icon: Trophy, id: 'pitch' },
-    { label: 'Settings', icon: Settings, id: 'settings' },
+    { label: 'admin.dashboard', icon: LayoutDashboard, id: 'dashboard' },
+    { label: 'admin.events', icon: Calendar, id: 'events' },
+    { label: 'admin.users', icon: Users, id: 'users' },
+    { label: 'admin.startups', icon: Rocket, id: 'startups' },
+    { label: 'admin.pitch', icon: Trophy, id: 'pitch' },
+    { label: 'admin.settings', icon: Settings, id: 'settings' },
 ];
 
 interface AdminSidebarProps {
@@ -25,6 +28,7 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ activeSection, mobileOpen = false, onClose }: AdminSidebarProps) {
+    const { t } = useI18n();
     const [role, setRole] = useState<string>('admin');
     const [userName, setUserName] = useState<string>('Admin User');
 
@@ -59,11 +63,11 @@ export function AdminSidebar({ activeSection, mobileOpen = false, onClose }: Adm
         )}
         <aside
             id="admin-sidebar"
-            aria-label="Admin navigation"
+            aria-label={t('admin.nav')}
             className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col bg-background/95 backdrop-blur-xl border-r border-border transition-transform duration-300 lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
             {onClose && (
-                <button type="button" onClick={onClose} aria-label="Close menu"
+                <button type="button" onClick={onClose} aria-label={t('common.closeMenu')}
                     className="lg:hidden absolute right-3 top-5 p-2 rounded-lg text-muted-foreground hover:bg-foreground/5">
                     <X className="h-5 w-5" />
                 </button>
@@ -91,7 +95,7 @@ export function AdminSidebar({ activeSection, mobileOpen = false, onClose }: Adm
                     transition={{ delay: 0.2 }}
                     className="mb-3 px-3 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase"
                 >
-                    {role === 'jury' ? 'Jury Panel' : 'Admin Panel'}
+                    {role === 'jury' ? t('admin.juryPanel') : t('admin.panel')}
                 </motion.p>
                 <ul className="flex flex-col gap-1">
                     {visibleItems.map((item, i) => {
@@ -124,7 +128,7 @@ export function AdminSidebar({ activeSection, mobileOpen = false, onClose }: Adm
                                         className={`relative z-10 h-[18px] w-[18px] transition-all duration-300 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground/60'
                                             }`}
                                     />
-                                    <span className="relative z-10">{item.label}</span>
+                                    <span className="relative z-10">{t(item.label)}</span>
                                     {isActive && (
                                         <ChevronRight className="relative z-10 ml-auto h-4 w-4 text-primary/50" />
                                     )}
@@ -155,10 +159,13 @@ export function AdminSidebar({ activeSection, mobileOpen = false, onClose }: Adm
                     </div>
                 </div>
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
-                    <ThemeToggle />
+                    <div className="flex items-center gap-2">
+                        <LanguageToggle />
+                        <ThemeToggle />
+                    </div>
                     <button 
-                        aria-label="Log out"
-                        title="Log out"
+                        aria-label={t('common.logout')}
+                        title={t('common.logout')}
                         onClick={async () => {
                             // Revoke the session server-side (clears the HttpOnly cookies), then local profile data
                             try { await api.logout(); } catch (_) { /* already logged out */ }

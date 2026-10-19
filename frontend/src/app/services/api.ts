@@ -596,6 +596,18 @@ export const api = {
         return await response.json();
     },
 
+    async createPhase(eventId: string, phase: { phaseName: string; phaseType: 'QUESTIONNAIRE' | 'PITCH'; startDate?: string; endDate?: string }): Promise<any> {
+        const response = await this.authFetch(`/phases/event/${eventId}`, {
+            method: 'POST',
+            body: JSON.stringify(phase),
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(getApiErrorMessage(err, 'Failed to create phase'));
+        }
+        return await response.json();
+    },
+
     async activatePhase(phaseId: string | number): Promise<any> {
         const response = await this.authFetch(`/phases/${phaseId}/activate`, { method: 'PUT' });
         if (!response.ok) {

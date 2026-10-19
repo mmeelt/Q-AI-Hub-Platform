@@ -9,6 +9,7 @@ import { Logo } from '../../components/common/Logo';
 import { Button } from '../../components/common/Button';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface ApplicationStatus {
     trackingCode: string;
@@ -31,6 +32,7 @@ export function TrackPage() {
 
 function TrackPageContent() {
     const navigate = useNavigate();
+    const { t, language } = useI18n();
     const [trackingCode, setTrackingCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [applicationData, setApplicationData] = useState<ApplicationStatus | null>(null);
@@ -40,7 +42,7 @@ function TrackPageContent() {
         e.preventDefault();
         
         if (!trackingCode.trim()) {
-            setError('Please enter a tracking code');
+            setError(t('track.enterCode'));
             return;
         }
 
@@ -51,10 +53,10 @@ function TrackPageContent() {
         try {
             const data = await api.trackApplication(trackingCode.trim());
             setApplicationData(data);
-            toast.success('Application found!');
+            toast.success(t('track.found'));
         } catch (error: any) {
-            setError(error.message || 'Tracking code not found');
-            toast.error('Tracking code not found');
+            setError(error.message || t('track.notFound'));
+            toast.error(t('track.notFound'));
         } finally {
             setIsLoading(false);
         }
@@ -115,10 +117,10 @@ function TrackPageContent() {
                             <Logo size="lg" showText={false} />
                         </motion.div>
                         <h1 className="text-4xl font-bold text-foreground mb-4">
-                            Track Your Application
+                            {t('track.title')}
                         </h1>
                         <p className="text-lg text-muted-foreground">
-                            Enter your tracking code to check your application status
+                            {t('track.subtitle')}
                         </p>
                     </div>
 
@@ -132,7 +134,7 @@ function TrackPageContent() {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label htmlFor="trackingCode" className="block text-sm font-medium text-foreground mb-2">
-                                    Tracking Code
+                                    {t('track.code')}
                                 </label>
                                 <div className="relative">
                                     <input
@@ -140,7 +142,7 @@ function TrackPageContent() {
                                         type="text"
                                         value={trackingCode}
                                         onChange={(e) => setTrackingCode(e.target.value.toUpperCase())}
-                                        placeholder="e.g., APP-123456"
+                                        placeholder={t('track.placeholder')}
                                         className="w-full px-4 py-3 pl-12 bg-background border border-border rounded-xl text-foreground outline-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground/40"
                                         disabled={isLoading}
                                     />
@@ -157,7 +159,7 @@ function TrackPageContent() {
                                 disabled={isLoading || !trackingCode.trim()}
                                 className="group"
                             >
-                                {isLoading ? 'Searching...' : 'Track Application'}
+                                {isLoading ? t('track.searching') : t('track.submit')}
                                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                             </Button>
                         </form>
@@ -174,7 +176,7 @@ function TrackPageContent() {
                             <div className="space-y-6">
                                 {/* Header */}
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-2xl font-bold text-foreground">Application Status</h2>
+                                    <h2 className="text-2xl font-bold text-foreground">{t('track.status')}</h2>
                                     <div className="flex items-center gap-2 px-3 py-1 rounded-full border bg-primary/10 text-primary border-primary/30">
                                         <span className="text-sm font-medium">{applicationData.trackingCode}</span>
                                     </div>
@@ -205,7 +207,7 @@ function TrackPageContent() {
                                     <div className="flex items-center gap-3">
                                         {getStatusIcon(applicationData.status)}
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Current Status</p>
+                                            <p className="text-sm text-muted-foreground">{t('track.currentStatus')}</p>
                                             <p className="font-semibold text-foreground capitalize">{applicationData.status}</p>
                                         </div>
                                     </div>
@@ -216,7 +218,7 @@ function TrackPageContent() {
                                                 <div className="w-2 h-2 rounded-full bg-primary" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-muted-foreground">Current Phase</p>
+                                                <p className="text-sm text-muted-foreground">{t('track.currentPhase')}</p>
                                                 <p className="font-semibold text-foreground">{applicationData.currentPhase}</p>
                                             </div>
                                         </div>
@@ -226,7 +228,7 @@ function TrackPageContent() {
                                         <div className="flex items-center gap-3">
                                             <ArrowRight className="w-5 h-5 text-primary" />
                                             <div>
-                                                <p className="text-sm text-muted-foreground">Next Step</p>
+                                                <p className="text-sm text-muted-foreground">{t('track.nextStep')}</p>
                                                 <p className="font-semibold text-foreground">{applicationData.nextStep}</p>
                                             </div>
                                         </div>
@@ -237,16 +239,16 @@ function TrackPageContent() {
                                 <div className="space-y-3 pt-4 border-t border-border">
                                     <div className="flex items-center gap-3 text-sm">
                                         <Calendar className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-muted-foreground">Submitted: {new Date(applicationData.submittedAt).toLocaleDateString()}</span>
+                                        <span className="text-muted-foreground">{t('track.submitted', { date: new Date(applicationData.submittedAt).toLocaleDateString(language) })}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm">
                                         <Clock className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-muted-foreground">Last Updated: {new Date(applicationData.lastUpdated).toLocaleDateString()}</span>
+                                        <span className="text-muted-foreground">{t('track.updated', { date: new Date(applicationData.lastUpdated).toLocaleDateString(language) })}</span>
                                     </div>
                                     {applicationData.eventType && (
                                         <div className="flex items-center gap-3 text-sm">
                                             <FileText className="w-4 h-4 text-muted-foreground" />
-                                            <span className="text-muted-foreground">Event Type: {applicationData.eventType}</span>
+                                            <span className="text-muted-foreground">{t('track.eventType', { type: applicationData.eventType })}</span>
                                         </div>
                                     )}
                                 </div>
@@ -258,7 +260,7 @@ function TrackPageContent() {
                                             onClick={() => navigate('/dashboard')}
                                             className="w-full"
                                         >
-                                            Go to Dashboard
+                                            {t('track.goToDashboard')}
                                             <ArrowRight className="ml-2" />
                                         </Button>
                                     </div>
@@ -274,7 +276,7 @@ function TrackPageContent() {
                             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft size={16} />
-                            Back to Home
+                            {t('track.backHome')}
                         </button>
                     </div>
                 </motion.div>

@@ -15,6 +15,8 @@ import { Button } from '../../components/common/Button';
 import { toast } from 'sonner';
 
 import { api } from '../../services/api';
+import { useI18n } from '../../i18n/I18nProvider';
+import { LanguageToggle } from '../../i18n/LanguageToggle';
 
 
 
@@ -25,6 +27,8 @@ export function RegisterPage() {
   const navigate = useNavigate();
 
   const location = useLocation();
+
+  const { t } = useI18n();
 
   // Expert invitation link: /register?invite=<id>&email=<invited email>
   const [searchParams] = useSearchParams();
@@ -112,17 +116,17 @@ export function RegisterPage() {
 
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName) newErrors.fullName = 'Full name is required';
+    if (!formData.fullName) newErrors.fullName = t('register.fullNameRequired');
 
-    if (!formData.studentId) newErrors.studentId = 'Student ID is required';
+    if (!formData.studentId) newErrors.studentId = t('register.studentIdRequired');
 
-    if (!formData.universityName) newErrors.universityName = 'University name is required';
+    if (!formData.universityName) newErrors.universityName = t('register.universityRequired');
 
-    if (!formData.email) newErrors.email = 'Email is required';
+    if (!formData.email) newErrors.email = t('common.emailRequired');
 
-    if (!formData.password) newErrors.password = 'Password is required';
+    if (!formData.password) newErrors.password = t('common.passwordRequired');
 
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t('register.passwordsMismatch');
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
@@ -150,7 +154,7 @@ export function RegisterPage() {
 
 
 
-      toast.success(response.message || 'Account created! Please verify your email.');
+      toast.success(response.message || t('register.created'));
 
 
 
@@ -175,7 +179,7 @@ export function RegisterPage() {
 
     } catch (error: any) {
 
-      toast.error(error.message || 'Registration failed. Please try again.');
+      toast.error(error.message || t('register.failed'));
 
     } finally {
 
@@ -189,7 +193,7 @@ export function RegisterPage() {
 
 
 
-  const strengthLabel = ['', 'Too weak', 'Weak', 'Medium', 'Strong'];
+  const strengthLabel = ['', t('register.strength.tooWeak'), t('register.strength.weak'), t('register.strength.medium'), t('register.strength.strong')];
 
   const strengthColor = ['', '#C8545E', '#C9973A', '#4A9CB5', '#3FA37C'];
 
@@ -268,6 +272,7 @@ export function RegisterPage() {
     <div className="min-h-screen relative flex items-center justify-center p-6 py-10">
 
       <ParticleBackground />
+      <div className="absolute top-4 right-4 z-20"><LanguageToggle /></div>
 
 
 
@@ -307,11 +312,11 @@ export function RegisterPage() {
 
             <div className="text-center mb-8">
 
-              <h1 className="text-3xl font-bold mb-2">Join Q-AI Hub</h1>
+              <h1 className="text-3xl font-bold mb-2">{t('register.title')}</h1>
 
               <p className="text-muted-foreground text-sm leading-relaxed">
 
-                Start your Quantum-AI entrepreneurship journey
+                {t('register.subtitle')}
 
               </p>
 
@@ -321,19 +326,19 @@ export function RegisterPage() {
 
             {registrationsClosed && (
               <div role="alert" className="mb-5 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm text-amber-700 dark:text-amber-400">
-                Registrations are currently by invitation only. If you received an invitation email, use the link it contains.
+                {t('register.closed')}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
 
-              {renderField({ label: "Full Name", icon: User, type: "text", field: "fullName", placeholder: "Your full name" })}
+              {renderField({ label: t('register.fullName'), icon: User, type: "text", field: "fullName", placeholder: t('register.fullNamePlaceholder') })}
 
 
 
               <div>
 
-                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Student ID</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">{t('register.studentId')}</label>
 
                 <div className="relative">
 
@@ -363,17 +368,17 @@ export function RegisterPage() {
 
 
 
-              {renderField({ label: "University / Institution", icon: User, type: "text", field: "universityName", placeholder: "e.g. ENICarthage" })}
+              {renderField({ label: t('register.university'), icon: User, type: "text", field: "universityName", placeholder: "e.g. ENICarthage" })}
 
 
 
-              {renderField({ label: "Email", icon: Mail, type: "email", field: "email", placeholder: "your@email.com" })}
+              {renderField({ label: t('common.email'), icon: Mail, type: "email", field: "email", placeholder: "your@email.com" })}
 
 
 
               <div>
 
-                {renderField({ label: "Password", icon: Lock, type: "password", field: "password", placeholder: "Create a strong password",
+                {renderField({ label: t('common.password'), icon: Lock, type: "password", field: "password", placeholder: t('register.passwordPlaceholder'),
 
                   showToggle: true, onToggle: () => setShowPassword(p => !p), show: showPassword })}
 
@@ -403,7 +408,7 @@ export function RegisterPage() {
 
 
 
-              {renderField({ label: "Confirm Password", icon: Lock, type: "password", field: "confirmPassword", placeholder: "Repeat your password",
+              {renderField({ label: t('register.confirmPassword'), icon: Lock, type: "password", field: "confirmPassword", placeholder: t('register.confirmPlaceholder'),
 
                 showToggle: true, onToggle: () => setShowConfirm(p => !p), show: showConfirm })}
 
@@ -427,13 +432,13 @@ export function RegisterPage() {
 
                     <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4" />
 
-                    <span>Creating account...</span>
+                    <span>{t('register.creating')}</span>
 
                   </>
 
                 ) : (
 
-                  <span>Create Account</span>
+                  <span>{t('register.create')}</span>
 
                 )}
 
@@ -443,13 +448,13 @@ export function RegisterPage() {
 
               <p className="text-center text-sm text-muted-foreground">
 
-                Already have an account?{' '}
+                {t('register.haveAccount')}{' '}
 
                 <Link to="/login" state={{ returnUrl, eventName }}
 
                   className="text-cyan-500 hover:text-cyan-400 dark:text-brand-cyan transition-colors font-medium">
 
-                  Log In →
+                  {t('register.login')}
 
                 </Link>
 
@@ -463,7 +468,7 @@ export function RegisterPage() {
 
                 <Shield size={16} className="text-emerald-600 dark:text-brand-mint flex-shrink-0" />
 
-                <p className="text-xs text-muted-foreground">Your ideas are protected under our confidentiality policy</p>
+                <p className="text-xs text-muted-foreground">{t('register.confidentiality')}</p>
 
               </div>
 

@@ -8,11 +8,14 @@ import { Button } from '../../components/common/Button';
 import { toast } from 'sonner';
 import { api } from '../../services/api';
 import { saveSession } from '../../utils/localStorage';
+import { useI18n } from '../../i18n/I18nProvider';
+import { LanguageToggle } from '../../i18n/LanguageToggle';
 
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,8 +32,8 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { email?: string; password?: string } = {};
-    if (!email) newErrors.email = 'Email is required';
-    if (!password) newErrors.password = 'Password is required';
+    if (!email) newErrors.email = t('common.emailRequired');
+    if (!password) newErrors.password = t('common.passwordRequired');
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
     setIsLoading(true);
@@ -41,7 +44,7 @@ export function LoginPage() {
         const otpSessionId = data.otpSessionId;
 
         localStorage.setItem('tempEmail', email);
-        toast.success('Admin credentials verified. Check your email for the OTP code.');
+        toast.success(t('login.adminVerified'));
 
         navigate('/otp', { state: { email, otpSessionId, destination: '/admin', rememberMe, expiresIn: data.expiresIn } });
       } else {
@@ -51,7 +54,7 @@ export function LoginPage() {
         if (data.requiresOtp === false) {
           // Email already verified and the admin does not require a code at every login
           saveSession(data);
-          toast.success('Welcome back!');
+          toast.success(t('login.welcomeBack'));
           const role = String(data.role || 'USER').replace(/^ROLE_/i, '').toUpperCase();
           const safeReturn = returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : null;
           navigate(safeReturn || (role === 'ADMIN' ? '/admin' : '/dashboard'));
@@ -62,7 +65,7 @@ export function LoginPage() {
 
         localStorage.setItem('tempEmail', email);
 
-        toast.success('Credentials verified. Check your email for the OTP code.');
+        toast.success(t('login.verified'));
 
         if (returnUrl) {
           navigate('/otp', { state: { email, returnUrl, eventName, otpSessionId, rememberMe, expiresIn: data.expiresIn } });
@@ -71,7 +74,7 @@ export function LoginPage() {
         }
       }
     } catch (error: any) {
-      toast.error(error.message || 'Login failed. Please check your credentials.');
+      toast.error(error.message || t('login.failed'));
     } finally {
       setIsLoading(false);
     }
@@ -81,6 +84,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-6 text-foreground">
       <ParticleBackground />
+      <div className="absolute top-4 right-4 z-20"><LanguageToggle /></div>
 
       {/* Ambient glow */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -101,18 +105,18 @@ export function LoginPage() {
             </div>
 
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
+              <h1 className="text-3xl font-bold mb-2">{t('login.title')}</h1>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 {eventName
-                  ? `Sign in to continue your application for ${eventName}`
-                  : 'Sign in to access your dashboard and applications'}
+                  ? t('login.subtitleEvent', { event: eventName })
+                  : t('login.subtitle')}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-widest">Email</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-widest">{t('common.email')}</label>
                 <div className="relative">
                   <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
@@ -129,7 +133,7 @@ export function LoginPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-widest">Password</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-widest">{t('common.password')}</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
@@ -143,6 +147,7 @@ export function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(p => !p)}
+                    aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -162,7 +167,7 @@ export function LoginPage() {
                 </button>
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <ShieldCheck size={14} className="text-primary" />
-                  Admin sign-in
+                  {t('login.admin')}
                 </span>
               </div>
 
@@ -176,14 +181,14 @@ export function LoginPage() {
                   >
                     {rememberMe && <Check size={10} strokeWidth={3} className="text-primary" />}
                   </div>
-                  <span className="text-sm text-muted-foreground group-hover:text-foreground/70 transition-colors select-none">Remember me</span>
+                  <span className="text-sm text-muted-foreground group-hover:text-foreground/70 transition-colors select-none">{t('login.rememberMe')}</span>
                 </label>
                 <button
                   type="button"
                   onClick={() => navigate('/forgot-password', { state: { email } })}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Forgot password?
+                  {t('login.forgot')}
                 </button>
               </div>
 
@@ -197,21 +202,21 @@ export function LoginPage() {
                 {isLoading ? (
                   <>
                     <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4" />
-                    <span>{isAdminLogin ? 'Signing in as Admin...' : 'Signing in...'}</span>
+                    <span>{isAdminLogin ? t('login.signingInAdmin') : t('login.signingIn')}</span>
                   </>
                 ) : (
-                  <span>{isAdminLogin ? 'Sign In as Admin' : 'Sign In'}</span>
+                  <span>{isAdminLogin ? t('login.signInAdmin') : t('login.signIn')}</span>
                 )}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                {t('login.noAccount')}{' '}
                 <Link
                   to="/register"
                   state={{ returnUrl, eventName }}
                   className="text-primary hover:text-primary/80 transition-colors font-bold"
                 >
-                  Create one →
+                  {t('login.createOne')}
                 </Link>
               </p>
             </form>

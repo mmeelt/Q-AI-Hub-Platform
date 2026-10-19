@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { ThemeProvider, useTheme } from './components/theme/ThemeProvider';
+import { I18nProvider } from './i18n/I18nProvider';
 import { ScrollToTop } from './components/layout/ScrollToTop';
 
 // Each page is downloaded only when it is first visited (smaller initial bundle)
@@ -64,6 +65,7 @@ function App() {
 
   return (
     <ThemeProvider>
+    <I18nProvider>
       <BrowserRouter>
         <ScrollToTop />
         <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
@@ -254,6 +256,7 @@ function App() {
         <ThemedToaster />
       </div>
       </BrowserRouter>
+    </I18nProvider>
     </ThemeProvider>
   );
 }
