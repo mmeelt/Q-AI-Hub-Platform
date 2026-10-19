@@ -7,6 +7,7 @@ import { Logo } from '../../components/common/Logo';
 import { Button } from '../../components/common/Button';
 import { toast } from 'sonner';
 import { api } from '../../services/api';
+import { ChoiceAnswer } from '../../components/common/ChoiceQuestion';
 
 export function SimpleEventRegisterPage() {
   const { id } = useParams();
@@ -272,16 +273,12 @@ export function SimpleEventRegisterPage() {
                         className="w-full px-4 py-3 bg-muted/30 rounded-xl border border-border text-foreground text-sm outline-none transition-all placeholder:text-muted-foreground/40 focus:border-primary/50 min-h-[100px] resize-none"
                       />
                     ) : q.type === 'select' ? (
-                      <select
+                      <ChoiceAnswer
+                        options={q.options}
+                        multiple={q.multiple}
                         value={form[`q_${q.id}`] || ''}
-                        onChange={e => setForm({ ...form, [`q_${q.id}`]: e.target.value })}
-                        className="w-full px-4 py-3 bg-muted/30 rounded-xl border border-border text-foreground text-sm outline-none transition-all focus:border-primary/50"
-                      >
-                        <option value="">Select an option</option>
-                        {q.options?.map((opt: string) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
+                        onChange={value => setForm({ ...form, [`q_${q.id}`]: value })}
+                      />
                     ) : (
                       <input
                         type={q.type || 'text'}

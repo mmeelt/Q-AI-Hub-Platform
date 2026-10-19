@@ -1,8 +1,11 @@
 import { useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, MapPin, Users, Clock, FileText, Tag, Image, HelpCircle, Plus, Trash2, AlignLeft, List, Type, GripVertical } from 'lucide-react';
 import { ImageUpload } from '../../components/common/ImageUpload';
+import { EventCardPreview } from '../../components/admin/EventCardPreview';
+import { ChoiceOptionsEditor, cleanOptions } from '../../components/common/ChoiceQuestion';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Logo } from '../../components/common/Logo';
 import { DatePicker } from '../../components/ui/date-picker';
@@ -17,15 +20,16 @@ interface ApplicationQuestion {
     type: 'text' | 'textarea' | 'select';
     required: boolean;
     options?: string[];
+    multiple?: boolean;
 }
 
 export function CreateEventPage() {
     const navigate = useNavigate();
+    const goBack = useGoBack('/admin/events');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const createdEventIdRef = useRef<string | null>(null);
     const [pendingExperts, setPendingExperts] = useState<EventExpert[]>([]);
     const [applicationQuestions, setApplicationQuestions] = useState<ApplicationQuestion[]>([]);
-    const [optionDrafts, setOptionDrafts] = useState<Record<string, string>>({});
     const [form, setForm] = useState({
         name: '',
         category: '',
@@ -57,7 +61,6 @@ export function CreateEventPage() {
             options: []
         };
         setApplicationQuestions(prev => [...prev, newQuestion]);
-        setOptionDrafts(prev => ({ ...prev, [newQuestion.id]: '' }));
     };
 
     const updateApplicationQuestion = (id: string, field: keyof ApplicationQuestion, value: any) => {
@@ -68,11 +71,6 @@ export function CreateEventPage() {
 
     const removeApplicationQuestion = (id: string) => {
         setApplicationQuestions(prev => prev.filter(q => q.id !== id));
-        setOptionDrafts(prev => {
-            const next = { ...prev };
-            delete next[id];
-            return next;
-        });
     };
 
     const generateFormFieldsJson = () => {
@@ -85,7 +83,8 @@ export function CreateEventPage() {
             question: q.question,
             type: q.type,
             required: q.required,
-            options: q.options || []
+            options: q.type === 'select' ? cleanOptions(q.options) : [],
+            multiple: q.type === 'select' && !!q.multiple
         })));
     };
 
@@ -93,6 +92,10 @@ export function CreateEventPage() {
         e.preventDefault();
         if (!form.name || !form.category || !form.startDate || !form.endDate) {
             toast.error('Please fill in all required fields.');
+            return;
+        }
+        if (applicationQuestions.some(q => q.type === 'select' && cleanOptions(q.options).length < 2)) {
+            toast.error('A multiple choice question needs at least 2 choices');
             return;
         }
         if (isSubmitting) return;
@@ -179,11 +182,11 @@ export function CreateEventPage() {
                     </Link>
                     <div className="h-6 w-px bg-foreground/10" />
                     <button
-                        onClick={() => navigate('/admin')}
+                        onClick={goBack}
                         className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ArrowLeft size={18} />
-                        <span className="text-sm">Back to Dashboard</span>
+                        <span className="text-sm">Back</span>
                     </button>
                 </div>
             </div>
@@ -383,6 +386,14 @@ export function CreateEventPage() {
                                         label="Choose a cover image"
                                     />
                                 </div>
+                                <EventCardPreview
+                                    title={form.name}
+                                    category={form.category}
+                                    description={form.description}
+                                    startDate={form.startDate}
+                                    location={form.location}
+                                    imageUrl={form.imageUrl}
+                                />
 
                                 {/* Status */}
                                 <div>
@@ -510,41 +521,13 @@ export function CreateEventPage() {
                                                     </label>
                                                 </div>
 
-                                                {/* Multiple Choice Options — full width, prominent */}
                                                 {question.type === 'select' && (
-                                                    <div className="mt-4 p-4 bg-indigo-500/5 border border-indigo-500/15 rounded-xl">
-                                                        <label className="flex items-center gap-2 text-xs font-medium text-indigo-400 mb-3">
-                                                            <List size={13} />
-                                                            Answer Choices
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            value={optionDrafts[question.id] ?? question.options?.join(', ') ?? ''}
-                                                            onChange={e => setOptionDrafts(prev => ({ ...prev, [question.id]: e.target.value }))}
-                                                            onBlur={e => {
-                                                                const parsed = e.target.value.split(',').map(o => o.trim()).filter(o => o);
-                                                                updateApplicationQuestion(question.id, 'options', parsed);
-                                                            }}
-                                                            placeholder="Enter choices separated by commas: Option A, Option B, Option C"
-                                                            className="w-full px-4 py-3 bg-background rounded-xl border border-border text-foreground outline-none focus:border-indigo-500/40 transition-colors text-sm placeholder:text-muted-foreground/30"
-                                                        />
-                                                        {/* Live preview chips */}
-                                                        {(() => {
-                                                            const raw = optionDrafts[question.id] ?? question.options?.join(', ') ?? '';
-                                                            const parsed = raw.split(',').map(o => o.trim()).filter(o => o);
-                                                            if (parsed.length === 0) return null;
-                                                            return (
-                                                                <div className="flex flex-wrap gap-2 mt-3">
-                                                                    {parsed.map((opt, i) => (
-                                                                        <span key={i} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-500/10 text-indigo-300 text-xs font-medium rounded-full border border-indigo-500/20">
-                                                                            <span className="w-4 h-4 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px] font-bold">{String.fromCharCode(65 + i)}</span>
-                                                                            {opt}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                    </div>
+                                                    <ChoiceOptionsEditor
+                                                        options={question.options}
+                                                        onChange={options => updateApplicationQuestion(question.id, 'options', options)}
+                                                        multiple={question.multiple}
+                                                        onMultipleChange={multiple => updateApplicationQuestion(question.id, 'multiple', multiple)}
+                                                    />
                                                 )}
                                             </div>
                                         ))}
@@ -580,7 +563,7 @@ export function CreateEventPage() {
                                 type="button"
                                 variant="ghost"
                                 fullWidth
-                                onClick={() => navigate('/admin')}
+                                onClick={goBack}
                             >
                                 Cancel
                             </Button>

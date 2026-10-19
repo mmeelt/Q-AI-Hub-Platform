@@ -341,7 +341,12 @@ export function EventsPage() {
                                             <div className="h-full p-px rounded-2xl bg-gradient-to-br from-foreground/10 via-transparent to-foreground/5 hover:from-foreground/15 hover:to-foreground/5 transition-all duration-500">
                                                 <div className="relative h-full rounded-[calc(1rem-1px)] p-6 flex flex-col border border-border/40 bg-card/50 group-hover:border-primary/20 transition-all duration-500 shadow-sm">
                                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent rounded-[calc(1rem-1px)]" />
-                                                    <div className="flex items-center justify-between mb-4">
+                                                    {event.coverImageUrl && (
+                                                        <div className="relative -mx-6 -mt-6 mb-5 h-40 overflow-hidden rounded-t-[calc(1rem-1px)]">
+                                                            <img src={event.coverImageUrl} alt={event.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                        </div>
+                                                    )}
+                                                    <div className="relative flex items-center justify-between mb-4">
                                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${typeStyle.bg} ${typeStyle.text} ${typeStyle.border}`}>
                                                             <Sparkles size={12} />
                                                             {event.type}

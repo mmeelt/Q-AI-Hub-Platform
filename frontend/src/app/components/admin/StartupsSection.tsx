@@ -105,7 +105,7 @@ function StartupDetailPanel({ startup: initialStartup, onClose }: { startup: any
             <div className="flex-1 overflow-y-auto">
                 <div className="border-b border-border bg-gradient-to-br from-brand-cyan/[0.04] to-brand-purple/[0.02] p-6">
                     <div className="flex items-start gap-4">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-cyan/25 to-brand-purple/25 text-xl font-bold text-cyan-600 dark:text-brand-cyan ring-2 ring-brand-cyan/15">{startup.logo}</div>
+                        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-cyan/25 to-brand-purple/25 text-xl font-bold text-cyan-600 dark:text-brand-cyan ring-2 ring-brand-cyan/15">{startup.logoUrl ? <img src={startup.logoUrl} alt={startup.name} className="h-full w-full object-cover" /> : startup.logo}</div>
                         <div className="flex-1">
                             <div className="flex items-center gap-2"><h4 className="text-xl font-bold text-foreground">{startup.name}</h4><StageBadge stage={startup.stage} /></div>
                             <p className="text-sm text-muted-foreground">{startup.industry}</p>
@@ -372,6 +372,7 @@ export function StartupsSection() {
                         funding: s.totalFundingRaised ? `$${s.totalFundingRaised}` : '$0',
                         teamSize: s.currentTeamSize || 1,
                         logo: s.projectName?.charAt(0) || 'S',
+                        logoUrl: s.companyLogoUrl || '',
                         description: s.companyTagline || s.rawDescription || '',
                         pitchVideoUrl: s.pitchVideoLink,
                         appliedEventTitles: summary.appliedEventTitles || [],
@@ -482,7 +483,7 @@ export function StartupsSection() {
                         whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(59,155,176,0.06)' }}
                         className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-colors hover:border-border/80">
                         <div className="flex items-start gap-4 p-5">
-                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-cyan/20 to-brand-purple/20 text-lg font-bold text-cyan-600 dark:text-brand-cyan ring-2 ring-brand-cyan/10 group-hover:ring-brand-cyan/25 transition-all">{startup.logo}</div>
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-cyan/20 to-brand-purple/20 text-lg font-bold text-cyan-600 dark:text-brand-cyan ring-2 ring-brand-cyan/10 group-hover:ring-brand-cyan/25 transition-all">{startup.logoUrl ? <img src={startup.logoUrl} alt={startup.name} className="h-full w-full object-cover" /> : startup.logo}</div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2"><h3 className="truncate text-base font-bold text-foreground">{startup.name}</h3><StageBadge stage={startup.stage} /></div>
                                 <p className="text-sm text-muted-foreground">{startup.industry}</p>

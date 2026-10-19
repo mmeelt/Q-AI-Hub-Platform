@@ -32,6 +32,13 @@ public class User {
     private String studyField;
     private String primaryInterest;
 
+    // Professional details of an invited expert
+    private String organization;
+    private String jobTitle;
+    private String expertiseArea;
+    @Column(length = 512)
+    private String linkedinUrl;
+
     @ElementCollection
     @CollectionTable(name = "user_availability", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "availability_slot")

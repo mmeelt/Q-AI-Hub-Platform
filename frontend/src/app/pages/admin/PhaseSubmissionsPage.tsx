@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Users, FileText, Star, MessageSquare, CheckCircle, X, Clock, TrendingUp, Search, Filter } from 'lucide-react';
 import { Button } from '../../components/common/Button';
@@ -282,6 +283,7 @@ function GradingModal({ submission, isOpen, onClose, onGrade, onDecide }: Gradin
 export function PhaseSubmissionsPage() {
     const { phaseId } = useParams<{ phaseId: string }>();
     const navigate = useNavigate();
+    const goBack = useGoBack('/admin/events');
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -399,11 +401,11 @@ export function PhaseSubmissionsPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => navigate('/admin')}
+                                onClick={goBack}
                                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 <ArrowLeft size={16} />
-                                Back to Admin
+                                Back
                             </button>
                             <div>
                                 <h1 className="text-2xl font-bold text-foreground">Phase Submissions</h1>

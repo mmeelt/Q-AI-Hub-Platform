@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { ArrowLeft, Rocket, Globe, Upload, X, Check, Save, Building2, Target, Sparkles, Users, Mail, User, Loader2 } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
@@ -16,6 +17,7 @@ const sectors = [
 
 export function CreateStartupProfilePage() {
     const navigate = useNavigate();
+    const goBack = useGoBack('/dashboard?tab=startup');
     const [searchParams] = useSearchParams();
     const editingId = searchParams.get('id');
     const [isLoading, setIsLoading] = useState(false);
@@ -167,7 +169,7 @@ export function CreateStartupProfilePage() {
                     {/* Header */}
                     <div className="flex items-center gap-4 mb-8">
                         <button
-                            onClick={() => navigate('/dashboard')}
+                            onClick={goBack}
                             className="p-2 rounded-lg hover:bg-foreground/5 transition-colors"
                         >
                             <ArrowLeft size={20} />
@@ -518,7 +520,7 @@ export function CreateStartupProfilePage() {
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    onClick={() => navigate('/dashboard')}
+                                    onClick={goBack}
                                 >
                                     Cancel
                                 </Button>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { ArrowLeft, Users, Brain, Target, Star, Sparkles, TrendingUp, ShieldCheck, Calendar, Plus, Trash2, CheckCircle2, Circle } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
@@ -30,6 +31,7 @@ import { Loader2, Wand2 } from 'lucide-react';
 export function StartupDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const goBack = useGoBack('/dashboard');
     const [application, setApplication] = useState<any>(null);
     const [milestones, setMilestones] = useState<any[]>([]);
     const [newMilestoneTask, setNewMilestoneTask] = useState('');
@@ -180,8 +182,8 @@ export function StartupDetailPage() {
             {/* Content */}
             <main className="relative z-10 max-w-5xl mx-auto px-6 py-12">
                 <div className="mb-8">
-                    <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                        <ArrowLeft size={16} /> Back to Events
+                    <button onClick={goBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <ArrowLeft size={16} /> Back
                     </button>
                 </div>
                 <motion.div

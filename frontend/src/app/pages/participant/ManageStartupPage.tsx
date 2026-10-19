@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
     Rocket, ArrowLeft, Save, Users, Target, Info, Globe, Video, 
@@ -19,6 +20,7 @@ type TabType = 'info' | 'team';
 export function ManageStartupPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const goBack = useGoBack('/my-startups');
     const [activeTab, setActiveTab] = useState<TabType>('info');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -126,7 +128,7 @@ export function ManageStartupPage() {
                 {/* Header */}
                 <div className="mb-10">
                     <button 
-                        onClick={() => navigate('/my-startups')} 
+                        onClick={goBack} 
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-cyan-500 transition-colors mb-6 group"
                     >
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 

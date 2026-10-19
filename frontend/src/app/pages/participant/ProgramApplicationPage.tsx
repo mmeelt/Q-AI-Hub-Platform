@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useUrlStep } from '../../hooks/useUrlStep';
+import { useGoBack } from '../../hooks/useGoBack';
 import { Upload, Sparkles, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { GradientButton } from '../../components/common/GradientButton';
 import { GlassCard } from '../../components/common/GlassCard';
@@ -11,6 +13,7 @@ import { api } from '../../services/api';
 export function ProgramApplicationPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack('/events');
   const [program, setProgram] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,7 +56,7 @@ export function ProgramApplicationPage() {
     loadData();
   }, [id]);
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useUrlStep(1);
   const [formData, setFormData] = useState({
     startupName: '',
     sector: '',
@@ -200,7 +203,7 @@ export function ProgramApplicationPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />

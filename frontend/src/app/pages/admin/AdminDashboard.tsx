@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
@@ -266,6 +267,7 @@ function SettingsSection() {
 export function AdminDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
+  const goBackFromPitch = useGoBack('/admin/events');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Close the mobile menu whenever the page changes
   useEffect(() => { setMobileNavOpen(false); }, [location.pathname]);
@@ -304,7 +306,7 @@ export function AdminDashboard() {
       case 'events': return <EventsManager onStartPitch={handleNavigateToPitch} />;
       case 'users': return <UsersSection />;
       case 'startups': return <StartupsSection />;
-      case 'pitch': return <PitchEvaluation initialEventId={pitchEventId} onBack={() => navigate('/admin/events')} />;
+      case 'pitch': return <PitchEvaluation initialEventId={pitchEventId} onBack={goBackFromPitch} />;
       case 'settings': return <SettingsSection />;
       default: return <DashboardHome onNavigate={handleSectionChange} />;
     }

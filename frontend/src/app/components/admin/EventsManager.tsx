@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { Search, Plus, MapPin, CalendarDays, Users, ArrowRight, Filter, X, UserPlus, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../services/api';
@@ -14,7 +15,6 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
     const [searchParams, setSearchParams] = useSearchParams();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
-    const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
     const [eventsList, setEventsList] = useState<any[]>([]);
     const [partneringEventId, setPartneringEventId] = useState<string | null>(null);
 
@@ -37,13 +37,6 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
                     hasPitch: e.hasPitch || false,
                 }));
                 setEventsList(formatted);
-
-                // Auto-select event if reviewEvent param exists
-                const reviewId = searchParams.get('reviewEvent');
-                if (reviewId) {
-                    const found = formatted.find((ev: any) => String(ev.id) === String(reviewId));
-                    if (found) setSelectedEvent(found);
-                }
             } catch (err) {
                 console.error(err);
                 toast.error('Failed to load events');
@@ -52,15 +45,10 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
         fetchEvents();
     }, []);
 
-    // Sync search params when selectedEvent changes or is cleared
-    useEffect(() => {
-        if (selectedEvent) {
-            setSearchParams({ reviewEvent: selectedEvent.id });
-        } else {
-            searchParams.delete('reviewEvent');
-            setSearchParams(searchParams, { replace: true });
-        }
-    }, [selectedEvent]);
+    // The open event lives in the URL, so the browser's back button returns to the list
+    const reviewId = searchParams.get('reviewEvent');
+    const selectedEvent = reviewId ? eventsList.find(ev => String(ev.id) === String(reviewId)) || null : null;
+    const goBackToList = useGoBack('/admin/events');
 
     useEffect(() => {
         const handler = (e: any) => {
@@ -82,10 +70,7 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
     return (
         <div className="flex flex-col gap-6">
             {selectedEvent ? (
-                <EventDetail event={selectedEvent} onBack={() => {
-                    setSelectedEvent(null);
-                    setSearchParams({});
-                }} navigate={navigate} onStartPitch={onStartPitch} />
+                <EventDetail event={selectedEvent} onBack={goBackToList} navigate={navigate} onStartPitch={onStartPitch} />
             ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-6">
             {/* Header */}
@@ -180,7 +165,7 @@ export function EventsManager({ onStartPitch }: { onStartPitch: (id: string) => 
                                     variant="outline"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setSelectedEvent(event);
+                                        setSearchParams({ reviewEvent: String(event.id) });
                                         setSearchParams({ reviewEvent: String(event.id) });
                                     }}
                                     className="!px-3 !py-2 !text-xs group/btn !h-9"

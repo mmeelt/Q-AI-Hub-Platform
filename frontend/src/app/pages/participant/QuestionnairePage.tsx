@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useUrlStep } from '../../hooks/useUrlStep';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, ArrowRight, Brain, Target, Users, Sparkles, Rocket } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
@@ -7,6 +8,7 @@ import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { Button } from '../../components/common/Button';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
+import { ChoiceAnswer } from '../../components/common/ChoiceQuestion';
 
 interface DynamicQuestion {
     id: string;
@@ -14,13 +16,14 @@ interface DynamicQuestion {
     type: 'text' | 'textarea' | 'number' | 'email' | 'select' | 'file' | 'image' | 'pdf' | 'videoUrl';
     required: boolean;
     options?: string[];
+    multiple?: boolean;
 }
 
 export function QuestionnairePage() {
     const { id, type } = useParams<{ id: string; type: string }>(); // type is 'event' or 'program'
     const navigate = useNavigate();
     const location = useLocation();
-    const [currentStep, setCurrentStep] = useState(0);
+    const [currentStep, setCurrentStep] = useUrlStep(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [questions, setQuestions] = useState<DynamicQuestion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -311,16 +314,12 @@ export function QuestionnairePage() {
                                 placeholder="Enter your answer here..."
                             />
                         ) : currentQ.type === 'select' ? (
-                            <select
+                            <ChoiceAnswer
+                                options={currentQ.options}
+                                multiple={currentQ.multiple}
                                 value={answers[currentQ.id] || ''}
-                                onChange={(e) => setAnswers({ ...answers, [currentQ.id]: e.target.value })}
-                                className="w-full bg-foreground/5 border border-border rounded-2xl p-6 text-foreground outline-none focus:border-cyan-500/50 transition-all"
-                            >
-                                <option value="">Select an option...</option>
-                                {currentQ.options?.map((option, index) => (
-                                    <option key={index} value={option}>{option}</option>
-                                ))}
-                            </select>
+                                onChange={(value) => setAnswers({ ...answers, [currentQ.id]: value })}
+                            />
                         ) : currentQ.type === 'number' ? (
                             <input
                                 type="number"

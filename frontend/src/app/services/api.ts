@@ -104,6 +104,16 @@ export const api = {
         return response;
     },
 
+    /** What an invitation link is for: an expert account or a participant account. */
+    async getInvitation(token: string): Promise<{ email: string; kind: 'EXPERT' | 'PARTICIPANT'; expertRole?: string; eventTitle?: string }> {
+        const response = await fetch(`${BASE_URL}/auth/invitations/${encodeURIComponent(token)}`);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(getApiErrorMessage(errorData, 'This invitation link is not valid'));
+        }
+        return await response.json();
+    },
+
     /**
      * Registers a new student user.
      */

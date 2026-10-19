@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, X, GripVertical } from 'lucide-react';
 import { Button } from '../common/Button';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
+import { ChoiceOptionsEditor, cleanOptions } from '../common/ChoiceQuestion';
 
 interface Question {
     id: string;
@@ -11,6 +12,7 @@ interface Question {
     type: 'text' | 'textarea' | 'number' | 'select' | 'file' | 'image' | 'pdf' | 'videoUrl';
     required: boolean;
     options?: string[];
+    multiple?: boolean;
 }
 
 interface Phase2QuestionsEditorProps {
@@ -72,9 +74,15 @@ export function Phase2QuestionsEditor({ phaseId, phaseName, onClose }: Phase2Que
             toast.error('All questions must have text');
             return;
         }
+        const fewChoices = questions.find(q => q.type === 'select' && cleanOptions(q.options).length < 2);
+        if (fewChoices) {
+            toast.error('A multiple choice question needs at least 2 choices');
+            return;
+        }
         setIsSaving(true);
         try {
-            await api.updatePhaseFormFields(phaseId, JSON.stringify(questions));
+            await api.updatePhaseFormFields(phaseId, JSON.stringify(questions.map(q =>
+                q.type === 'select' ? { ...q, options: cleanOptions(q.options) } : q)));
             toast.success('Questions saved successfully');
             onClose();
         } catch (error: any) {
@@ -170,6 +178,7 @@ export function Phase2QuestionsEditor({ phaseId, phaseName, onClose }: Phase2Que
                                                     <option value="textarea">Long text</option>
                                                     <option value="text">Short text</option>
                                                     <option value="number">Number</option>
+                                                    <option value="select">Multiple choice</option>
                                                     <option value="file">File upload</option>
                                                     <option value="pdf">PDF upload</option>
                                                     <option value="image">Image upload</option>
@@ -187,6 +196,15 @@ export function Phase2QuestionsEditor({ phaseId, phaseName, onClose }: Phase2Que
                                                 <label htmlFor={`req-${q.id}`} className="text-xs text-muted-foreground">Required</label>
                                             </div>
                                         </div>
+
+                                        {q.type === 'select' && (
+                                            <ChoiceOptionsEditor
+                                                options={q.options}
+                                                onChange={options => updateQuestion(index, 'options', options)}
+                                                multiple={q.multiple}
+                                                onMultipleChange={multiple => updateQuestion(index, 'multiple', multiple)}
+                                            />
+                                        )}
                                     </motion.div>
                                 ))}
                             </AnimatePresence>

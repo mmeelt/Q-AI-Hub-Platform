@@ -128,6 +128,60 @@ class AuthServiceTest {
     }
 
     @Test
+    void register_withExpertInvite_keepsTheExpertsProfessionalDetails() {
+        String invId = UUID.randomUUID().toString();
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("judge@test.com");
+        req.setPassword("ValidPass1!");
+        req.setFullName("Judge");
+        req.setOrganization("Orange");
+        req.setJobTitle("CTO");
+        req.setExpertiseArea("AI");
+        req.setLinkedinUrl("https://linkedin.com/in/judge");
+        req.setInviteToken(invId);
+        InvitationLog inv = InvitationLog.builder().invitationId(invId).email("judge@test.com")
+                .expertRole("JUDGE").invitedAt(new Date()).build();
+
+        when(inputSanitizer.sanitizeEmail(any())).thenAnswer(a -> a.getArgument(0));
+        when(inputSanitizer.sanitize(any())).thenAnswer(a -> a.getArgument(0));
+        when(invitationLogRepository.findById(invId)).thenReturn(Optional.of(inv));
+        when(userRepository.findByEmailAddress("judge@test.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any())).thenReturn("hashed-pass");
+        when(otpService.generateAndSendOtp(any(), eq("judge@test.com"), any())).thenReturn("otp-session");
+
+        authService.register(req);
+
+        verify(userRepository).save(argThat(u -> u.getExpertRole() == User.ExpertRole.JUDGE
+                && "Orange".equals(u.getOrganization())
+                && "CTO".equals(u.getJobTitle())
+                && "AI".equals(u.getExpertiseArea())
+                && "https://linkedin.com/in/judge".equals(u.getLinkedinUrl())
+                && u.getStudentId() == null));
+    }
+
+    @Test
+    void describeInvitation_tellsAnExpertLinkFromAParticipantLink() {
+        InvitationLog expert = InvitationLog.builder().invitationId("e1").email("judge@test.com")
+                .expertRole("JUDGE").eventId("ev1").invitedAt(new Date()).build();
+        InvitationLog participant = InvitationLog.builder().invitationId("p1").email("founder@test.com")
+                .expertRole(ExpertInvitationService.PARTICIPANT).invitedAt(new Date()).build();
+        tn.enicarthage.backend.entity.Event event = new tn.enicarthage.backend.entity.Event();
+        event.setTitle("AI Bootcamp");
+        when(invitationLogRepository.findById("e1")).thenReturn(Optional.of(expert));
+        when(invitationLogRepository.findById("p1")).thenReturn(Optional.of(participant));
+        when(eventRepository.findById("ev1")).thenReturn(Optional.of(event));
+
+        var expertInfo = authService.describeInvitation("e1");
+        assertEquals("EXPERT", expertInfo.get("kind"));
+        assertEquals("JUDGE", expertInfo.get("expertRole"));
+        assertEquals("AI Bootcamp", expertInfo.get("eventTitle"));
+        assertEquals("PARTICIPANT", authService.describeInvitation("p1").get("kind"));
+
+        expert.setConsumedAt(new Date());
+        assertThrows(InvalidInvitationException.class, () -> authService.describeInvitation("e1"));
+    }
+
+    @Test
     void register_withParticipantInvite_givesNoExpertRole_evenWhenRegistrationsAreClosed() {
         String invId = UUID.randomUUID().toString();
         RegisterRequest req = new RegisterRequest();

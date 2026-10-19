@@ -11,4 +11,12 @@ public class RegisterRequest {
     private String studentId;
     /** Opaque invitation id from the invite link (`invite` query param). */
     private String inviteToken;
+
+    // Filled in by invited experts instead of the university / student id
+    private String phoneNumber;
+    private String organization;
+    private String jobTitle;
+    private String expertiseArea;
+    private String linkedinUrl;
+    private String userBio;
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { ArrowLeft, Send, Rocket, ShieldCheck } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
@@ -15,6 +16,7 @@ const inputClass =
 
 export function InviteUserPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack('/admin/users');
   const [type, setType] = useState<InviteType>('participant');
   const [email, setEmail] = useState('');
   const [eventId, setEventId] = useState('');
@@ -85,11 +87,11 @@ export function InviteUserPage() {
           </Link>
           <div className="h-6 w-px bg-foreground/10" />
           <button
-            onClick={() => navigate('/admin/users')}
+            onClick={goBack}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft size={18} />
-            <span className="text-sm">Back to Users</span>
+            <span className="text-sm">Back</span>
           </button>
         </div>
       </div>

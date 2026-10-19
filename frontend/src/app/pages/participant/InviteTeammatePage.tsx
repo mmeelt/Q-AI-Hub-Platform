@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { Send, UserPlus, Briefcase, Mail, MessageSquare, ArrowLeft, CheckCircle2, Rocket, Code2, Wrench, Palette, Megaphone, TrendingUp, Sparkles } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
@@ -21,6 +22,7 @@ const roles = [
 export function InviteTeammatePage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const goBack = useGoBack('/my-startups');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [form, setForm] = useState({
         email: '',
@@ -69,7 +71,7 @@ export function InviteTeammatePage() {
                     animate={{ opacity: 1, y: 0 }}
                 >
                     <button 
-                        onClick={() => navigate(-1)} 
+                        onClick={goBack} 
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-cyan-500 transition-colors mb-8 group"
                     >
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 

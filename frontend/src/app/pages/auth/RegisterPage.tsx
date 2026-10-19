@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 
 import { motion } from 'motion/react';
 
-import { User, Mail, Lock, Eye, EyeOff, CreditCard, Shield } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, CreditCard, Shield, Building2, Briefcase, Award, Phone, Linkedin } from 'lucide-react';
 
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 
@@ -45,6 +45,13 @@ export function RegisterPage() {
 
     universityName: '',
 
+    // Invited experts give professional details instead of the student ones
+    organization: '',
+    jobTitle: '',
+    expertiseArea: '',
+    phoneNumber: '',
+    linkedinUrl: '',
+
     email: invitedEmail,
 
     password: '',
@@ -72,7 +79,17 @@ export function RegisterPage() {
 
 
 
-  const returnUrl = inviteToken ? '/dashboard?tab=expert' : (location.state as any)?.returnUrl;
+  // An invitation link is either for an expert (judge, mentor...) or for a participant
+  const [invitation, setInvitation] = useState<{ kind: 'EXPERT' | 'PARTICIPANT'; expertRole?: string; eventTitle?: string } | null>(null);
+  useEffect(() => {
+    if (!inviteToken) return;
+    api.getInvitation(inviteToken)
+      .then(setInvitation)
+      .catch((e: any) => toast.error(e.message || t('register.inviteInvalid')));
+  }, [inviteToken]);
+  const isExpertInvite = invitation?.kind === 'EXPERT';
+
+  const returnUrl = isExpertInvite ? '/dashboard?tab=expert' : (location.state as any)?.returnUrl;
 
   const eventName = (location.state as any)?.eventName;
 
@@ -127,9 +144,14 @@ export function RegisterPage() {
 
     if (!formData.fullName) newErrors.fullName = t('register.fullNameRequired');
 
-    if (!formData.studentId) newErrors.studentId = t('register.studentIdRequired');
-
-    if (!formData.universityName) newErrors.universityName = t('register.universityRequired');
+    if (isExpertInvite) {
+      if (!formData.organization.trim()) newErrors.organization = t('register.expert.organizationRequired');
+      if (!formData.jobTitle.trim()) newErrors.jobTitle = t('register.expert.jobTitleRequired');
+      if (!formData.expertiseArea.trim()) newErrors.expertiseArea = t('register.expert.expertiseRequired');
+    } else {
+      if (!formData.studentId) newErrors.studentId = t('register.studentIdRequired');
+      if (!formData.universityName) newErrors.universityName = t('register.universityRequired');
+    }
 
     if (!formData.email) newErrors.email = t('common.emailRequired');
 
@@ -157,9 +179,15 @@ export function RegisterPage() {
 
         fullName: formData.fullName,
 
-        studentId: formData.studentId,
-
-        universityName: formData.universityName,
+        ...(isExpertInvite
+          ? {
+            organization: formData.organization,
+            jobTitle: formData.jobTitle,
+            expertiseArea: formData.expertiseArea,
+            phoneNumber: formData.phoneNumber,
+            linkedinUrl: formData.linkedinUrl,
+          }
+          : { studentId: formData.studentId, universityName: formData.universityName }),
 
         ...(inviteToken ? { inviteToken } : {}),
 
@@ -325,11 +353,11 @@ export function RegisterPage() {
 
             <div className="text-center mb-8">
 
-              <h1 className="text-3xl font-bold mb-2">{t('register.title')}</h1>
+              <h1 className="text-3xl font-bold mb-2">{isExpertInvite ? t('register.expert.title') : t('register.title')}</h1>
 
               <p className="text-muted-foreground text-sm leading-relaxed">
 
-                {t('register.subtitle')}
+                {isExpertInvite ? t('register.expert.subtitle') : t('register.subtitle')}
 
               </p>
 
@@ -343,12 +371,29 @@ export function RegisterPage() {
               </div>
             )}
 
+            {isExpertInvite && (
+              <div className="mb-5 p-4 rounded-xl bg-primary/10 border border-primary/20 text-sm text-foreground">
+                <span className="font-semibold">{t('register.expert.invitedAs')} {invitation?.expertRole}</span>
+                {invitation?.eventTitle && <> · {invitation.eventTitle}</>}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
 
               {renderField({ label: t('register.fullName'), icon: User, type: "text", field: "fullName", placeholder: t('register.fullNamePlaceholder') })}
 
 
 
+              {isExpertInvite ? (
+                <>
+                  {renderField({ label: t('register.expert.organization'), icon: Building2, type: "text", field: "organization", placeholder: t('register.expert.organizationPlaceholder') })}
+                  {renderField({ label: t('register.expert.jobTitle'), icon: Briefcase, type: "text", field: "jobTitle", placeholder: t('register.expert.jobTitlePlaceholder') })}
+                  {renderField({ label: t('register.expert.expertise'), icon: Award, type: "text", field: "expertiseArea", placeholder: t('register.expert.expertisePlaceholder') })}
+                  {renderField({ label: t('register.expert.phone'), icon: Phone, type: "tel", field: "phoneNumber", placeholder: "+216 XX XXX XXX" })}
+                  {renderField({ label: t('register.expert.linkedin'), icon: Linkedin, type: "url", field: "linkedinUrl", placeholder: "https://linkedin.com/in/..." })}
+                </>
+              ) : (
+                <>
               <div>
 
                 <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">{t('register.studentId')}</label>
@@ -382,6 +427,8 @@ export function RegisterPage() {
 
 
               {renderField({ label: t('register.university'), icon: User, type: "text", field: "universityName", placeholder: "e.g. ENICarthage" })}
+                </>
+              )}
 
 
 

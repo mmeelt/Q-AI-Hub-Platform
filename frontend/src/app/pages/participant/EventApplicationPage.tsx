@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useUrlStep } from '../../hooks/useUrlStep';
 import { motion, AnimatePresence } from 'motion/react';
 import { Upload, Check, Sparkles, Video, Loader2, X } from 'lucide-react';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
@@ -26,7 +27,7 @@ const commonRoles = [
 export function EventApplicationPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useUrlStep(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [useAiVersion, setUseAiVersion] = useState(false);

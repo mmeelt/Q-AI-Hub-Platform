@@ -26,6 +26,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.register(dto));
     }
 
+    // GET /api/auth/invitations/{token} — tells the sign-up page whether the link invites an expert
+    @GetMapping("/invitations/{token}")
+    public ResponseEntity<java.util.Map<String, Object>> describeInvitation(@PathVariable String token) {
+        return ResponseEntity.ok(authService.describeInvitation(token));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest dto) {
         LoginPendingResponse result = authService.login(dto);

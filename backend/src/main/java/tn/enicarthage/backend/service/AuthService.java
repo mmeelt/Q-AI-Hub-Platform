@@ -94,7 +94,13 @@ public class AuthService {
                 .failedLoginAttempts(0)
                 .accountLocked(false);
         if (assignedExpertRole != null) {
-            userBuilder.expertRole(assignedExpertRole);
+            userBuilder.expertRole(assignedExpertRole)
+                    .phoneNumber(inputSanitizer.sanitize(dto.getPhoneNumber()))
+                    .organization(inputSanitizer.sanitize(dto.getOrganization()))
+                    .jobTitle(inputSanitizer.sanitize(dto.getJobTitle()))
+                    .expertiseArea(inputSanitizer.sanitize(dto.getExpertiseArea()))
+                    .linkedinUrl(inputSanitizer.sanitize(dto.getLinkedinUrl()))
+                    .userBio(inputSanitizer.sanitize(dto.getUserBio()));
         }
 
         User user = userBuilder.build();
@@ -451,6 +457,26 @@ public class AuthService {
         RefreshToken rt = refreshTokenService.createRefreshToken(admin.getAdminId());
         return new AuthResponse(token, rt.getToken(), accessTokenTtlMs / 1000, admin.getAdminId(),
                 admin.getAdminEmail(), "ADMIN", admin.getAdminName());
+    }
+
+    /** What an invitation link is for, so the sign-up page shows the expert form or the participant one. */
+    public java.util.Map<String, Object> describeInvitation(String token) {
+        InvitationLog inv = invitationLogRepository.findById(token == null ? "" : token.trim())
+                .orElseThrow(() -> new InvalidInvitationException("Invalid or unknown invitation"));
+        if (inv.getConsumedAt() != null) {
+            throw new InvalidInvitationException("Invitation has already been used");
+        }
+        boolean expert = !ExpertInvitationService.PARTICIPANT.equals(inv.getExpertRole());
+        java.util.Map<String, Object> info = new java.util.LinkedHashMap<>();
+        info.put("email", inv.getEmail());
+        info.put("kind", expert ? "EXPERT" : "PARTICIPANT");
+        if (expert) {
+            info.put("expertRole", inv.getExpertRole());
+            if (inv.getEventId() != null) {
+                eventRepository.findById(inv.getEventId()).ifPresent(e -> info.put("eventTitle", e.getTitle()));
+            }
+        }
+        return info;
     }
 
     private User.ExpertRole parseExpertRole(String raw) {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, CalendarDays, MapPin, Users, Search, Eye, 
@@ -231,6 +232,7 @@ function PitchRatingsSection({ applicationId }: { applicationId: string }) {
 export function ExpertEventPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const goBack = useGoBack('/events');
     const [event, setEvent] = useState<any>(null);
     const [applicants, setApplicants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -313,8 +315,8 @@ export function ExpertEventPage() {
                     <div className="flex items-center gap-4">
                         <Link to="/dashboard"><Logo size="sm" /></Link>
                         <div className="h-5 w-px bg-border" />
-                        <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                            <ArrowLeft size={15} /> Back to Events
+                        <button onClick={goBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            <ArrowLeft size={15} /> Back
                         </button>
                     </div>
                     <div className="flex items-center gap-3">

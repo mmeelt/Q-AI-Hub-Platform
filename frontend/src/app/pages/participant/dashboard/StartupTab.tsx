@@ -19,8 +19,10 @@ export function StartupTab({ startups }: { startups: any[] }) {
           {startups.map((startup, index) => (
             <div key={startup.startupId || index} className="bg-card backdrop-blur-xl border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/30 transition-all">
               <div className="flex items-start gap-6 mb-8">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-3xl font-bold text-primary">
-                  {startup.projectName?.[0] || 'S'}
+                <div className="w-24 h-24 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-3xl font-bold text-primary">
+                  {startup.companyLogoUrl
+                    ? <img src={startup.companyLogoUrl} alt={startup.projectName} className="h-full w-full object-cover" />
+                    : startup.projectName?.[0] || 'S'}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">

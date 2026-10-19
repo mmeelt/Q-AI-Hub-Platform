@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 import { motion } from 'motion/react';
 import { ArrowLeft, Calendar, MapPin, Users, Clock, FileText, Tag, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 import { ImageUpload } from '../../components/common/ImageUpload';
+import { EventCardPreview } from '../../components/admin/EventCardPreview';
+import { ChoiceOptionsEditor, cleanOptions } from '../../components/common/ChoiceQuestion';
 import { ParticleBackground } from '../../components/effects/ParticleBackground';
 import { Logo } from '../../components/common/Logo';
 import { DatePicker } from '../../components/ui/date-picker';
@@ -16,6 +19,7 @@ const categories = ['Hackathon', 'Bootcamp', 'Workshop', 'Masterclass', 'Summit'
 export function EditEventPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const goBack = useGoBack('/admin/events');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [pendingExperts, setPendingExperts] = useState<EventExpert[]>([]);
@@ -102,13 +106,18 @@ export function EditEventPage() {
         if (applicationQuestions.length === 0) {
             return null;
         }
-        return JSON.stringify(applicationQuestions);
+        return JSON.stringify(applicationQuestions.map(q =>
+            q.type === 'select' ? { ...q, options: cleanOptions(q.options) } : q));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.name || !form.category || !form.startDate || !form.endDate) {
             toast.error('Please fill in all required fields.');
+            return;
+        }
+        if (applicationQuestions.some(q => q.type === 'select' && cleanOptions(q.options).length < 2)) {
+            toast.error('A multiple choice question needs at least 2 choices');
             return;
         }
         setIsSubmitting(true);
@@ -164,11 +173,11 @@ export function EditEventPage() {
                     </Link>
                     <div className="h-6 w-px bg-foreground/10" />
                     <button
-                        onClick={() => navigate('/admin')}
+                        onClick={goBack}
                         className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ArrowLeft size={18} />
-                        <span className="text-sm">Back to Dashboard</span>
+                        <span className="text-sm">Back</span>
                     </button>
                 </div>
             </div>
@@ -351,6 +360,14 @@ export function EditEventPage() {
                                         label="Choose a cover image"
                                     />
                                 </div>
+                                <EventCardPreview
+                                    title={form.name}
+                                    category={form.category}
+                                    description={form.description}
+                                    startDate={form.startDate}
+                                    location={form.location}
+                                    imageUrl={form.imageUrl}
+                                />
 
                                 <div>
                                     <label className="block text-sm text-muted-foreground mb-3">Publishing Status</label>
@@ -423,7 +440,7 @@ export function EditEventPage() {
                                                     >
                                                         <option value="text">Short Text</option>
                                                         <option value="textarea">Long Text</option>
-                                                        <option value="select">Choice</option>
+                                                        <option value="select">Multiple choice</option>
                                                     </select>
                                                     <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                                                         <input
@@ -434,6 +451,14 @@ export function EditEventPage() {
                                                         Required
                                                     </label>
                                                 </div>
+                                                {q.type === 'select' && (
+                                                    <ChoiceOptionsEditor
+                                                        options={q.options}
+                                                        onChange={options => updateApplicationQuestion(q.id, 'options', options)}
+                                                        multiple={q.multiple}
+                                                        onMultipleChange={multiple => updateApplicationQuestion(q.id, 'multiple', multiple)}
+                                                    />
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -462,7 +487,7 @@ export function EditEventPage() {
                                 type="button"
                                 variant="ghost"
                                 fullWidth
-                                onClick={() => navigate('/admin')}
+                                onClick={goBack}
                             >
                                 Cancel
                             </Button>
