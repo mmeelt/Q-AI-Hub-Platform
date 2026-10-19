@@ -76,8 +76,8 @@ This password is for local testing only. Never use it on a real server.
 | ![Events manager](docs/screenshots/admin-events.png) | ![Event phases](docs/screenshots/admin-phases.png) |
 | **Expert: the event and its pitch schedule** | **Expert: grade /20, final once sent** |
 | ![Expert event page](docs/screenshots/expert-event.png) | ![Expert grade](docs/screenshots/expert-grade.png) |
-| **Founder: application progress and pitch results** | **Light theme** |
-| ![Applications](docs/screenshots/user-applications.png) | ![Light theme](docs/screenshots/home-light.png) |
+| **Founder: application progress and pitch results** | **Dark theme** |
+| ![Applications](docs/screenshots/user-applications.png) | ![Dark theme](docs/screenshots/home-dark.png) |
 | **Mobile** | |
 | <img src="docs/screenshots/mobile-home.png" width="49%"> <img src="docs/screenshots/mobile-applications.png" width="49%"> | |
 
