@@ -1,0 +1,9 @@
+mails/
+uploads/
+screenshots/
+reports/
+state.json
+*.log
+*.pdf
+TC1*_*.txt
+__pycache__/

@@ -1,0 +1,4 @@
+selenium==4.27.1
+requests==2.32.3
+aiosmtpd==1.4.6
+pytest==8.3.4
