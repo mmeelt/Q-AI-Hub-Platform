@@ -1,6 +1,6 @@
 # Q-AI Hub
 
-[![CI](https://github.com/mmeelt/TEST-Q-AI-HUB/actions/workflows/ci.yml/badge.svg)](https://github.com/mmeelt/TEST-Q-AI-HUB/actions/workflows/ci.yml)
+[![CI](https://github.com/mmeelt/Q-AI-Hub-Platform/actions/workflows/ci.yml/badge.svg)](https://github.com/mmeelt/Q-AI-Hub-Platform/actions/workflows/ci.yml)
 ![Java 17](https://img.shields.io/badge/Java-17-orange)
 ![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4-6db33f)
 ![React 18](https://img.shields.io/badge/React-18-61dafb)
@@ -44,14 +44,24 @@ This password is for local testing only. Never use it on a real server.
 ## Features
 
 - **Two kinds of events**: simple events (register with name + email, custom questions set by the admin)
-  and incubation programs (apply with a startup, then go through phases)
-- **Phases**: questionnaires, follow-up questions from the admin, accept / reject decisions with email notifications
-- **Multi-judge pitch evaluation**: experts invited per event score each startup on the round's criteria;
-  every judge scores separately, the average is the final score, and the admin sends the results to all startups
-- **Startups & teams**: startup profiles, teammate invitations, pitch video upload
+  and incubation programs (apply with a startup and answer the organizer's questions, then go through phases).
+  An event that reaches its maximum number of participants is shown as **full**
+- **Phases**: questionnaires (text, long text, multiple choice, PDF upload), accept / reject decisions with
+  email notifications. The admin opens a phase (and is warned when participants of the current phase have not
+  submitted yet), closes the last one, or reopens a closed one; each phase card shows real figures
+  (who can take part, submitted, reviewed / rounds, startups, scored)
+- **Expert review of applications**: invited experts grade each application /20 with a recommendation; the
+  admin sees every grade and the average, then decides
+- **Multi-judge pitch evaluation**: experts score each startup on the round's criteria; every judge scores
+  separately, the average is the final score, and the admin sends the results to all startups.
+  Experts see the pitch schedule and are notified when a pitch date is set
+- **Final grades**: a grade, a score or a feedback is final once sent (by an expert or the admin)
+- **Startups & teams**: startup profiles, teammate invitations, pitch video upload, AI-improved descriptions (Gemini)
 - **"Notify me"** on upcoming events: one email when registrations open
-- **Administration**: dashboard, several administrators, platform settings, CSV exports
+- **Administration**: dashboard with real monthly figures, several administrators, platform settings, CSV exports
   (applications, jury scores, events)
+- **Navigation**: the browser's back arrow and every Back button return to the exact previous view
+  (tabs, panels, form steps are kept in the URL)
 - **Security**: two-step login (password + emailed code), HttpOnly cookies, rate limiting,
   per-event judge access, ownership checks, optional anonymous applicants for judges
 
@@ -62,10 +72,14 @@ This password is for local testing only. Never use it on a real server.
 | ![Events](docs/screenshots/events.png) | ![Event registration](docs/screenshots/event-registration.png) |
 | **Pitch evaluation: every judge, the average and the final decision** | **Admin dashboard** |
 | ![Pitch evaluation](docs/screenshots/pitch-results.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
-| **Events manager** | **Founder: application progress** |
-| ![Events manager](docs/screenshots/admin-events.png) | ![Applications](docs/screenshots/user-applications.png) |
-| **Light theme** | **Mobile** |
-| ![Light theme](docs/screenshots/home-light.png) | <img src="docs/screenshots/mobile-home.png" width="49%"> <img src="docs/screenshots/mobile-applications.png" width="49%"> |
+| **Events manager** | **An incubation event and its phases** |
+| ![Events manager](docs/screenshots/admin-events.png) | ![Event phases](docs/screenshots/admin-phases.png) |
+| **Expert: the event and its pitch schedule** | **Expert: grade /20, final once sent** |
+| ![Expert event page](docs/screenshots/expert-event.png) | ![Expert grade](docs/screenshots/expert-grade.png) |
+| **Founder: application progress and pitch results** | **Light theme** |
+| ![Applications](docs/screenshots/user-applications.png) | ![Light theme](docs/screenshots/home-light.png) |
+| **Mobile** | |
+| <img src="docs/screenshots/mobile-home.png" width="49%"> <img src="docs/screenshots/mobile-applications.png" width="49%"> | |
 
 <sub>Screenshots use fictional demo data.</sub>
 
@@ -142,7 +156,8 @@ This is a team project. My part:
 ├── .github/workflows/ci.yml     CI: backend tests, frontend type check + build, Docker images
 ├── docker-compose.yml           MySQL + API + website with one command
 ├── database/                    SQL maintenance scripts
-├── docs/                        Class diagram, design guidelines, deployment guide
+├── docs/                        Class diagram, design guidelines, deployment guide, screenshots
+├── tests/e2e/                   Browser tests (Selenium + pytest) of the test plan's cases
 └── scripts/run-dev.bat          Starts API + frontend in two windows (Windows)
 ```
 
@@ -218,13 +233,20 @@ then sent with the next requests. The raw spec is at `/v3/api-docs`.
 ## Tests and quality checks
 
 ```bash
-cd backend && ./mvnw test           # 155 tests: services, controllers, security filters, multi-judge scoring
+cd backend && ./mvnw test           # 206 tests: services, controllers, security filters, multi-judge scoring,
+                                    # and end-to-end API journeys on an H2 database
 cd frontend && npm run typecheck    # TypeScript in strict mode
 cd frontend && npm run build        # production build (Vite)
 ```
 
 [GitHub Actions](.github/workflows/ci.yml) runs all of them, and builds the Docker images,
 on every push and pull request.
+
+**Browser tests (Selenium + pytest)**: [`tests/e2e`](tests/e2e) runs the functional, system and
+acceptance cases of the test plan (create an event and its phases, apply, track by code, upload,
+jury scoring, AI description, acceptance with notification and email, the whole student journey)
+in Chrome or Edge, against a test copy of the app (in-memory H2 database, emails caught by a local
+fake SMTP server). See [tests/e2e/README.md](tests/e2e/README.md).
 
 ## Database migrations (Flyway)
 
@@ -233,7 +255,7 @@ automatically at startup.
 
 - A database created earlier by Hibernate is recorded as version 1 (baseline) and only later
   scripts run on it.
-- To change the schema, add a new file: `V7__short_description.sql`. **Never edit an applied migration.**
+- To change the schema, add a new file with the next number (`V10__short_description.sql`). **Never edit an applied migration.**
 - `dev` still lets Hibernate add new columns (`ddl-auto=update`); `prod` only validates the schema.
 
 ## Authentication
@@ -257,7 +279,8 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for a step-by-step deployment on fr
 
 - **Visitor** – browses events, registers to simple events with name + email.
 - **Participant** – applies to incubation events with a startup, follows phases and results.
-- **Expert / judge** – invited by an admin to an event; reviews startups and scores pitches.
+- **Expert / judge** – invited by an admin to an event; grades applications /20, sees the pitch
+  schedule and scores pitches (only their own grades, final once sent).
 - **Admin** – manages events, phases, users and startups; sees every judge's scores and
   sends the averaged results.
 
